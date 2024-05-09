@@ -1,4 +1,4 @@
-package com.hieuphung.SpringSecurityJWT.entity;
+package com.hieuphung.SpringSecurityJWT.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,27 +11,36 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "ourusers")
-public class OurUsers implements UserDetails {
+@Table(name = "users")
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String email;
+    private String fullName;
+
+    private String username;
 
     private String password;
 
-    private String role;
+    private String email;
+
+    private String phone;
+
+    private String address;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
     @Override

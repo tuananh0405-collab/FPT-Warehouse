@@ -1,7 +1,7 @@
 package com.hieuphung.SpringSecurityJWT.controller;
 
 import com.hieuphung.SpringSecurityJWT.dto.ReqRes;
-import com.hieuphung.SpringSecurityJWT.entity.Product;
+import com.hieuphung.SpringSecurityJWT.model.Product;
 import com.hieuphung.SpringSecurityJWT.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,16 +24,16 @@ public class AdminUsers {
     @PostMapping("/admin/saveproduct")
     public ResponseEntity<Object> signUp(@RequestBody ReqRes productRequest) {
         Product productToSave = new Product();
-        productToSave.setName(productRequest.getName());
+        productToSave.setName(productRequest.getUsername());
         return ResponseEntity.ok(productRepository.save(productToSave));
     }
 
-    @GetMapping("/user/alone")
+    @GetMapping("/staff/alone")
     public ResponseEntity<Object> userAlone() {
         return ResponseEntity.ok("Users alone can access this api only");
     }
 
-    @GetMapping("/adminuser/both")
+    @GetMapping("/adminstaff/both")
     public ResponseEntity<Object> bothAdminAndUserApi() {
         return ResponseEntity.ok("Both Admin and Users can access this api");
     }

@@ -1,8 +1,8 @@
 package com.hieuphung.SpringSecurityJWT.service;
 
 import com.hieuphung.SpringSecurityJWT.dto.ReqRes;
-import com.hieuphung.SpringSecurityJWT.entity.OurUsers;
-import com.hieuphung.SpringSecurityJWT.repository.OurUsersRepository;
+import com.hieuphung.SpringSecurityJWT.model.User;
+import com.hieuphung.SpringSecurityJWT.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class AuthService  {
 
     @Autowired
-    private OurUsersRepository ourUsersRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private JWTUtils jwtUtils;
@@ -29,13 +29,17 @@ public class AuthService  {
     public ReqRes signUp(ReqRes registrationRequest) {
         ReqRes reqRes = new ReqRes();
         try {
-            OurUsers ourUsers = new OurUsers();
-            ourUsers.setEmail(registrationRequest.getEmail());
-            ourUsers.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
-            ourUsers.setRole(registrationRequest.getRole());
-            OurUsers ourUsersResult = ourUsersRepository.save(ourUsers);
-            if (ourUsersResult!=null && ourUsersResult.getId()>0) {
-                reqRes.setOurUsers(ourUsersResult);
+            User user = new User();
+            user.setFullName(registrationRequest.getFullName());
+            user.setUsername(registrationRequest.getUsername());
+            user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
+            user.setEmail(registrationRequest.getEmail());
+            user.setPhone(registrationRequest.getPhone());
+            user.setAddress(registrationRequest.getAddress());
+            user.setRole(registrationRequest.getRole());
+            User userResult = userRepository.save(user);
+            if (userResult !=null && userResult.getId()>0) {
+                reqRes.setUser(userResult);
                 reqRes.setMessage("User saved successfully");
                 reqRes.setStatusCode(200);
             }
@@ -49,8 +53,8 @@ public class AuthService  {
     public ReqRes signIn(ReqRes signinRequest) {
         ReqRes reqRes = new ReqRes();
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signinRequest.getEmail(), signinRequest.getPassword()));
-            var user = ourUsersRepository.findByEmail(signinRequest.getEmail()).orElseThrow();
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signinRequest.getUsername(), signinRequest.getPassword()));
+            var user = userRepository.findByUsername(signinRequest.getUsername()).orElseThrow();
             System.out.println("User is: " + user);
             var jwt = jwtUtils.generateToken(user);
             var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
@@ -68,8 +72,8 @@ public class AuthService  {
 
     public ReqRes refreshToken(ReqRes refreshTokenRegister) {
         ReqRes reqRes = new ReqRes();
-        String ourEmail = jwtUtils.extractUsername(refreshTokenRegister.getToken());
-        OurUsers users = ourUsersRepository.findByEmail(ourEmail).orElseThrow();
+        String ourUsername = jwtUtils.extractUsername(refreshTokenRegister.getToken());
+        User users = userRepository.findByUsername(ourUsername).orElseThrow();
         if (jwtUtils.isTokenValid(refreshTokenRegister.getToken(), users)) {
             var jwt = jwtUtils.generateToken(users);
             reqRes.setStatusCode(200);

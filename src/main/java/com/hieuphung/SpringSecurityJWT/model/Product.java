@@ -1,4 +1,4 @@
-package com.hieuphung.SpringSecurityJWT.entity;
+package com.hieuphung.SpringSecurityJWT.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
