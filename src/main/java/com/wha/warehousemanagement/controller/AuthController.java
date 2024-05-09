@@ -1,7 +1,7 @@
-package com.hieuphung.SpringSecurityJWT.controller;
+package com.wha.warehousemanagement.controller;
 
-import com.hieuphung.SpringSecurityJWT.dto.ReqRes;
-import com.hieuphung.SpringSecurityJWT.service.AuthService;
+import com.wha.warehousemanagement.dto.ReqRes;
+import com.wha.warehousemanagement.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

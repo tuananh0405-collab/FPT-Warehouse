@@ -1,6 +1,6 @@
-package com.hieuphung.SpringSecurityJWT.config;
+package com.wha.warehousemanagement.config;
 
-import com.hieuphung.SpringSecurityJWT.service.UserDetailsService;
+import com.wha.warehousemanagement.service.UserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request.requestMatchers("/auth/**", "/public/**").permitAll()
+                        .requestMatchers("/auth/signup").permitAll()
                         .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                         .requestMatchers("/staff/**").hasAnyAuthority("STAFF")
                         .requestMatchers("/adminstaff/**").hasAnyAuthority("STAFF", "ADMIN")

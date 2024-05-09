@@ -1,7 +1,7 @@
-package com.hieuphung.SpringSecurityJWT.config;
+package com.wha.warehousemanagement.config;
 
-import com.hieuphung.SpringSecurityJWT.service.JWTUtils;
-import com.hieuphung.SpringSecurityJWT.service.UserDetailsService;
+import com.wha.warehousemanagement.service.JWTUtils;
+import com.wha.warehousemanagement.service.UserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

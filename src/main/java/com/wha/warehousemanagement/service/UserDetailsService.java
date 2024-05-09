@@ -1,6 +1,6 @@
-package com.hieuphung.SpringSecurityJWT.service;
+package com.wha.warehousemanagement.service;
 
-import com.hieuphung.SpringSecurityJWT.repository.UserRepository;
+import com.wha.warehousemanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

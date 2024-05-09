@@ -1,6 +1,6 @@
-package com.hieuphung.SpringSecurityJWT.repository;
+package com.wha.warehousemanagement.repository;
 
-import com.hieuphung.SpringSecurityJWT.model.Product;
+import com.wha.warehousemanagement.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {

@@ -1,8 +1,8 @@
-package com.hieuphung.SpringSecurityJWT.service;
+package com.wha.warehousemanagement.service;
 
-import com.hieuphung.SpringSecurityJWT.dto.ReqRes;
-import com.hieuphung.SpringSecurityJWT.model.User;
-import com.hieuphung.SpringSecurityJWT.repository.UserRepository;
+import com.wha.warehousemanagement.dto.ReqRes;
+import com.wha.warehousemanagement.model.User;
+import com.wha.warehousemanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

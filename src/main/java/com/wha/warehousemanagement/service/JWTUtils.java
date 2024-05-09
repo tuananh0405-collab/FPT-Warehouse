@@ -1,4 +1,4 @@
-package com.hieuphung.SpringSecurityJWT.service;
+package com.wha.warehousemanagement.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

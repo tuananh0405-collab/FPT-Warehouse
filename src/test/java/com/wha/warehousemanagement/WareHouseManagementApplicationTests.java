@@ -1,10 +1,10 @@
-package com.hieuphung.SpringSecurityJWT;
+package com.wha.warehousemanagement;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SpringSecurityJwtApplicationTests {
+class WareHouseManagementApplicationTests {
 
 	@Test
 	void contextLoads() {

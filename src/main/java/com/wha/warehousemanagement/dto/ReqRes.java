@@ -1,10 +1,10 @@
-package com.hieuphung.SpringSecurityJWT.dto;
+package com.wha.warehousemanagement.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.hieuphung.SpringSecurityJWT.model.Role;
-import com.hieuphung.SpringSecurityJWT.model.User;
-import com.hieuphung.SpringSecurityJWT.model.Product;
+import com.wha.warehousemanagement.model.Role;
+import com.wha.warehousemanagement.model.User;
+import com.wha.warehousemanagement.model.Product;
 import lombok.Data;
 
 import java.util.List;

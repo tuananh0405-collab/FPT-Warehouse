@@ -1,4 +1,4 @@
-package com.hieuphung.SpringSecurityJWT.model;
+package com.wha.warehousemanagement.model;
 
 import jakarta.persistence.*;
 import lombok.Data;

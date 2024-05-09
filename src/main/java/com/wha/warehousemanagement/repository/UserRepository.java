@@ -1,6 +1,6 @@
-package com.hieuphung.SpringSecurityJWT.repository;
+package com.wha.warehousemanagement.repository;
 
-import com.hieuphung.SpringSecurityJWT.model.User;
+import com.wha.warehousemanagement.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
