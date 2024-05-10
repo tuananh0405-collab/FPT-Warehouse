@@ -1,5 +1,6 @@
 package com.wha.warehousemanagement.service;
 
+import com.wha.warehousemanagement.dto.CategoryDTO;
 import com.wha.warehousemanagement.dto.request.AddCategoryRequest;
 import com.wha.warehousemanagement.dto.request.SignUpRequest;
 import com.wha.warehousemanagement.dto.response.AddCategoryResponse;
@@ -13,26 +14,23 @@ import org.springframework.stereotype.Service;
 @Service
 public class CategoryService {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
-    public AddCategoryResponse addCategory(AddCategoryRequest addCategoryRequest) {
-        AddCategoryResponse response = new AddCategoryResponse();
-        try {
-            Category category = new Category();
-            category.setName(addCategoryRequest.getName());
-            category.setDescription(addCategoryRequest.getDescription());
-            Category categoryResult = categoryRepository.save(category);
-            if (categoryResult !=null && categoryResult.getId()>0) {
-                response.setCategory(category);
-                response.setMessage("Category saved successfully");
-                response.setStatusCode(200);
-            }
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setError(e.getMessage());
-        }
-        return response;
+    @Autowired
+    public CategoryService(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
+
+    public CategoryDTO addCategory(AddCategoryRequest addCategoryRequest) {
+        CategoryDTO categoryDTO = new CategoryDTO();
+        Category category = new Category();
+        category.setName(addCategoryRequest.getName());
+        category.setDescription(addCategoryRequest.getDescription());
+        categoryRepository.save(category);
+        categoryDTO.setId(category.getId());
+        categoryDTO.setName(category.getName());
+        categoryDTO.setDescription(category.getDescription());
+        return categoryDTO;
     }
 
 }
