@@ -1,6 +1,11 @@
 package com.wha.warehousemanagement.service;
 
-import com.wha.warehousemanagement.dto.ReqRes;
+import com.wha.warehousemanagement.dto.request.LoginRequest;
+import com.wha.warehousemanagement.dto.request.RefreshTokenRequest;
+import com.wha.warehousemanagement.dto.request.SignUpRequest;
+import com.wha.warehousemanagement.dto.response.LoginResponse;
+import com.wha.warehousemanagement.dto.response.RefreshTokenResponse;
+import com.wha.warehousemanagement.dto.response.SignUpResponse;
 import com.wha.warehousemanagement.model.User;
 import com.wha.warehousemanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,64 +31,64 @@ public class AuthService  {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public ReqRes signUp(ReqRes registrationRequest) {
-        ReqRes reqRes = new ReqRes();
+    public SignUpResponse signUp(SignUpRequest signUpRequest) {
+        SignUpResponse response = new SignUpResponse();
         try {
             User user = new User();
-            user.setFullName(registrationRequest.getFullName());
-            user.setUsername(registrationRequest.getUsername());
-            user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
-            user.setEmail(registrationRequest.getEmail());
-            user.setPhone(registrationRequest.getPhone());
-            user.setAddress(registrationRequest.getAddress());
-            user.setRole(registrationRequest.getRole());
+            user.setFullName(signUpRequest.getFullName());
+            user.setUsername(signUpRequest.getUsername());
+            user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+            user.setEmail(signUpRequest.getEmail());
+            user.setPhone(signUpRequest.getPhone());
+            user.setAddress(signUpRequest.getAddress());
+            user.setRole(signUpRequest.getRole());
             User userResult = userRepository.save(user);
             if (userResult !=null && userResult.getId()>0) {
-                reqRes.setUser(userResult);
-                reqRes.setMessage("User saved successfully");
-                reqRes.setStatusCode(200);
+                response.setUser(userResult);
+                response.setMessage("User saved successfully");
+                response.setStatusCode(200);
             }
         } catch (Exception e) {
-            reqRes.setStatusCode(500);
-            reqRes.setError(e.getMessage());
+            response.setStatusCode(500);
+            response.setError(e.getMessage());
         }
-        return reqRes;
+        return response;
     }
 
-    public ReqRes signIn(ReqRes signinRequest) {
-        ReqRes reqRes = new ReqRes();
+    public LoginResponse login(LoginRequest loginRequest) {
+        LoginResponse response = new LoginResponse();
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signinRequest.getUsername(), signinRequest.getPassword()));
-            var user = userRepository.findByUsername(signinRequest.getUsername()).orElseThrow();
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            var user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow();
             System.out.println("User is: " + user);
             var jwt = jwtUtils.generateToken(user);
             var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
-            reqRes.setStatusCode(200);
-            reqRes.setToken(jwt);
-            reqRes.setRefreshToken(refreshToken);
-            reqRes.setExpirationTime("24h");
-            reqRes.setMessage("Successfully signed in");
+            response.setStatusCode(200);
+            response.setToken(jwt);
+            response.setRefreshToken(refreshToken);
+            response.setExpirationTime("24h");
+            response.setMessage("Successfully signed in");
         } catch (Exception e) {
-            reqRes.setStatusCode(500);
-            reqRes.setError(e.getMessage());
+            response.setStatusCode(500);
+            response.setError(e.getMessage());
         }
-        return reqRes;
+        return response;
     }
 
-    public ReqRes refreshToken(ReqRes refreshTokenRegister) {
-        ReqRes reqRes = new ReqRes();
-        String ourUsername = jwtUtils.extractUsername(refreshTokenRegister.getToken());
+    public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        RefreshTokenResponse response = new RefreshTokenResponse();
+        String ourUsername = jwtUtils.extractUsername(refreshTokenRequest.getToken());
         User users = userRepository.findByUsername(ourUsername).orElseThrow();
-        if (jwtUtils.isTokenValid(refreshTokenRegister.getToken(), users)) {
+        if (jwtUtils.isTokenValid(refreshTokenRequest.getToken(), users)) {
             var jwt = jwtUtils.generateToken(users);
-            reqRes.setStatusCode(200);
-            reqRes.setToken(jwt);
-            reqRes.setRefreshToken(refreshTokenRegister.getToken());
-            reqRes.setExpirationTime("24h");
-            reqRes.setMessage("Successfully refreshed in");
+            response.setStatusCode(200);
+            response.setToken(jwt);
+            response.setRefreshToken(refreshTokenRequest.getToken());
+            response.setExpirationTime("24h");
+            response.setMessage("Successfully refreshed in");
         }
-        reqRes.setStatusCode(500);
-        return reqRes;
+        response.setStatusCode(500);
+        return response;
     }
 
 }
