@@ -1,7 +1,7 @@
 package com.wha.warehousemanagement.controller;
 
 import com.wha.warehousemanagement.dto.request.AddCategoryRequest;
-import com.wha.warehousemanagement.dto.response.AddCategoryResponse;
+import com.wha.warehousemanagement.model.ResponseObject;
 import com.wha.warehousemanagement.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,12 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/staff/category")
 public class CategoryController {
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
+
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
 
     @PostMapping("/add")
-    public ResponseEntity<AddCategoryResponse> addCategory(@RequestBody AddCategoryRequest addCategoryRequest) {
-        return ResponseEntity.ok(categoryService.addCategory(addCategoryRequest));
+    public ResponseEntity<ResponseObject> addCategory(@RequestBody AddCategoryRequest addCategoryRequest) {
+        return ResponseEntity.ok(new ResponseObject("200", "Category added successfully", categoryService.addCategory(addCategoryRequest)));
     }
 
 }
