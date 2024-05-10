@@ -1,7 +1,9 @@
 package com.wha.warehousemanagement.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,28 +12,42 @@ import java.util.Collection;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Integer id;
 
+    @Column(name = "user_full_name")
     private String fullName;
 
+    @Column(name = "user_username")
     private String username;
 
+    @Column(name = "user_password")
     private String password;
 
+    @Column(name = "user_email")
     private String email;
 
+    @Column(name = "user_phone")
     private String phone;
 
+    @Column(name = "user_address")
     private String address;
 
+    @Column(name = "user_role")
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @ManyToOne()
+    @JoinColumn(name = "warehouse_id", nullable = true)
+    private Warehouse warehouse;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
