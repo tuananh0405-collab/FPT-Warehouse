@@ -6,17 +6,25 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryDTO {
-
+public class ProductDTO {
     private Integer id;
 
     private String name;
 
     private String description;
 
+    private int quantity;
+
+    private String country;
+
+    private Date receivedDate;
+
+    private Integer categoryId;
 }

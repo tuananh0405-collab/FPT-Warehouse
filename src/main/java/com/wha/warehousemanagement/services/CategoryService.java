@@ -41,7 +41,7 @@ public class CategoryService {
     }
 
     public ResponseObject getCategoryById(int id) {
-        Optional<Category> category = categoryRepository.getCategoryById(id);
+        Optional<CategoryDTO> category = categoryRepository.getCategoryDTOById(id);
         return category.map(
                         value -> new ResponseObject("200", "Get category successfully", value))
                 .orElseGet(() -> new ResponseObject("500", "Not found", null));
