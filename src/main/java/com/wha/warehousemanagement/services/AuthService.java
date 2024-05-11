@@ -3,6 +3,7 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.TokenDTO;
 import com.wha.warehousemanagement.dtos.UserLoginDTO;
 import com.wha.warehousemanagement.dtos.UserSignUpDTO;
+import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.User;
 import com.wha.warehousemanagement.repositories.UserRepository;
@@ -34,6 +35,8 @@ public class AuthService {
     }
 
     public ResponseObject signUp(UserSignUpDTO userSignUpDTO) {
+        if (userRepository.existsByUsername(userSignUpDTO.getUsername())) return new ResponseObject("500", "Username existed", null);
+        if (userSignUpDTO.getPassword().length()<8) return new ResponseObject("500", "Password must be more than 8 characters", null);
         User user = new User();
         user.setFullName(userSignUpDTO.getFullName());
         user.setUsername(userSignUpDTO.getUsername());
@@ -49,6 +52,7 @@ public class AuthService {
             return new ResponseObject("500", "User signed up unsuccessfully", null);
         }
     }
+
 
     public ResponseObject login(UserLoginDTO userLoginDTO) {
         TokenDTO tokenData = new TokenDTO();

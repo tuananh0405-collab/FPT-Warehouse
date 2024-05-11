@@ -25,7 +25,7 @@ public class Category {
     @Column(name = "category_description")
     private String description;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private Set<Product> products;
 
 }

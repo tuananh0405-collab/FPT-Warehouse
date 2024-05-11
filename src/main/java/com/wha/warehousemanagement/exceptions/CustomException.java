@@ -1,5 +1,6 @@
 package com.wha.warehousemanagement.exceptions;
 
+import com.wha.warehousemanagement.models.ResponseObject;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
