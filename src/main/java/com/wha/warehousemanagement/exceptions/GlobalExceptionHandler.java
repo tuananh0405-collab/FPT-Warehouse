@@ -1,6 +1,7 @@
 package com.wha.warehousemanagement.exceptions;
 
 import com.wha.warehousemanagement.models.ResponseObject;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +47,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseObject> handleCustomException(CustomException e) {
         return ResponseEntity.status(e.getStatus())
                 .body(new ResponseObject("error", e.getMessage(), null));
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ResponseObject> handleEntityNotFoundException(EntityNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ResponseObject("404", e.getMessage(), null));
     }
 
 }
