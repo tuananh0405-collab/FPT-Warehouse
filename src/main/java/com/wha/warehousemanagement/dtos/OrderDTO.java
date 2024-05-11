@@ -2,12 +2,9 @@ package com.wha.warehousemanagement.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.wha.warehousemanagement.models.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -16,18 +13,18 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderDTO {
 
-    private Integer id;
+        private Integer id;
 
-    private String customerName;
+        private String customerName;
 
-    private String description;
+        private String description;
 
-    private int quantity;
+        private int quantity;
 
-    private Status status;
+        private String status;
 
-    private Date orderDate;
+        private String orderDate;
 
-    private String country;
+        private String country;
 
 }

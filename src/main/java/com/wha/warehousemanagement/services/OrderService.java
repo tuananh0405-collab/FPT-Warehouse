@@ -6,12 +6,11 @@ import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.OrderRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class OrderService {
+
     private final OrderRepository orderRepository;
 
     public OrderService(OrderRepository orderRepository) {
