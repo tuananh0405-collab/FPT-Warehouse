@@ -11,12 +11,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryDTO {
+public class OrderDTO {
 
-    private Integer id;
+        private Integer id;
 
-    private String name;
+        private String customerName;
 
-    private String description;
+        private String description;
+
+        private int quantity;
+
+        private String status;
+
+        private String orderDate;
+
+        private String country;
 
 }

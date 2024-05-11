@@ -17,13 +17,13 @@ import java.util.HashMap;
 @Service
 public class AuthService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    private JWTUtils jwtUtils;
+    private final JWTUtils jwtUtils;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
     @Autowired
     public AuthService(UserRepository userRepository, JWTUtils jwtUtils, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
@@ -34,6 +34,8 @@ public class AuthService {
     }
 
     public ResponseObject signUp(UserSignUpDTO userSignUpDTO) {
+        if (userRepository.existsByUsername(userSignUpDTO.getUsername())) return new ResponseObject("500", "Username existed", null);
+        if (userSignUpDTO.getPassword().length()<8) return new ResponseObject("500", "Password must be more than 8 characters", null);
         User user = new User();
         user.setFullName(userSignUpDTO.getFullName());
         user.setUsername(userSignUpDTO.getUsername());
@@ -49,6 +51,7 @@ public class AuthService {
             return new ResponseObject("500", "User signed up unsuccessfully", null);
         }
     }
+
 
     public ResponseObject login(UserLoginDTO userLoginDTO) {
         TokenDTO tokenData = new TokenDTO();
