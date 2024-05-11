@@ -66,6 +66,9 @@ public class OrderService {
     public ResponseObject deleteOrderById(int id) {
         Optional<Order> order = orderRepository.getOrderById(id);
         if (order.isPresent()) {
+
+//            Need to delete order detail first
+
             orderRepository.delete(order.get());
             return new ResponseObject("200", "Deleted order successfully", order.get());
         } else {
