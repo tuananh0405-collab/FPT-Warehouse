@@ -6,7 +6,9 @@ import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.OrderRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -65,6 +67,9 @@ public class OrderService {
     public ResponseObject deleteOrderById(int id) {
         Optional<Order> order = orderRepository.getOrderById(id);
         if (order.isPresent()) {
+
+//            Need to delete order detail first
+
             orderRepository.delete(order.get());
             return new ResponseObject("200", "Deleted order successfully", order.get());
         } else {
