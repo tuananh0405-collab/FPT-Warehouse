@@ -41,7 +41,7 @@ public class CategoryService {
     }
 
     public ResponseObject getCategoryById(int id) {
-        Optional<Category> category = categoryRepository.getCategoryById(id);
+        Optional<CategoryDTO> category = categoryRepository.getCategoryDTOById(id);
         return category.map(
                         value -> new ResponseObject("200", "Get category successfully", value))
                 .orElseGet(() -> new ResponseObject("500", "Not found", null));
@@ -73,7 +73,7 @@ public class CategoryService {
         List<Category> list = new ArrayList<>(categoryRepository.findAll());
         if (!list.isEmpty()) {
             categoryRepository.deleteAll();
-            return new ResponseObject("200", "Deleted category successfully", null);
+            return new ResponseObject("200", "Deleted all categories successfully", null);
         } else {
             return new ResponseObject("500", "No category in db", null);
         }
