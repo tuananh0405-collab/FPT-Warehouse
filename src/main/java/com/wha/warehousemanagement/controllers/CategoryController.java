@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/staff/category")
+@RequestMapping("/category")
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -28,7 +28,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject> getAllCategories(@PathVariable("id") int id) {
+    public ResponseEntity<ResponseObject> getCategoryById(@PathVariable("id") int id) {
         return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
