@@ -3,7 +3,6 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.TokenDTO;
 import com.wha.warehousemanagement.dtos.UserLoginDTO;
 import com.wha.warehousemanagement.dtos.UserSignUpDTO;
-import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.User;
 import com.wha.warehousemanagement.repositories.UserRepository;
@@ -18,13 +17,13 @@ import java.util.HashMap;
 @Service
 public class AuthService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    private JWTUtils jwtUtils;
+    private final JWTUtils jwtUtils;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
     @Autowired
     public AuthService(UserRepository userRepository, JWTUtils jwtUtils, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
