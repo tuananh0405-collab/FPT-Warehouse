@@ -3,10 +3,13 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.TokenDTO;
 import com.wha.warehousemanagement.dtos.UserLoginDTO;
 import com.wha.warehousemanagement.dtos.UserSignUpDTO;
+import com.wha.warehousemanagement.exceptions.CustomException;
+import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.User;
 import com.wha.warehousemanagement.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,29 +36,36 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
-    public ResponseObject signUp(UserSignUpDTO userSignUpDTO) {
-        if (userRepository.existsByUsername(userSignUpDTO.getUsername())) return new ResponseObject("500", "Username existed", null);
-        if (userSignUpDTO.getPassword().length()<8) return new ResponseObject("500", "Password must be more than 8 characters", null);
-        User user = new User();
-        user.setFullName(userSignUpDTO.getFullName());
-        user.setUsername(userSignUpDTO.getUsername());
-        user.setPassword(passwordEncoder.encode(userSignUpDTO.getPassword()));
-        user.setEmail(userSignUpDTO.getEmail());
-        user.setPhone(userSignUpDTO.getPhone());
-        user.setAddress(userSignUpDTO.getAddress());
-        user.setRole(userSignUpDTO.getRole());
-        User userResult = userRepository.save(user);
-        if (userResult != null && userResult.getId() > 0) {
-            return new ResponseObject("200", "User signed up successfully", userResult);
-        } else {
-            return new ResponseObject("500", "User signed up unsuccessfully", null);
+    public ResponseObject<Object> signUp(UserSignUpDTO userSignUpDTO) {
+        try {
+            if (userRepository.existsByUsername(userSignUpDTO.getUsername())) {
+                throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
+            }
+            if (userSignUpDTO.getPassword().length() < 8) {
+                throw new CustomException(ErrorCode.PASSWORD_TOO_SHORT);
+            }
+            User user = new User(
+                    userSignUpDTO.getFullName(),
+                    userSignUpDTO.getUsername(),
+                    passwordEncoder.encode(userSignUpDTO.getPassword()),
+                    userSignUpDTO.getEmail(),
+                    userSignUpDTO.getPhone(),
+                    userSignUpDTO.getAddress(),
+                    userSignUpDTO.getRole()
+            );
+            User userResult = userRepository.save(user);
+            return new ResponseObject<>(HttpStatus.OK.value(), "User signed up successfully", userResult);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "User signed up UN-successfully", null);
         }
     }
 
 
-    public ResponseObject login(UserLoginDTO userLoginDTO) {
-        TokenDTO tokenData = new TokenDTO();
+    public ResponseObject<TokenDTO> login(UserLoginDTO userLoginDTO) {
         try {
+            TokenDTO tokenData = new TokenDTO();
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userLoginDTO.getUsername(), userLoginDTO.getPassword()));
             var user = userRepository.findByUsername(userLoginDTO.getUsername()).orElseThrow();
             var jwt = jwtUtils.generateToken(user);
@@ -64,25 +74,29 @@ public class AuthService {
             tokenData.setToken(jwt);
             tokenData.setRefreshToken(refreshToken);
             tokenData.setExpirationTime("24h");
+            return new ResponseObject<>(200, "Login successfully", tokenData);
         } catch (Exception e) {
-            return new ResponseObject("500", "Invalid username or passwords", null);
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Invalid username or password", null);
         }
-        return new ResponseObject("200", "Login successfully", tokenData);
     }
 
-    public ResponseObject refreshToken(String refreshTokenRequest) {
-        TokenDTO tokenResponse = new TokenDTO();
-        String ourUsername = jwtUtils.extractUsername(refreshTokenRequest);
-        User users = userRepository.findByUsername(ourUsername).orElseThrow();
-        if (jwtUtils.isTokenValid(refreshTokenRequest, users)) {
-            var jwt = jwtUtils.generateToken(users);
-            tokenResponse.setToken(jwt);
-            tokenResponse.setRefreshToken(refreshTokenRequest);
-            tokenResponse.setExpirationTime("24h");
-        } else {
-            return new ResponseObject("500", "Invalid token", null);
+    public ResponseObject<Object> refreshToken(String refreshTokenRequest) {
+        try {
+            TokenDTO tokenResponse = new TokenDTO();
+            String ourUsername = jwtUtils.extractUsername(refreshTokenRequest);
+            User users = userRepository.findByUsername(ourUsername).orElseThrow();
+            if (jwtUtils.isTokenValid(refreshTokenRequest, users)) {
+                var jwt = jwtUtils.generateToken(users);
+                tokenResponse.setToken(jwt);
+                tokenResponse.setRefreshToken(refreshTokenRequest);
+                tokenResponse.setExpirationTime("24h");
+            } else {
+                return new ResponseObject<>(400, "Invalid refresh token", null);
+            }
+            return new ResponseObject<>(200, "Successfully refreshed in", null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Invalid refresh token", null);
         }
-        return new ResponseObject("200", "Successfully refreshed in", null);
     }
 
 }

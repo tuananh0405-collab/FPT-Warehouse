@@ -41,4 +41,12 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private Set<OrderDetail> orderDetails;
 
+    public Order(String customerName, String description, int quantity, Status status, Date orderDate, String country) {
+        this.customerName = customerName;
+        this.description = description;
+        this.quantity = quantity;
+        this.status = status;
+        this.orderDate = orderDate;
+        this.country = country;
+    }
 }

@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/category")
 public class CategoryController {
@@ -18,32 +20,32 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseObject> addCategory(@Valid @RequestBody CategoryDTO CategoryDTO) {
+    public ResponseEntity<ResponseObject<CategoryDTO>> addCategory(@Valid @RequestBody CategoryDTO CategoryDTO) {
         return ResponseEntity.ok(categoryService.addCategory(CategoryDTO));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseObject> getAllCategories() {
+    public ResponseEntity<ResponseObject<List<CategoryDTO>>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject> getCategoryById(@PathVariable("id") int id) {
+    public ResponseEntity<ResponseObject<CategoryDTO>> getCategoryById(@PathVariable("id") int id) {
         return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject> updateCategory(@PathVariable("id") int id, @RequestBody CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseObject<CategoryDTO>> updateCategory(@PathVariable("id") int id, @RequestBody CategoryDTO categoryDTO) {
         return ResponseEntity.ok(categoryService.updateCategory(id, categoryDTO));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject> deleteCategory(@PathVariable("id") int id) {
+    public ResponseEntity<ResponseObject<Object>> deleteCategory(@PathVariable("id") int id) {
         return ResponseEntity.ok(categoryService.deleteCategoryById(id));
     }
 
     @DeleteMapping
-    public ResponseEntity<ResponseObject> deleteAllCategories() {
+    public ResponseEntity<ResponseObject<Object>> deleteAllCategories() {
         return ResponseEntity.ok(categoryService.deleteAllCategories());
     }
 
