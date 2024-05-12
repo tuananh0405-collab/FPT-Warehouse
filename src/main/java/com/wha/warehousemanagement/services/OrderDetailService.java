@@ -1,10 +1,13 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.OrderDetailDTO;
+import com.wha.warehousemanagement.exceptions.CustomException;
+import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.OrderDetailRepository;
 import com.wha.warehousemanagement.repositories.OrderRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,81 +26,107 @@ public class OrderDetailService {
         this.orderRepository = orderRepository;
     }
 
-    public ResponseObject addOrderDetail(OrderDetailDTO orderDetailDTO) {
-        if (orderDetailDTO.getOrderId() == null) {
-            return new ResponseObject("400", "Order id is blank", null);
-        } else if (orderDetailDTO.getProductId() == null) {
-            return new ResponseObject("400", "Product id is blank", null);
-        } else if (orderDetailDTO.getQuantity()<0) {
-            return new ResponseObject("400", "Quantity must be greater than 0", null);
-        }
-        Optional<Order> order = orderRepository.getOrderById(orderDetailDTO.getOrderId());
-        if (order.isEmpty()) {
-            return new ResponseObject("400", "Order invalid", null);
-        }
-        Optional<Product> product = productRepository.getProductById(orderDetailDTO.getProductId());
-        if (product.isEmpty()) {
-            return new ResponseObject("400", "Product invalid", null);
-        }
-        OrderDetail orderDetail = new OrderDetail();
-        orderDetail.setOrder(order.get());
-        orderDetail.setProduct(product.get());
-        orderDetail.setQuantity(orderDetailDTO.getQuantity());
-        orderDetailRepository.save(orderDetail);
-        return new ResponseObject("200", "Product added successfully", orderDetail);
-    }
-
-    public ResponseObject getAllOrderDetails() {
-        List<OrderDetail> list = new ArrayList<>(orderDetailRepository.findAll());
-        return new ResponseObject("200", "Get all order details successfully", list);
-    }
-
-    public ResponseObject getOrderDetailById(int id) {
-        Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
-        return orderDetail.map(
-                        value -> new ResponseObject("200", "Get order detail successfully", value))
-                .orElseGet(() -> new ResponseObject("500", "Not found", null));
-    }
-
-    public ResponseObject updateOrderDetail(int id, OrderDetailDTO orderDetailDTO) {
-        Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
-        if (orderDetail.isPresent()) {
+    public ResponseObject<Object> addOrderDetail(OrderDetailDTO orderDetailDTO) {
+        try {
+            if (orderDetailDTO.getOrderId() == null) {
+                throw new CustomException(ErrorCode.ORDER_ID_BLANK);
+            } else if (orderDetailDTO.getProductId() == null) {
+                throw new CustomException(ErrorCode.PRODUCT_ID_BLANK);
+            } else if (orderDetailDTO.getQuantity() < 0) {
+                throw new CustomException(ErrorCode.QUANTITY_INVALID);
+            }
             Optional<Order> order = orderRepository.getOrderById(orderDetailDTO.getOrderId());
             if (order.isEmpty()) {
-                return new ResponseObject("400", "Order invalid", null);
+                throw new CustomException(ErrorCode.ORDER_INVALID);
             }
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setOrder(order.get());
             Optional<Product> product = productRepository.getProductById(orderDetailDTO.getProductId());
             if (product.isEmpty()) {
-                return new ResponseObject("400", "Product invalid", null);
+                throw new CustomException(ErrorCode.PRODUCT_ID_BLANK);
             }
-            OrderDetail orderDetail1 = orderDetail.get();
-            orderDetail1.setOrder(order.get());
-            orderDetail1.setProduct(product.get());
-            orderDetail1.setQuantity(orderDetailDTO.getQuantity());
-            return new ResponseObject("200", "Updated order detail successfully", orderDetailRepository.save(orderDetail1));
-        } else {
-            return new ResponseObject("500", "Not found", null);
+            orderDetail.setProduct(product.get());
+            orderDetail.setQuantity(orderDetailDTO.getQuantity());
+            orderDetailRepository.save(orderDetail);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Order detail added successfully", orderDetail);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Order detail added unsuccessfully", null);
         }
     }
 
-    public ResponseObject deleteOrderDetailById(int id) {
-        Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
-        if (orderDetail.isPresent()) {
-            orderDetailRepository.delete(orderDetail.get());
-            return new ResponseObject("200", "Deleted order detail successfully", orderDetail.get());
-        } else {
-            return new ResponseObject("500", "Not found", null);
+    public ResponseObject<List<OrderDetail>> getAllOrderDetails() {
+        try {
+            List<OrderDetail> list = new ArrayList<>(orderDetailRepository.findAll());
+            if (!list.isEmpty()) {
+                return new ResponseObject<>(HttpStatus.OK.value(), "Get all order details successfully", list);
+            } else {
+                return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No order detail in db", null);
+            }
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch order details", null);
         }
     }
 
-    public ResponseObject deleteAllOrderDetails() {
-        List<OrderDetail> list = new ArrayList<>(orderDetailRepository.findAll());
-        if (!list.isEmpty()) {
-            orderDetailRepository.deleteAll();
-            return new ResponseObject("200", "Deleted order details successfully", null);
-        } else {
-            return new ResponseObject("500", "No product in db", null);
+    public ResponseObject<OrderDetail> getOrderDetailById(int id) {
+        try {
+            Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
+            return orderDetail.map(detail -> new ResponseObject<>(HttpStatus.OK.value(), "Get order detail by id successfully", detail)).orElseGet(() -> new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Order detail not found", null));
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch order detail", null);
         }
+    }
 
+    public ResponseObject<OrderDetail> updateOrderDetail(int id, OrderDetailDTO orderDetailDTO) {
+        try {
+            Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
+            if (orderDetail.isPresent()) {
+                Optional<Order> order = orderRepository.getOrderById(orderDetailDTO.getOrderId());
+                if (order.isEmpty()) {
+                    throw new CustomException(ErrorCode.ORDER_INVALID);
+                }
+                Optional<Product> product = productRepository.getProductById(orderDetailDTO.getProductId());
+                if (product.isEmpty()) {
+                    throw new CustomException(ErrorCode.PRODUCT_ID_BLANK);
+                }
+                OrderDetail orderDetail1 = orderDetail.get();
+                orderDetail1.setOrder(order.get());
+                orderDetail1.setProduct(product.get());
+                orderDetail1.setQuantity(orderDetailDTO.getQuantity());
+                orderDetailRepository.save(orderDetail1);
+                return new ResponseObject<>(HttpStatus.OK.value(), "Updated order detail successfully", orderDetail1);
+            } else {
+                return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Not found", null);
+            }
+        }catch (Exception e){
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update order detail", null);
+        }
+    }
+
+    public ResponseObject<OrderDetail> deleteOrderDetailById(int id) {
+        try {
+            Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
+            if (orderDetail.isPresent()) {
+                orderDetailRepository.delete(orderDetail.get());
+                return new ResponseObject<>(HttpStatus.OK.value(), "Deleted order detail successfully", orderDetail.get());
+            } else {
+                return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Not found", null);
+            }
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete order detail", null);
+        }
+    }
+
+    public ResponseObject<Object> deleteAllOrderDetails() {
+        try {
+            List<OrderDetail> list = new ArrayList<>(orderDetailRepository.findAll());
+            if (!list.isEmpty()) {
+                orderDetailRepository.deleteAll();
+                return new ResponseObject<>(HttpStatus.OK.value(), "Deleted all order details successfully", null);
+            } else {
+                return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No order detail in db", null);
+            }
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete order details", null);
+        }
     }
 }
