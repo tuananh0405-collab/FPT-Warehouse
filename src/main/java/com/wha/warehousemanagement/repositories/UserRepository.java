@@ -15,9 +15,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByUsername(String username);
     Optional<User> getUserById(int id);
 
-    @Query("SELECT new com.wha.warehousemanagement.dtos.UserDTO(c.id, c.fullName, c.username, c.password, c.email, c.phone, c.address, c.role, c.warehouse.id) FROM User c WHERE c.id = :id")
+    boolean existsById(int id);
+
+    @Query("SELECT new com.wha.warehousemanagement.dtos.UserDTO(c.id, c.fullName, c.username, c.password, c.email, c.phone, c.address, c.role) FROM User c WHERE c.id = :id")
     Optional<UserDTO> getUserDTOById(int id);
 
-    @Query("SELECT new com.wha.warehousemanagement.dtos.UserDTO(c.id, c.fullName, c.username, c.password, c.email, c.phone, c.address, c.role, c.warehouse.id) FROM User c")
-    List<UserDTO> getAllUserDTO();
+    @Query("SELECT new com.wha.warehousemanagement.dtos.UserDTO(c.id, c.fullName, c.username, c.password, c.email, c.phone, c.address, c.role) FROM User c")
+    List<UserDTO> getAllUsers();
 }

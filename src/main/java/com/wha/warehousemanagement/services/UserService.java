@@ -30,121 +30,88 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public ResponseObject<Object> addUser(UserDTO userDTO) {
+    public ResponseObject<List<UserDTO>> getAllUsers() {
         try {
-            if (userDTO.getWarehouseId() == null) {
-                throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
+            List<UserDTO> list = new ArrayList<>(userRepository.getAllUsers());
+            if (list.isEmpty()) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
             }
-            User user = new User();
-            Optional<Warehouse> warehouse = warehouseRepository.findById(userDTO.getWarehouseId());
-            Optional<WarehouseDTO> warehouseDTO = warehouseRepository.getWarehouseById(userDTO.getWarehouseId());
+            list.forEach(userDTO -> {
+                Optional<WarehouseDTO> warehouseDTO = warehouseRepository.getWarehouseByUserId(userDTO.getId());
+                warehouseDTO.ifPresent(userDTO::setWarehouse);
+            });
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all users successfully", list);
+        } catch (CustomException e) {
+            return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed get users details", null);
+        }
+    }
+
+    public ResponseObject<UserDTO> getUsersById(int id) {
+        try {
+            Optional<UserDTO> userDTO = userRepository.getUserDTOById(id);
+            if (userDTO.isEmpty()) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            }
+            Optional<WarehouseDTO> warehouseDTO = warehouseRepository.getWarehouseByUserId(userDTO.get().getId());
+            warehouseDTO.ifPresent(userDTO.get()::setWarehouse);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get user by id successfully", userDTO.get());
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed get user by id", null);
+        }
+    }
+
+    public ResponseObject<Object> updateUser(int id, UserDTO userDTO) {
+        try {
+            Optional<User> user = userRepository.findById(id);
+            if (user.isEmpty()) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            }
+            if (userDTO.getUsername() != null &&
+                    !userDTO.getUsername().trim().isEmpty() &&
+                    !userDTO.getUsername().equals(user.get().getUsername()) &&
+                    userRepository.existsByUsername(userDTO.getUsername())) {
+                throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
+            }
+            user.get().setUsername(userDTO.getUsername());
+            user.get().setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            user.get().setFullName(userDTO.getFullName());
+            user.get().setEmail(userDTO.getEmail());
+            user.get().setAddress(userDTO.getAddress());
+            user.get().setRole(userDTO.getRole());
+            UserDTO updatedUserDTO = new UserDTO(user.get().getId(), user.get().getFullName(),
+                    user.get().getUsername(), user.get().getPassword(), user.get().getEmail(), user.get().getPhone(),
+                    user.get().getAddress(), user.get().getRole());
+            userRepository.save(user.get());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", updatedUserDTO);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update user", null);
+        }
+    }
+
+    public ResponseObject<Object> updateWarehouseForUser(int userId, int warehouseId) {
+        try {
+            Optional<User> user = userRepository.findById(userId);
+            if (user.isEmpty()) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            }
+            Optional<Warehouse> warehouse = warehouseRepository.findById(warehouseId);
             if (warehouse.isEmpty()) {
                 throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
             }
-            user.setFullName(userDTO.getFullName());
-            user.setUsername(userDTO.getUsername());
-            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-            user.setEmail(userDTO.getEmail());
-            user.setPhone(userDTO.getPhone());
-            user.setAddress(userDTO.getAddress());
-            user.setRole(userDTO.getRole());
-            user.setWarehouse(warehouse.get());
-            userRepository.save(user);
-            UserDTO ud = new UserDTO();
-            if (warehouseDTO.isPresent()) {
-                ud.setFullName(userDTO.getFullName());
-                ud.setUsername(userDTO.getUsername());
-                ud.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-                ud.setEmail(userDTO.getEmail());
-                ud.setPhone(userDTO.getPhone());
-                ud.setAddress(userDTO.getAddress());
-                ud.setRole(userDTO.getRole());
-                ud.setWarehouse(warehouseDTO.get());
-            }
-            return new ResponseObject<>(HttpStatus.OK.value(), "User added successfully", ud);
+            user.get().setWarehouse(warehouse.get());
+            userRepository.save(user.get());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Update warehouse for user successfully", null);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Order detail added unsuccessfully", null);
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update warehouse for user", null);
         }
     }
 
-    public ResponseObject<List<UserDTO>> getAllUsers() {
-        try {
-            List<UserDTO> list = new ArrayList<>();
-            userRepository.findAll().forEach(x -> {
-                UserDTO userDTO = new UserDTO();
-                Optional<WarehouseDTO> warehouseDTO = warehouseRepository.getWarehouseById(x.getWarehouse().getId());
-                if (warehouseDTO.isEmpty()) {
-                    throw new RuntimeException("Failed to fetch warehouses because of empty");
-                }
-                userDTO.setWarehouse(warehouseDTO.get());
-                list.add(userDTO);
-            });
-            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouses fetched successfully", list);
-        } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch warehouses", null);
-        }
-    }
-
-//    public ResponseObject<OrderDetail> getOrderDetailById(int id) {
-//        try {
-//            Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
-//            return orderDetail.map(detail -> new ResponseObject<>(HttpStatus.OK.value(), "Get order detail by id successfully", detail)).orElseGet(() -> new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Order detail not found", null));
-//        } catch (Exception e) {
-//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch order detail", null);
-//        }
-//    }
-//
-//    public ResponseObject<OrderDetail> updateOrderDetail(int id, OrderDetailDTO orderDetailDTO) {
-//        try {
-//            Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
-//            if (orderDetail.isPresent()) {
-//                Optional<Order> order = orderRepository.getOrderById(orderDetailDTO.getOrderId());
-//                if (order.isEmpty()) {
-//                    throw new CustomException(ErrorCode.ORDER_INVALID);
-//                }
-//                Optional<Product> product = productRepository.getProductById(orderDetailDTO.getProductId());
-//                if (product.isEmpty()) {
-//                    throw new CustomException(ErrorCode.PRODUCT_ID_BLANK);
-//                }
-//                OrderDetail orderDetail1 = orderDetail.get();
-//                orderDetail1.setOrder(order.get());
-//                orderDetail1.setProduct(product.get());
-//                orderDetail1.setQuantity(orderDetailDTO.getQuantity());
-//                orderDetailRepository.save(orderDetail1);
-//                return new ResponseObject<>(HttpStatus.OK.value(), "Updated order detail successfully", orderDetail1);
-//            } else {
-//                return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Not found", null);
-//            }
-//        } catch (Exception e) {
-//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update order detail", null);
-//        }
-//    }
-//
-//    public ResponseObject<OrderDetail> deleteOrderDetailById(int id) {
-//        try {
-//            Optional<OrderDetail> orderDetail = orderDetailRepository.getOrderDetailById(id);
-//            if (orderDetail.isPresent()) {
-//                orderDetailRepository.delete(orderDetail.get());
-//                return new ResponseObject<>(HttpStatus.OK.value(), "Deleted order detail successfully", orderDetail.get());
-//            } else {
-//                return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Not found", null);
-//            }
-//        } catch (Exception e) {
-//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete order detail", null);
-//        }
-//    }
-//
-//    public ResponseObject<Object> deleteAllOrderDetails() {
-//        try {
-//            List<OrderDetail> list = new ArrayList<>(orderDetailRepository.findAll());
-//            if (!list.isEmpty()) {
-//                orderDetailRepository.deleteAll();
-//                return new ResponseObject<>(HttpStatus.OK.value(), "Deleted all order details successfully", null);
-//            } else {
-//                return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No order detail in db", null);
-//            }
-//        } catch (Exception e) {
-//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete order details", null);
-//        }
-//    }
 }
