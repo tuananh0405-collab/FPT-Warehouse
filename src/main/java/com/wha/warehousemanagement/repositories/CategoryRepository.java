@@ -12,6 +12,12 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     Optional<Category> getCategoryById(int id);
 
+    boolean existsByName(String name);
+
     @Query("SELECT new com.wha.warehousemanagement.dtos.CategoryDTO(c.id, c.name, c.description) FROM Category c WHERE c.id = :id")
     Optional<CategoryDTO> getCategoryDTOById(int id);
+
+
+    @Query("SELECT new com.wha.warehousemanagement.dtos.CategoryDTO(c.id, c.name, c.description) FROM Category c")
+    Optional<CategoryDTO> getAllCategoryDTO();
 }

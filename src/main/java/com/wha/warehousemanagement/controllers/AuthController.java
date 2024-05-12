@@ -1,10 +1,11 @@
 package com.wha.warehousemanagement.controllers;
 
+import com.wha.warehousemanagement.dtos.TokenDTO;
 import com.wha.warehousemanagement.dtos.UserLoginDTO;
 import com.wha.warehousemanagement.dtos.UserSignUpDTO;
 import com.wha.warehousemanagement.models.ResponseObject;
+import com.wha.warehousemanagement.models.User;
 import com.wha.warehousemanagement.services.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,25 +13,24 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private AuthService authService;
+    private final AuthService authService;
 
-    @Autowired
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<ResponseObject> signUp(@RequestBody UserSignUpDTO userSignUpDTO) {
+    public ResponseEntity<ResponseObject<Object>> signUp(@RequestBody UserSignUpDTO userSignUpDTO) {
         return ResponseEntity.ok(authService.signUp(userSignUpDTO));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseObject> login(@RequestBody UserLoginDTO userLoginDTO) {
+    public ResponseEntity<ResponseObject<TokenDTO>> login(@RequestBody UserLoginDTO userLoginDTO) {
         return ResponseEntity.ok(authService.login(userLoginDTO));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ResponseObject> refreshToken(@RequestBody String refreshTokenRequest) {
+    public ResponseEntity<ResponseObject<Object>> refreshToken(@RequestBody String refreshTokenRequest) {
         return ResponseEntity.ok(authService.refreshToken(refreshTokenRequest));
     }
 }

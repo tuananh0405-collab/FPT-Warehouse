@@ -2,17 +2,19 @@ package com.wha.warehousemanagement.exceptions;
 
 import com.wha.warehousemanagement.models.ResponseObject;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus
 @Getter
+@Setter
 public class CustomException extends RuntimeException {
-    private final HttpStatus status;
+    private ErrorCode errorCode;
 
-    public CustomException(String message, HttpStatus status) {
-        super(message);
-        this.status = status;
+    public CustomException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
     }
 
 }
