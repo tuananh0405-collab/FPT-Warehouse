@@ -22,6 +22,8 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Integer> {
 
     Optional<WarehouseDTO> findByAddress(String address);
 
+    Optional<Warehouse> findById(int id);
+
     boolean existsByName(String name);
 
     boolean existsByAddress(String address);
