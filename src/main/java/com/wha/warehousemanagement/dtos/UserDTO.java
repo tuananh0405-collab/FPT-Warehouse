@@ -1,6 +1,7 @@
 package com.wha.warehousemanagement.dtos;
 
 
+import com.wha.warehousemanagement.models.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,5 +18,5 @@ public class UserDTO {
     private String phone;
     private String address;
     private String role;
-    private int warehouseId;
+    WarehouseDTO warehouse;
 }

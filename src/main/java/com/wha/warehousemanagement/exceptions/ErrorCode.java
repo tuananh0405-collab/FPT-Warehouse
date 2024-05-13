@@ -44,6 +44,12 @@ public enum ErrorCode {
     SHIPMENT_PRODUCT_DELETE_NOT_FOUND(1037, "Shipment product to delete not found"),
     WAREHOUSE_ADDRESS_ALREADY_EXISTS(1039, "Warehouse address already exists"),
     PRODUCT_NOT_FOUND(1040, "Product not found"),
+    PROVIDER_NAME_BLANK(1041, "Provider not found"),
+    PROVIDER_ALREADY_EXISTS(1042, "Provider already exists"),
+    PROVIDER_ADD_FAILED(1043, "Failed to add provider"),
+    PROVIDER_NOT_FOUND(1044, "Provider not found"),
+    EMAIL_ALREADY_EXISTS(1045, "Email already exists"),
+    PHONE_ALREADY_EXISTS(1046, "Phone already exists"),
     ;
 
     private final int code;
