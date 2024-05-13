@@ -6,31 +6,21 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class WarehouseDTO {
+public class ProviderDTO {
 
-    private Integer id;
+    private int id;
 
     private String name;
 
-    private String description;
+    private String email;
+
+    private String phone;
 
     private String address;
 
-    private Date createdAt;
-
-    private Date updatedAt;
-
-    public WarehouseDTO(Integer id, String name, String description, String address) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.address = address;
-    }
 }
