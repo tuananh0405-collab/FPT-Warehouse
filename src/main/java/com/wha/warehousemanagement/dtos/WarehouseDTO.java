@@ -26,4 +26,11 @@ public class WarehouseDTO {
     private Date createdAt;
 
     private Date updatedAt;
+
+    public WarehouseDTO(Integer id, String name, String description, String address) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.address = address;
+    }
 }

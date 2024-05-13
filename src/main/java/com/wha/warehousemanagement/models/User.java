@@ -1,5 +1,6 @@
 package com.wha.warehousemanagement.models;
 
+import com.wha.warehousemanagement.dtos.WarehouseDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

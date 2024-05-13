@@ -3,7 +3,6 @@ package com.wha.warehousemanagement.controllers;
 import com.wha.warehousemanagement.dtos.CategoryDTO;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.CategoryService;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +19,7 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseObject<CategoryDTO>> addCategory(@Valid @RequestBody CategoryDTO CategoryDTO) {
+    public ResponseEntity<ResponseObject<CategoryDTO>> addCategory(@RequestBody CategoryDTO CategoryDTO) {
         return ResponseEntity.ok(categoryService.addCategory(CategoryDTO));
     }
 

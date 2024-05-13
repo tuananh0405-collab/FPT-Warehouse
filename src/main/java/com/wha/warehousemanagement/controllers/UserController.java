@@ -1,5 +1,12 @@
 package com.wha.warehousemanagement.controllers;
 
+import com.wha.warehousemanagement.dtos.UserDTO;
+import com.wha.warehousemanagement.dtos.WarehouseDTO;
+import com.wha.warehousemanagement.models.ResponseObject;
+import com.wha.warehousemanagement.models.User;
+import com.wha.warehousemanagement.services.UserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import com.wha.warehousemanagement.dtos.UserDTO;
 import com.wha.warehousemanagement.models.ResponseObject;
@@ -10,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("user")
+@RequestMapping("/user")
 public class UserController {
     private final UserService userService;
 
