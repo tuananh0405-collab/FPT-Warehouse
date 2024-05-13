@@ -13,13 +13,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByUsername(String username);
     boolean existsByUsername(String username);
-    Optional<User> getUserById(int id);
-
     boolean existsById(int id);
-
-    @Query("SELECT new com.wha.warehousemanagement.dtos.UserDTO(c.id, c.fullName, c.username, c.password, c.email, c.phone, c.address, c.role) FROM User c WHERE c.id = :id")
-    Optional<UserDTO> getUserDTOById(int id);
-
-    @Query("SELECT new com.wha.warehousemanagement.dtos.UserDTO(c.id, c.fullName, c.username, c.password, c.email, c.phone, c.address, c.role) FROM User c")
-    List<UserDTO> getAllUsers();
+    boolean existsByEmail(String email);
+    boolean existsByPhone(String phone);
 }

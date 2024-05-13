@@ -3,6 +3,7 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.CategoryDTO;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.CategoryMapper;
 import com.wha.warehousemanagement.models.Category;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.CategoryRepository;
@@ -43,7 +44,7 @@ public class CategoryService {
     public ResponseObject<List<CategoryDTO>> getAllCategories() {
         List<CategoryDTO> list = new ArrayList<>();
         categoryRepository.findAll().forEach(category -> {
-            CategoryDTO categoryDTO = new CategoryDTO(category.getId(), category.getName(), category.getDescription());
+            CategoryDTO categoryDTO = CategoryMapper.INSTANCE.categoryToCategoryDTO(category);
             list.add(categoryDTO);
         });
         return new ResponseObject<>(HttpStatus.OK.value(), "Get all categories successfully", list);
@@ -52,7 +53,7 @@ public class CategoryService {
     public ResponseObject<CategoryDTO> getCategoryById(int id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-        CategoryDTO categoryDTO = new CategoryDTO(category.getId(), category.getName(), category.getDescription());
+        CategoryDTO categoryDTO = CategoryMapper.INSTANCE.categoryToCategoryDTO(category);
         return new ResponseObject<>(HttpStatus.OK.value(), "Get category by id successfully", categoryDTO);
     }
 
@@ -66,12 +67,8 @@ public class CategoryService {
                     categoryRepository.existsByName(categoryDTO.getName())) {
                 throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
             }
-            if (categoryDTO.getName() != null && !categoryDTO.getName().trim().isEmpty()) {
-                category.setName(categoryDTO.getName());
-            }
-            if (categoryDTO.getDescription() != null) {
-                category.setDescription(categoryDTO.getDescription());
-            }
+            category.setName(categoryDTO.getName());
+            category.setDescription(categoryDTO.getDescription());
             categoryRepository.save(category);
             return new ResponseObject<>(HttpStatus.OK.value(), "Updated category successfully", categoryDTO);
         } catch (CustomException e) {
