@@ -8,6 +8,7 @@ import com.wha.warehousemanagement.models.Order;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.OrderRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -16,16 +17,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
 
     private final ProductRepository productRepository;
-
-    public OrderService(OrderRepository orderRepository, ProductRepository productRepository) {
-        this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
-    }
 
     public ResponseObject<Order> addOrder(OrderDTO orderDTO) {
         try {

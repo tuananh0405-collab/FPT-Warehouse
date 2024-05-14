@@ -7,6 +7,7 @@ import com.wha.warehousemanagement.mappers.CategoryMapper;
 import com.wha.warehousemanagement.models.Category;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.CategoryRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,14 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-
-    @Autowired
-    public CategoryService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
 
     public ResponseObject<CategoryDTO> addCategory(CategoryDTO categoryDTO) {
         if (categoryDTO.getName() == null || categoryDTO.getName().trim().isEmpty()) {

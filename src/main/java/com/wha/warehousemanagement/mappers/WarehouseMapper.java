@@ -6,7 +6,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
-public interface WarehouseMapper {
+public interface WarehouseMapper extends EntityMapper<WarehouseDTO, Warehouse>{
     WarehouseMapper INSTANCE = Mappers.getMapper(WarehouseMapper.class);
-    WarehouseDTO warehouseToWarehouseDTO(Warehouse warehouse);
 }

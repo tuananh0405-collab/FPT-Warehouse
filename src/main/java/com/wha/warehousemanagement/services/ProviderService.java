@@ -6,6 +6,7 @@ import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.models.Provider;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.ProviderRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProviderService {
 
     private final ProviderRepository providerRepository;
-
-    public ProviderService(ProviderRepository providerRepository) {
-        this.providerRepository = providerRepository;
-    }
 
     public ResponseObject<ProviderDTO> addProvider(ProviderDTO providerDTO) {
         if (providerDTO.getName() == null || providerDTO.getName().trim().isEmpty()) {

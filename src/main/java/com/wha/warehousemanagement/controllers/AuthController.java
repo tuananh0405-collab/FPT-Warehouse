@@ -6,18 +6,16 @@ import com.wha.warehousemanagement.dtos.UserSignUpDTO;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.User;
 import com.wha.warehousemanagement.services.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
-
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
 
     @PostMapping("/signup")
     public ResponseEntity<ResponseObject<Object>> signUp(@RequestBody UserSignUpDTO userSignUpDTO) {

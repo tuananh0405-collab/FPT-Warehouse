@@ -4,6 +4,7 @@ import com.wha.warehousemanagement.dtos.WarehouseDTO;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.Warehouse;
 import com.wha.warehousemanagement.services.WarehouseService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,13 +12,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/warehouse")
+@RequiredArgsConstructor
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
-
-    public WarehouseController(WarehouseService warehouseService) {
-        this.warehouseService = warehouseService;
-    }
 
     @GetMapping("/all")
     public ResponseEntity<ResponseObject<List<WarehouseDTO>>> getAllWarehouses() {

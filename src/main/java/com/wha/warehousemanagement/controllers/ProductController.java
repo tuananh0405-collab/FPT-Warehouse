@@ -5,6 +5,7 @@ import com.wha.warehousemanagement.models.Product;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ProductService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,13 +13,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("product")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
-
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
 
     @PostMapping
     public ResponseEntity<ResponseObject<ProductDTO>> addProduct(@Valid @RequestBody ProductDTO productDTO) {

@@ -4,6 +4,7 @@ import com.wha.warehousemanagement.dtos.OrderDTO;
 import com.wha.warehousemanagement.models.Order;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.OrderService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,12 +12,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("order")
+@RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
-
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
 
     @PostMapping
     public ResponseEntity<ResponseObject<Order>> addOrder(@RequestBody OrderDTO orderDTO) {
