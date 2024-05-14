@@ -57,14 +57,13 @@ public class AuthService {
 
     public ResponseObject<TokenDTO> login(UserLoginDTO userLoginDTO) {
         try {
-            TokenDTO tokenData = new TokenDTO();
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userLoginDTO.getUsername(), userLoginDTO.getPassword()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    userLoginDTO.getUsername(), userLoginDTO.getPassword()
+            ));
             User user = userRepository.findByUsername(userLoginDTO.getUsername()).orElseThrow();
-
-            System.out.println(user.getUsername() + " " + user.getPassword());
-
             String  jwt = jwtUtils.generateToken(user);
             String  refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
+            TokenDTO tokenData = new TokenDTO();
             tokenData.setUsername(userLoginDTO.getUsername());
             tokenData.setToken(jwt);
             tokenData.setRefreshToken(refreshToken);
