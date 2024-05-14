@@ -4,6 +4,8 @@ import com.wha.warehousemanagement.dtos.UserDTO;
 import com.wha.warehousemanagement.dtos.WarehouseDTO;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.UserMapper;
+import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.UserRepository;
 import com.wha.warehousemanagement.repositories.WarehouseRepository;
@@ -11,9 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -32,15 +34,21 @@ public class UserService {
 
     public ResponseObject<List<UserDTO>> getAllUsers() {
         try {
-            List<UserDTO> list = new ArrayList<>(userRepository.getAllUsers());
-            if (list.isEmpty()) {
+            List<User> users = userRepository.findAll();
+            if (users.isEmpty()) {
                 throw new CustomException(ErrorCode.USER_NOT_FOUND);
             }
-            list.forEach(userDTO -> {
-                Optional<WarehouseDTO> warehouseDTO = warehouseRepository.getWarehouseByUserId(userDTO.getId());
-                warehouseDTO.ifPresent(userDTO::setWarehouse);
-            });
-            return new ResponseObject<>(HttpStatus.OK.value(), "Get all users successfully", list);
+
+            List<UserDTO> userDTOs = users.stream()
+                    .map(user -> {
+                        UserDTO userDTO = UserMapper.INSTANCE.userToUserDTO(user);
+                        WarehouseDTO warehouseDTO = WarehouseMapper.INSTANCE.warehouseToWarehouseDTO(user.getWarehouse());
+                        userDTO.setWarehouse(warehouseDTO);
+                        return userDTO;
+                    })
+                    .collect(Collectors.toList());
+
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all users successfully", userDTOs);
         } catch (CustomException e) {
             return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
@@ -48,21 +56,24 @@ public class UserService {
         }
     }
 
-    public ResponseObject<UserDTO> getUsersById(int id) {
+
+    public ResponseObject<UserDTO> getUserById(int id) {
         try {
-            Optional<UserDTO> userDTO = userRepository.getUserDTOById(id);
-            if (userDTO.isEmpty()) {
+            Optional<User> user = userRepository.findById(id);
+            if (user.isEmpty()) {
                 throw new CustomException(ErrorCode.USER_NOT_FOUND);
             }
-            Optional<WarehouseDTO> warehouseDTO = warehouseRepository.getWarehouseByUserId(userDTO.get().getId());
-            warehouseDTO.ifPresent(userDTO.get()::setWarehouse);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Get user by id successfully", userDTO.get());
+            UserDTO userDTO = UserMapper.INSTANCE.userToUserDTO(user.get());
+            WarehouseDTO warehouseDTO = WarehouseMapper.INSTANCE.warehouseToWarehouseDTO(user.get().getWarehouse());
+            userDTO.setWarehouse(warehouseDTO);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get user by id successfully", userDTO);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed get user by id", null);
         }
     }
+
 
     public ResponseObject<Object> updateUser(int id, UserDTO userDTO) {
         try {
@@ -76,42 +87,31 @@ public class UserService {
                     userRepository.existsByUsername(userDTO.getUsername())) {
                 throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
             }
-            user.get().setUsername(userDTO.getUsername());
-            user.get().setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            if (userDTO.getEmail() != null &&
+                    !userDTO.getEmail().trim().isEmpty() &&
+                    !userDTO.getEmail().equals(user.get().getEmail()) &&
+                    userRepository.existsByEmail(userDTO.getEmail())) {
+                throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            }
+            if (userDTO.getPhone() != null &&
+                    !userDTO.getPhone().trim().isEmpty() &&
+                    !userDTO.getPhone().equals(user.get().getPhone()) &&
+                    userRepository.existsByPhone(userDTO.getPhone())) {
+                throw new CustomException(ErrorCode.PHONE_ALREADY_EXISTS);
+            }
             user.get().setFullName(userDTO.getFullName());
+            user.get().setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            user.get().setRole(Role.valueOf(userDTO.getRole()));
             user.get().setEmail(userDTO.getEmail());
+            user.get().setPhone(userDTO.getPhone());
             user.get().setAddress(userDTO.getAddress());
-            user.get().setRole(userDTO.getRole());
-            UserDTO updatedUserDTO = new UserDTO(user.get().getId(), user.get().getFullName(),
-                    user.get().getUsername(), user.get().getPassword(), user.get().getEmail(), user.get().getPhone(),
-                    user.get().getAddress(), user.get().getRole());
             userRepository.save(user.get());
-            return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", updatedUserDTO);
+            UserDTO userDTO1 = UserMapper.INSTANCE.userToUserDTO(user.get());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", userDTO1);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update user", null);
         }
     }
-
-    public ResponseObject<Object> updateWarehouseForUser(int userId, int warehouseId) {
-        try {
-            Optional<User> user = userRepository.findById(userId);
-            if (user.isEmpty()) {
-                throw new CustomException(ErrorCode.USER_NOT_FOUND);
-            }
-            Optional<Warehouse> warehouse = warehouseRepository.findById(warehouseId);
-            if (warehouse.isEmpty()) {
-                throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
-            }
-            user.get().setWarehouse(warehouse.get());
-            userRepository.save(user.get());
-            return new ResponseObject<>(HttpStatus.OK.value(), "Update warehouse for user successfully", null);
-        } catch (CustomException e) {
-            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
-        } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update warehouse for user", null);
-        }
-    }
-
 }

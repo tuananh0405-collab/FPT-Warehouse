@@ -48,6 +48,8 @@ public enum ErrorCode {
     PROVIDER_ALREADY_EXISTS(1042, "Provider already exists"),
     PROVIDER_ADD_FAILED(1043, "Failed to add provider"),
     PROVIDER_NOT_FOUND(1044, "Provider not found"),
+    EMAIL_ALREADY_EXISTS(1045, "Email already exists"),
+    PHONE_ALREADY_EXISTS(1046, "Phone already exists"),
     ;
 
     private final int code;

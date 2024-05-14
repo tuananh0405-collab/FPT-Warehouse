@@ -3,15 +3,18 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.WarehouseDTO;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.Warehouse;
 import com.wha.warehousemanagement.repositories.WarehouseRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class WarehouseService {
@@ -23,12 +26,10 @@ public class WarehouseService {
 
     public ResponseObject<List<WarehouseDTO>> getAllWarehouses() {
         try {
-            List<WarehouseDTO> warehouse = warehouseRepository.getWarehouses();
-            if (!warehouse.isEmpty()) {
-                return new ResponseObject<>(HttpStatus.OK.value(), "Warehouses fetched successfully", warehouse);
-            } else {
-                return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No warehouse in db", null);
-            }
+            List<WarehouseDTO> list = warehouseRepository.findAll().stream()
+                    .map(WarehouseMapper.INSTANCE::warehouseToWarehouseDTO)
+                    .collect(Collectors.toList());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouses fetched successfully", list);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch warehouses", null);
         }
@@ -36,9 +37,12 @@ public class WarehouseService {
 
     public ResponseObject<WarehouseDTO> getWarehouseById(int id) {
         try {
-            Optional<WarehouseDTO> warehouse = warehouseRepository.getWarehouseById(id);
-            return warehouse.map(warehouseDTO -> new ResponseObject<>(HttpStatus.OK.value(), "Warehouse fetched successfully", warehouseDTO))
-                    .orElseGet(() -> new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "Warehouse not found", null));
+            Optional<Warehouse> warehouse = warehouseRepository.findById(id);
+            WarehouseDTO warehouseDTO = warehouse.map(WarehouseMapper.INSTANCE::warehouseToWarehouseDTO).orElse(null);
+            if (warehouseDTO == null) {
+                throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse fetched successfully", warehouseDTO);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch warehouse", null);
         }
