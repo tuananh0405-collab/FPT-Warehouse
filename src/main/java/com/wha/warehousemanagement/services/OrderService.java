@@ -1,24 +1,17 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.OrderDTO;
-import com.wha.warehousemanagement.dtos.ProductOrderDTO;
 import com.wha.warehousemanagement.dtos.requests.OrderRequest;
-import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
 import com.wha.warehousemanagement.dtos.responses.OrderResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
-import com.wha.warehousemanagement.mappers.CategoryMapper;
 import com.wha.warehousemanagement.mappers.OrderMapper;
-import com.wha.warehousemanagement.models.Category;
 import com.wha.warehousemanagement.models.Order;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.OrderRepository;
-import com.wha.warehousemanagement.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,10 +20,10 @@ import java.util.Optional;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderMapper orderMapper;
 
-    private final ProductRepository productRepository;
 
-    public ResponseObject<OrderResponse> addOrder(OrderRequest request) {
+    public ResponseObject<?> addOrder(OrderRequest request) {
         try {
             if (request.getCustomerName() == null) {
                 throw new CustomException(ErrorCode.CUSTOMER_NAME_BLANK);
@@ -66,64 +59,28 @@ public class OrderService {
         }
     }
 
-    public ResponseObject<List<OrderResponse>> getAllOrders() {
+    public ResponseObject<?> getAllOrders() {
         try {
-            List<OrderResponse> list = new ArrayList<>();
-            orderRepository.findAll().forEach(order -> {
-//                OrderResponse response = new OrderResponse();
-//                response.setId(order.getId());
-//                response.setCustomerName(order.getCustomerName());
-//                response.setDescription(response.getDescription());
-//                response.setQuantity(response.getQuantity());
-//                response.setStatus(response.getStatus());
-//                response.setOrderDate(response.getOrderDate());
-//                response.setCountry(response.getCountry());
-                OrderResponse response = OrderMapper.INSTANCE.orderToOrderResponse(order);
-                list.add(response);
-            });
+            List<OrderResponse> list = orderRepository.findAll()
+                    .stream()
+                    .map(orderMapper::toDto)
+                    .toList();
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all orders successfully", list);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No order in db", null);
         }
     }
 
-    public ResponseObject<OrderResponse> getOrderById(int id) {
-//        try {
-//            Optional<OrderDTO> orderDTO = orderRepository.getOrderDTOById(id);
-//            if (orderDTO.isEmpty()) {
-//                throw new CustomException(ErrorCode.ORDER_INVALID);
-//            }
-//            List<ProductOrderDTO> productDetails = productRepository.findProductOrderByOrderId(id);
-//            orderDTO.get().setProducts(productDetails);
-//            return new ResponseObject<>(HttpStatus.OK.value(), "Get order by id successfully", orderDTO.get());
-//        } catch (Exception e) {
-//            return new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error", null);
-//        }
+    public ResponseObject<?> getOrderById(int id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-        OrderResponse response = OrderMapper.INSTANCE.orderToOrderResponse(order);
+        OrderResponse response = orderMapper.toDto(order);
         return new ResponseObject<>(HttpStatus.OK.value(), "Get category by id successfully", response);
     }
 
-    public ResponseObject<OrderResponse> updateOrder(int id, OrderRequest request) {
-//        try {
-//            Optional<Order> order = orderRepository.getOrderById(id);
-//            if (order.isPresent()) {
-//                order.get().setCustomerName(orderDTO.getCustomerName());
-//                order.get().setDescription(orderDTO.getDescription());
-//                order.get().setQuantity(orderDTO.getQuantity());
-//                order.get().setStatus(orderDTO.getStatus());
-//                order.get().setOrderDate(orderDTO.getOrderDate());
-//                order.get().setCountry(orderDTO.getCountry());
-//                orderRepository.save(order.get());
-//                return new ResponseObject<>(HttpStatus.OK.value(), "Updated order successfully", order.get());
-//            } else {
-//                throw new CustomException(ErrorCode.ORDER_INVALID);
-//            }
-//        } catch (Exception e) {
-//            return new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error", null);
-//        }
-
+    public ResponseObject<?> updateOrder(int id, OrderRequest request) {
         try {
             Order order = orderRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
@@ -154,7 +111,7 @@ public class OrderService {
             orderRepository.save(order);
             return new ResponseObject<>(HttpStatus.OK.value(),
                     "Updated category successfully",
-                    OrderMapper.INSTANCE.orderToOrderResponse(order));
+                    orderMapper.toDto(order));
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -162,7 +119,7 @@ public class OrderService {
         }
     }
 
-    public ResponseObject<Object> deleteOrderById(int id) {
+    public ResponseObject<?> deleteOrderById(int id) {
         try {
             Order order = orderRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
@@ -175,7 +132,7 @@ public class OrderService {
         }
     }
 
-    public ResponseObject<Object> deleteAllOrders() {
+    public ResponseObject<?> deleteAllOrders() {
         try {
             List<Order> list = orderRepository.findAll();
             if (!list.isEmpty()) {

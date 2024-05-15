@@ -1,6 +1,5 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.CategoryDTO;
 import com.wha.warehousemanagement.dtos.requests.CategoryRequest;
 import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
@@ -10,27 +9,27 @@ import com.wha.warehousemanagement.models.Category;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.CategoryRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
-    public ResponseObject<CategoryResponse> addCategory(CategoryRequest request) {
-        if (request.getName() == null || request.getName().trim().isEmpty()) {
-            throw new CustomException(ErrorCode.CATEGORY_NAME_BLANK);
-        } else if (categoryRepository.findByName(request.getName()).isPresent()) {
-            throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
-        }
+    public ResponseObject<?> addCategory(CategoryRequest request) {
         try {
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new CustomException(ErrorCode.CATEGORY_NAME_BLANK);
+            } else if (categoryRepository.findByName(request.getName()).isPresent()) {
+                throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
+            }
             Category category = new Category();
             category.setName(request.getName());
             category.setDescription(request.getDescription());
@@ -42,8 +41,10 @@ public class CategoryService {
             return new ResponseObject<>(HttpStatus.OK.value(),
                     "Category added successfully",
                     response.get());
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.CATEGORY_ADD_FAILED);
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to add category", null);
         }
     }
 
@@ -56,38 +57,42 @@ public class CategoryService {
         }
     }
 
-    public ResponseObject<List<CategoryResponse>> getAllCategories() {
-        List<CategoryResponse> list = new ArrayList<>();
-        categoryRepository.findAll().forEach(category -> {
-            CategoryResponse response = CategoryMapper.INSTANCE.categoryToCategoryResponse(category);
-            list.add(response);
-        });
-        return new ResponseObject<>(HttpStatus.OK.value(), "Get all categories successfully", list);
+    public ResponseObject<?> getAllCategories() {
+        try {
+            List<CategoryResponse> list = categoryRepository.findAll()
+                    .stream()
+                    .map(categoryMapper::toDto)
+                    .collect(Collectors.toList());
+            if (list.isEmpty()) {
+                throw new CustomException(ErrorCode.CATEGORY_NOT_FOUND);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all categories successfully", list);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all categories", null);
+        }
     }
 
-    public ResponseObject<CategoryResponse> getCategoryById(int id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-        CategoryResponse response = CategoryMapper.INSTANCE.categoryToCategoryResponse(category);
-        return new ResponseObject<>(HttpStatus.OK.value(), "Get category by id successfully", response);
-    }
-
-    public ResponseObject<CategoryResponse> updateCategory(int id, CategoryRequest request) {
+    public ResponseObject<?> getCategoryById(int id) {
         try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-            if (request.getName() != null &&
-                    !request.getName().trim().isEmpty() &&
-                    !request.getName().equals(category.getName()) &&
-                    categoryRepository.existsByName(request.getName())) {
-                throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
-            }
-            if (request.getName() != null) {
-                category.setName(request.getName());
-            }
-            if (request.getDescription() != null) {
-                category.setDescription(request.getDescription());
-            }
+            CategoryResponse response = categoryMapper.toDto(category);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get category by id successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get category by id", null);
+        }
+    }
+
+    public ResponseObject<?> updateCategory(int id, CategoryRequest request) {
+        try {
+            Category category = categoryRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+
+
             categoryRepository.save(category);
             return new ResponseObject<>(HttpStatus.OK.value(),
                     "Updated category successfully",
@@ -99,7 +104,7 @@ public class CategoryService {
         }
     }
 
-    public ResponseObject<Object> deleteCategoryById(int id) {
+    public ResponseObject<?> deleteCategoryById(int id) {
         try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -112,7 +117,7 @@ public class CategoryService {
         }
     }
 
-    public ResponseObject<Object> deleteAllCategories() {
+    public ResponseObject<?> deleteAllCategories() {
         try {
             List<Category> list = categoryRepository.findAll();
             if (!list.isEmpty()) {

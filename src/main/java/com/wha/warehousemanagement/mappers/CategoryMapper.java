@@ -4,11 +4,8 @@ import com.wha.warehousemanagement.dtos.CategoryDTO;
 import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
 import com.wha.warehousemanagement.models.Category;
 import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
+import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = "spring")
-public interface CategoryMapper {
-    CategoryMapper INSTANCE = Mappers.getMapper(CategoryMapper.class);
-    CategoryResponse categoryToCategoryResponse(Category category);
-    Category categoryDTOToCategory(CategoryDTO categoryDTO);
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface CategoryMapper extends EntityMapper<CategoryResponse, Category>{
 }

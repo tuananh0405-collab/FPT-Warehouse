@@ -7,6 +7,7 @@ import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.Warehouse;
 import com.wha.warehousemanagement.repositories.WarehouseRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -15,25 +16,27 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class WarehouseService {
+
     private final WarehouseRepository warehouseRepository;
+    private final WarehouseMapper warehouseMapper;
 
-    public WarehouseService(WarehouseRepository warehouseRepository) {
-        this.warehouseRepository = warehouseRepository;
-    }
-
-    public ResponseObject<List<WarehouseDTO>> getAllWarehouses() {
+    public ResponseObject<?> getAllWarehouses() {
         try {
-            List<WarehouseDTO> warehouses = warehouseRepository.findAll().stream().map(WarehouseMapper.INSTANCE::toDto).collect(Collectors.toList());
+            List<WarehouseDTO> warehouses = warehouseRepository.findAll()
+                    .stream()
+                    .map(warehouseMapper::toDto)
+                    .collect(Collectors.toList());
             return new ResponseObject<>(HttpStatus.OK.value(), "Warehouses fetched successfully", warehouses);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch warehouses", null);
         }
     }
 
-    public ResponseObject<WarehouseDTO> getWarehouseById(int id) {
+    public ResponseObject<?> getWarehouseById(int id) {
         try {
-            WarehouseDTO warehouseDTO = warehouseRepository.findById(id).map(WarehouseMapper.INSTANCE::toDto)
+            WarehouseDTO warehouseDTO = warehouseRepository.findById(id).map(warehouseMapper::toDto)
                     .orElseThrow(
                             () -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)
                     );
@@ -43,7 +46,7 @@ public class WarehouseService {
         }
     }
 
-    public ResponseObject<Warehouse> addWarehouse(WarehouseDTO warehouseDTO) {
+    public ResponseObject<?> addWarehouse(WarehouseDTO warehouseDTO) {
         try {
             if (warehouseRepository.existsByName(warehouseDTO.getName())) {
                 throw new CustomException(ErrorCode.WAREHOUSE_ALREADY_EXISTS);
@@ -57,7 +60,7 @@ public class WarehouseService {
             warehouse.setAddress(warehouseDTO.getAddress());
             System.out.println(warehouse);
             warehouseRepository.save(warehouse);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse added successfully", warehouse);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse added successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -65,7 +68,7 @@ public class WarehouseService {
         }
     }
 
-    public ResponseObject<Warehouse> updateWarehouseById(int id, WarehouseDTO warehouseDTO) {
+    public ResponseObject<?> updateWarehouseById(int id, WarehouseDTO warehouseDTO) {
         try {
             Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
             boolean isUpdated = false;

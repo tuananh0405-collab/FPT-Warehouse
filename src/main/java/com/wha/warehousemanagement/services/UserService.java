@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,8 +22,10 @@ public class UserService {
     private final WarehouseRepository warehouseRepository;
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final WarehouseMapper warehouseMapper;
 
-    public ResponseObject<List<UserDTO>> getAllUsers() {
+    public ResponseObject<?> getAllUsers() {
         try {
             List<User> users = userRepository.findAll();
             if (users.isEmpty()) {
@@ -32,8 +33,8 @@ public class UserService {
             }
             List<UserDTO> userDTOs = users.stream()
                     .map(user -> {
-                        UserDTO userDTO = UserMapper.INSTANCE.toDto(user);
-                        WarehouseDTO warehouseDTO = WarehouseMapper.INSTANCE.toDto(user.getWarehouse());
+                        UserDTO userDTO = userMapper.toDto(user);
+                        WarehouseDTO warehouseDTO = warehouseMapper.toDto(user.getWarehouse());
                         userDTO.setWarehouse(warehouseDTO);
                         return userDTO;
                     })
@@ -46,14 +47,13 @@ public class UserService {
         }
     }
 
-
-    public ResponseObject<UserDTO> getUserById(int id) {
+    public ResponseObject<?> getUserById(int id) {
         try {
             User user = userRepository.findById(id).orElseThrow(
                     () -> new CustomException(ErrorCode.USER_NOT_FOUND)
             );
-            UserDTO userDTO = UserMapper.INSTANCE.toDto(user);
-            WarehouseDTO warehouseDTO = WarehouseMapper.INSTANCE.toDto(user.getWarehouse());
+            UserDTO userDTO = userMapper.toDto(user);
+            WarehouseDTO warehouseDTO = warehouseMapper.toDto(user.getWarehouse());
             userDTO.setWarehouse(warehouseDTO);
             return new ResponseObject<>(HttpStatus.OK.value(), "Get user by id successfully", userDTO);
         } catch (CustomException e) {
@@ -63,26 +63,27 @@ public class UserService {
         }
     }
 
-    public ResponseObject<UserDTO> updateUser(int id, UserDTO userReceived) {
+    public ResponseObject<?> updateUser(int id, UserDTO userReceived) {
         try {
-            User user = userRepository.findById(id).orElseThrow(
-                    () -> new CustomException(ErrorCode.USER_NOT_FOUND)
-            );
+            User updatedUser = userRepository.findById(id).map(user -> {
+                user.setFullName(userReceived.getFullName());
+                user.setUsername(userReceived.getUsername());
+                user.setPassword(userReceived.getPassword());
+                user.setEmail(userReceived.getEmail());
+                user.setPhone(userReceived.getPhone());
+                user.setAddress(userReceived.getAddress());
+                user.setRole(Role.valueOf(userReceived.getRole()));
+                return userRepository.save(user);
+            }).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-            user.setFullName(userReceived.getFullName());
-            user.setUsername(userReceived.getUsername());
-            user.setPassword(userReceived.getPassword());
-            user.setEmail(userReceived.getEmail());
-            user.setPhone(userReceived.getPhone());
-            user.setAddress(userReceived.getAddress());
-            user.setRole(Role.valueOf(userReceived.getRole()));
+            if (userReceived.getWarehouse() != null) {
+                Warehouse warehouse = warehouseRepository.findById(userReceived.getWarehouse().getId()).orElseThrow(
+                        () -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)
+                );
+                updatedUser.setWarehouse(warehouse);
+            }
 
-            //should be updated by warehouse id
-            Optional<Warehouse> warehouse = warehouseRepository.findById(userReceived.getWarehouse().getId());
-            warehouse.ifPresent(user::setWarehouse);
-            user = userRepository.save(user);
-
-            return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", UserMapper.INSTANCE.toDto(user));
+            return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -90,7 +91,7 @@ public class UserService {
         }
     }
 
-    public ResponseObject<Object> deleteUserById(int id) {
+    public ResponseObject<?> deleteUserById(int id) {
         try {
             User user = userRepository.findById(id).orElseThrow(
                     () -> new CustomException(ErrorCode.USER_NOT_FOUND)
