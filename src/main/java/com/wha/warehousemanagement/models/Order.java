@@ -27,7 +27,7 @@ public class Order {
     private String description;
 
     @Column(name = "order_quantity")
-    private int quantity;
+    private Integer quantity;
 
     @Column(name = "order_status")
     private Status status;

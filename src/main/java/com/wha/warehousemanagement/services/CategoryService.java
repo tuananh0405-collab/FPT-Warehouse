@@ -1,76 +1,102 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.CategoryDTO;
+import com.wha.warehousemanagement.dtos.requests.CategoryRequest;
+import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.CategoryMapper;
 import com.wha.warehousemanagement.models.Category;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.CategoryRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
-    @Autowired
-    public CategoryService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
-
-    public ResponseObject<CategoryDTO> addCategory(CategoryDTO categoryDTO) {
-        if (categoryDTO.getName() == null || categoryDTO.getName().trim().isEmpty()) {
-            throw new CustomException(ErrorCode.CATEGORY_NAME_BLANK);
-        } else if (categoryRepository.findByName(categoryDTO.getName()).isPresent()) {
-            throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
-        }
+    public ResponseObject<?> addCategory(CategoryRequest request) {
         try {
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new CustomException(ErrorCode.CATEGORY_NAME_BLANK);
+            } else if (categoryRepository.findByName(request.getName()).isPresent()) {
+                throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
+            }
             Category category = new Category();
-            category.setName(categoryDTO.getName());
-            category.setDescription(categoryDTO.getDescription());
+            category.setName(request.getName());
+            category.setDescription(request.getDescription());
             categoryRepository.save(category);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Category added successfully", categoryDTO);
+            Optional<CategoryResponse> response = getLastCategoryResponse();
+            if (response.isEmpty()) {
+                throw new CustomException(ErrorCode.CATEGORY_ADD_FAILED);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(),
+                    "Category added successfully",
+                    response.get());
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.CATEGORY_ADD_FAILED);
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to add category", null);
         }
     }
 
-    public ResponseObject<List<CategoryDTO>> getAllCategories() {
-        List<CategoryDTO> list = new ArrayList<>();
-        categoryRepository.findAll().forEach(category -> {
-            CategoryDTO categoryDTO = CategoryMapper.INSTANCE.categoryToCategoryDTO(category);
-            list.add(categoryDTO);
-        });
-        return new ResponseObject<>(HttpStatus.OK.value(), "Get all categories successfully", list);
+    private Optional<CategoryResponse> getLastCategoryResponse() {
+        List<CategoryResponse> responses = categoryRepository.getAllCategoryResponses();
+        if (!responses.isEmpty()) {
+            return Optional.of(responses.get(0));
+        } else {
+            return Optional.empty();
+        }
     }
 
-    public ResponseObject<CategoryDTO> getCategoryById(int id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-        CategoryDTO categoryDTO = CategoryMapper.INSTANCE.categoryToCategoryDTO(category);
-        return new ResponseObject<>(HttpStatus.OK.value(), "Get category by id successfully", categoryDTO);
+    public ResponseObject<?> getAllCategories() {
+        try {
+            List<CategoryResponse> list = categoryRepository.findAll()
+                    .stream()
+                    .map(categoryMapper::toDto)
+                    .collect(Collectors.toList());
+            if (list.isEmpty()) {
+                throw new CustomException(ErrorCode.CATEGORY_NOT_FOUND);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all categories successfully", list);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all categories", null);
+        }
     }
 
-    public ResponseObject<CategoryDTO> updateCategory(int id, CategoryDTO categoryDTO) {
+    public ResponseObject<?> getCategoryById(int id) {
         try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-            if (categoryDTO.getName() != null &&
-                    !categoryDTO.getName().trim().isEmpty() &&
-                    !categoryDTO.getName().equals(category.getName()) &&
-                    categoryRepository.existsByName(categoryDTO.getName())) {
-                throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
-            }
-            category.setName(categoryDTO.getName());
-            category.setDescription(categoryDTO.getDescription());
+            CategoryResponse response = categoryMapper.toDto(category);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get category by id successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get category by id", null);
+        }
+    }
+
+    public ResponseObject<?> updateCategory(int id, CategoryRequest request) {
+        try {
+            Category category = categoryRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+
+
             categoryRepository.save(category);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Updated category successfully", categoryDTO);
+            return new ResponseObject<>(HttpStatus.OK.value(),
+                    "Updated category successfully",
+                    new CategoryResponse(category.getId(), category.getName(), category.getDescription()));
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -78,7 +104,7 @@ public class CategoryService {
         }
     }
 
-    public ResponseObject<Object> deleteCategoryById(int id) {
+    public ResponseObject<?> deleteCategoryById(int id) {
         try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -91,15 +117,15 @@ public class CategoryService {
         }
     }
 
-    public ResponseObject<Object> deleteAllCategories() {
-        try{
-        List<Category> list = categoryRepository.findAll();
-        if (!list.isEmpty()) {
-            categoryRepository.deleteAll();
-            return new ResponseObject<>(HttpStatus.OK.value(), "Deleted all categories successfully", null);
-        } else {
-            return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No categories to delete", null);
-        }
+    public ResponseObject<?> deleteAllCategories() {
+        try {
+            List<Category> list = categoryRepository.findAll();
+            if (!list.isEmpty()) {
+                categoryRepository.deleteAll();
+                return new ResponseObject<>(HttpStatus.OK.value(), "Deleted all categories successfully", null);
+            } else {
+                return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No categories to delete", null);
+            }
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete categories", null);
         }

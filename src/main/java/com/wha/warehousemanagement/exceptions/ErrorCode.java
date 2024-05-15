@@ -50,6 +50,9 @@ public enum ErrorCode {
     PROVIDER_NOT_FOUND(1044, "Provider not found"),
     EMAIL_ALREADY_EXISTS(1045, "Email already exists"),
     PHONE_ALREADY_EXISTS(1046, "Phone already exists"),
+    ORDER_ADD_FAILED(1047, "Order added unsuccessfully"),
+    ORDER_NOT_FOUND(1048, "Order not found"),
+    ORDER_ALREADY_EXISTS(1049, "Order exists")
     ;
 
     private final int code;

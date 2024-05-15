@@ -4,6 +4,7 @@ import com.wha.warehousemanagement.dtos.OrderDetailDTO;
 import com.wha.warehousemanagement.models.OrderDetail;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.OrderDetailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,13 +12,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("order-detail")
+@RequiredArgsConstructor
 public class OrderDetailController {
 
     private final OrderDetailService orderDetailService;
-
-    public OrderDetailController(OrderDetailService orderDetailService) {
-        this.orderDetailService = orderDetailService;
-    }
 
     @PostMapping
     public ResponseEntity<ResponseObject<Object>> addOrderDetail(@RequestBody OrderDetailDTO orderDetailDTO) {

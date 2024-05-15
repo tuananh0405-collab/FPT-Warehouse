@@ -7,6 +7,7 @@ import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.OrderDetailRepository;
 import com.wha.warehousemanagement.repositories.OrderRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -15,16 +16,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderDetailService {
     private final OrderDetailRepository orderDetailRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
-
-    public OrderDetailService(OrderDetailRepository orderDetailRepository, ProductRepository productRepository, OrderRepository orderRepository) {
-        this.orderDetailRepository = orderDetailRepository;
-        this.productRepository = productRepository;
-        this.orderRepository = orderRepository;
-    }
 
     public ResponseObject<Object> addOrderDetail(OrderDetailDTO orderDetailDTO) {
         try {
