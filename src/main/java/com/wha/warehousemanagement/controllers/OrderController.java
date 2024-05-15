@@ -1,7 +1,7 @@
 package com.wha.warehousemanagement.controllers;
 
-import com.wha.warehousemanagement.dtos.OrderDTO;
-import com.wha.warehousemanagement.models.Order;
+import com.wha.warehousemanagement.dtos.requests.OrderRequest;
+import com.wha.warehousemanagement.dtos.responses.OrderResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -17,23 +17,23 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<ResponseObject<Order>> addOrder(@RequestBody OrderDTO orderDTO) {
-        return ResponseEntity.ok(orderService.addOrder(orderDTO));
+    public ResponseEntity<ResponseObject<OrderResponse>> addOrder(@RequestBody OrderRequest request) {
+        return ResponseEntity.ok(orderService.addOrder(request));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseObject<List<OrderDTO>>> getAllOrders() {
+    public ResponseEntity<ResponseObject<List<OrderResponse>>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<OrderDTO>> getOrderById(@PathVariable("id") int id) {
+    public ResponseEntity<ResponseObject<OrderResponse>> getOrderById(@PathVariable("id") int id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<Order>> updateOrder(@PathVariable("id") int id, @RequestBody OrderDTO orderDTO) {
-        return ResponseEntity.ok(orderService.updateOrder(id, orderDTO));
+    public ResponseEntity<ResponseObject<OrderResponse>> updateOrder(@PathVariable("id") int id, @RequestBody OrderRequest request) {
+        return ResponseEntity.ok(orderService.updateOrder(id, request));
     }
 
     @DeleteMapping("/{id}")

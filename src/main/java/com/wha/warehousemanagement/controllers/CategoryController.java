@@ -1,6 +1,8 @@
 package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.CategoryDTO;
+import com.wha.warehousemanagement.dtos.requests.CategoryRequest;
+import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -17,23 +19,23 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping
-    public ResponseEntity<ResponseObject<CategoryDTO>> addCategory(@RequestBody CategoryDTO CategoryDTO) {
-        return ResponseEntity.ok(categoryService.addCategory(CategoryDTO));
+    public ResponseEntity<ResponseObject<CategoryResponse>> addCategory(@RequestBody CategoryRequest request) {
+        return ResponseEntity.ok(categoryService.addCategory(request));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseObject<List<CategoryDTO>>> getAllCategories() {
+    public ResponseEntity<ResponseObject<List<CategoryResponse>>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<CategoryDTO>> getCategoryById(@PathVariable("id") int id) {
+    public ResponseEntity<ResponseObject<CategoryResponse>> getCategoryById(@PathVariable("id") int id) {
         return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<CategoryDTO>> updateCategory(@PathVariable("id") int id, @RequestBody CategoryDTO categoryDTO) {
-        return ResponseEntity.ok(categoryService.updateCategory(id, categoryDTO));
+    public ResponseEntity<ResponseObject<CategoryResponse>> updateCategory(@PathVariable("id") int id, @RequestBody CategoryRequest request) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, request));
     }
 
     @DeleteMapping("/{id}")
