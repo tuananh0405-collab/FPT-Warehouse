@@ -61,8 +61,8 @@ public class AuthService {
                     userLoginDTO.getUsername(), userLoginDTO.getPassword()
             ));
             User user = userRepository.findByUsername(userLoginDTO.getUsername()).orElseThrow();
-            String  jwt = jwtUtils.generateToken(user);
-            String  refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
+            String jwt = jwtUtils.generateToken(user);
+            String refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
             TokenDTO tokenData = new TokenDTO();
             tokenData.setUsername(userLoginDTO.getUsername());
             tokenData.setToken(jwt);
