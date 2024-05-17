@@ -20,34 +20,34 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping
-    public ResponseEntity<ResponseObject<ProductResponse>> addProduct(@RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.addProduct(request));
-    }
-
-    @GetMapping
-    public ResponseEntity<ResponseObject<List<ProductResponse>>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<ProductResponse>> getAllProducts(@PathVariable("id") int id) {
-        return ResponseEntity.ok(productService.getProductById(id));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<ProductResponse>> updateProduct(@PathVariable("id") int id, @RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.updateProduct(id, request));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<Object>> deleteProduct(@PathVariable("id") int id) {
-        return ResponseEntity.ok(productService.deleteProductById(id));
-    }
-
-    @DeleteMapping
-    public ResponseEntity<ResponseObject<Object>> deleteAllProducts() {
-        return ResponseEntity.ok(productService.deleteAllProducts());
-    }
+//    @PostMapping
+//    public ResponseEntity<ResponseObject<ProductResponse>> addProduct(@RequestBody ProductRequest request) {
+//        return ResponseEntity.ok(productService.addProduct(request));
+//    }
+//
+//    @GetMapping
+//    public ResponseEntity<ResponseObject<List<ProductResponse>>> getAllProducts() {
+//        return ResponseEntity.ok(productService.getAllProducts());
+//    }
+//
+//    @GetMapping("/{id}")
+//    public ResponseEntity<ResponseObject<ProductResponse>> getAllProducts(@PathVariable("id") int id) {
+//        return ResponseEntity.ok(productService.getProductById(id));
+//    }
+//
+//    @PutMapping("/{id}")
+//    public ResponseEntity<ResponseObject<ProductResponse>> updateProduct(@PathVariable("id") int id, @RequestBody ProductRequest request) {
+//        return ResponseEntity.ok(productService.updateProduct(id, request));
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<ResponseObject<Object>> deleteProduct(@PathVariable("id") int id) {
+//        return ResponseEntity.ok(productService.deleteProductById(id));
+//    }
+//
+//    @DeleteMapping
+//    public ResponseEntity<ResponseObject<Object>> deleteAllProducts() {
+//        return ResponseEntity.ok(productService.deleteAllProducts());
+//    }
 
 }
