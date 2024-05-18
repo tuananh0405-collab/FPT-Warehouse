@@ -1,6 +1,7 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ImportRequest;
+import com.wha.warehousemanagement.dtos.responses.ImportDetailResponse;
 import com.wha.warehousemanagement.dtos.responses.ImportResponse;
 import com.wha.warehousemanagement.dtos.responses.ProviderResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
@@ -55,12 +56,13 @@ public class ImportService {
             List<ImportResponse> responses = importRepository.findAll()
                     .stream().map(anImport -> {
                                 ImportResponse response = importMapper.toDto(anImport);
-//                                 Need to take importDetail for import
-//                                List<ImportDetailResponse> importDetailResponses = importDetailRepository
-//                                        .findImportDetailResponsesByImportId(anImport.getId());
+
+                                List<ImportDetailResponse> importDetailResponses = importDetailRepository
+                                        .findAllByAnImport_Id(anImport.getId())
+                                        .stream().map(importDetailMapper::toDto).collect(Collectors.toList());
 
                                 ProviderResponse providerResponse = providerMapper.toDto(anImport.getProvider());
-//                                response.setImportDetails(importDetailResponses);
+                                response.setImportDetails(importDetailResponses);
                                 response.setProvider(providerResponse);
                                 return response;
                             }
@@ -76,9 +78,20 @@ public class ImportService {
 
     public ResponseObject<?> getImportById(int id) {
         try {
-            Import anImport = importRepository.getImportById(id)
+            ImportResponse response = importRepository.findById(id)
+                    .map(anImport -> {
+                        ImportResponse importResponse = importMapper.toDto(anImport);
+
+                        List<ImportDetailResponse> importDetailResponses = importDetailRepository
+                                .findAllByAnImport_Id(anImport.getId())
+                                .stream().map(importDetailMapper::toDto).collect(Collectors.toList());
+
+                        ProviderResponse providerResponse = providerMapper.toDto(anImport.getProvider());
+                        importResponse.setImportDetails(importDetailResponses);
+                        importResponse.setProvider(providerResponse);
+                        return importResponse;
+                    })
                     .orElseThrow(() -> new CustomException(ErrorCode.IMPORT_NOT_FOUND));
-            ImportResponse response = importMapper.toDto(anImport);
             return new ResponseObject<>(HttpStatus.OK.value(), "Get import by id successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
