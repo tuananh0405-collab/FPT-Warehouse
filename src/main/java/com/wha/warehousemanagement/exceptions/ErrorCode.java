@@ -52,7 +52,9 @@ public enum ErrorCode {
     PHONE_ALREADY_EXISTS(1046, "Phone already exists"),
     ORDER_ADD_FAILED(1047, "Order added unsuccessfully"),
     ORDER_NOT_FOUND(1048, "Order not found"),
-    ORDER_ALREADY_EXISTS(1049, "Order exists")
+    ORDER_ALREADY_EXISTS(1049, "Order exists"),
+    WAREHOUSE_NAME_EXISTS(1050, "Warehouse name already exists"),
+    WAREHOUSE_ADDRESS_EXISTS(1051, "Warehouse address already exists"),
     ;
 
     private final int code;

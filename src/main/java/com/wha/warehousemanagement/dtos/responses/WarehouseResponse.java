@@ -2,30 +2,28 @@ package com.wha.warehousemanagement.dtos.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.wha.warehousemanagement.models.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.sql.Date;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class OrderResponse {
-    private Integer id;
+public class WarehouseResponse {
 
-    private String customerName;
+        private Integer id;
 
-    private String description;
+        private String name;
 
-    private Integer quantity;
+        private String description;
 
-    private Status status;
+        private String address;
 
-    private Date orderDate;
+        private Date createdAt;
 
-    private String country;
+        private Date updatedAt;
 }

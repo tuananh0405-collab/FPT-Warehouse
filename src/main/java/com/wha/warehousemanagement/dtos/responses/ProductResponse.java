@@ -15,18 +15,11 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductResponse {
 
-    private Integer id;
-
     private String name;
 
     private String description;
 
-    private Integer quantity;
+    private String origin;
 
-    private String country;
-
-    private Date receivedDate;
-
-    private CategoryResponse categoryResponse;
-
+    private CategoryResponse category;
 }

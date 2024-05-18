@@ -1,6 +1,6 @@
 package com.wha.warehousemanagement.controllers;
 
-import com.wha.warehousemanagement.dtos.UserDTO;
+import com.wha.warehousemanagement.dtos.requests.UserRequest;
 import com.wha.warehousemanagement.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +23,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(userService.updateUser(id, userDTO));
+    public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody UserRequest request) {
+        return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
     @DeleteMapping("/{id}")
