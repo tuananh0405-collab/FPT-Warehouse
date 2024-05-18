@@ -29,7 +29,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
-    public ResponseObject<ProductResponse> addProduct(ProductRequest request) {
+    public ResponseObject<?> addProduct(ProductRequest request) {
         try {
             if (request.getName() == null || request.getName().trim().isEmpty()) {
                 throw new CustomException(ErrorCode.PRODUCT_NAME_BLANK);
@@ -54,19 +54,19 @@ public class ProductService {
     }
 
     public ResponseObject<?> getAllProducts() {
-      try{
-          List<ProductResponse> responses = productRepository.findAll()
-                  .stream().map(
+        try {
+            List<ProductResponse> responses = productRepository.findAll()
+                    .stream().map(
                             product -> {
                                 ProductResponse response = productMapper.toDto(product);
                                 CategoryResponse categoryResponse = categoryMapper.toDto(product.getCategory());
                                 response.setCategory(categoryResponse);
                                 return response;
                             }
-                  )
-                  .collect(Collectors.toList());
+                    )
+                    .collect(Collectors.toList());
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all products successfully", responses);
-      } catch (CustomException e) {
+        } catch (CustomException e) {
             return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed get products details", null);
