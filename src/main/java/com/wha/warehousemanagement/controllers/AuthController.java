@@ -1,10 +1,9 @@
 package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.TokenDTO;
-import com.wha.warehousemanagement.dtos.UserLoginDTO;
-import com.wha.warehousemanagement.dtos.UserSignUpDTO;
+import com.wha.warehousemanagement.dtos.requests.UserLoginRequest;
+import com.wha.warehousemanagement.dtos.requests.UserSignUpRequest;
 import com.wha.warehousemanagement.models.ResponseObject;
-import com.wha.warehousemanagement.models.User;
 import com.wha.warehousemanagement.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +17,13 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ResponseObject<Object>> signUp(@RequestBody UserSignUpDTO userSignUpDTO) {
-        return ResponseEntity.ok(authService.signUp(userSignUpDTO));
+    public ResponseEntity<ResponseObject<Object>> signUp(@RequestBody UserSignUpRequest request) {
+        return ResponseEntity.ok(authService.signUp(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseObject<TokenDTO>> login(@RequestBody UserLoginDTO userLoginDTO) {
-        return ResponseEntity.ok(authService.login(userLoginDTO));
+    public ResponseEntity<ResponseObject<TokenDTO>> login(@RequestBody UserLoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 
     @PostMapping("/refresh")

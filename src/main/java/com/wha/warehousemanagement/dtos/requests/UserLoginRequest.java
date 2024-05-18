@@ -1,4 +1,4 @@
-package com.wha.warehousemanagement.dtos;
+package com.wha.warehousemanagement.dtos.requests;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserLoginDTO {
+public class UserLoginRequest {
 
     private String username;
 

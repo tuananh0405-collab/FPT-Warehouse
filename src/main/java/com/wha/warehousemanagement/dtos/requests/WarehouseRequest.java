@@ -12,10 +12,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WarehouseRequest {
-
         private String name;
-
         private String description;
-
         private String address;
 }

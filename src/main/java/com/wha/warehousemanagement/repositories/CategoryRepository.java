@@ -1,6 +1,5 @@
 package com.wha.warehousemanagement.repositories;
 
-import com.wha.warehousemanagement.dtos.CategoryDTO;
 import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
 import com.wha.warehousemanagement.models.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
