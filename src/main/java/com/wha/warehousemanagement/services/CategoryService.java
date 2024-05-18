@@ -91,12 +91,13 @@ public class CategoryService {
         try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-
-
+            category.setName(request.getName());
+            category.setDescription(request.getDescription());
             categoryRepository.save(category);
+            CategoryResponse response = categoryMapper.toDto(category);
             return new ResponseObject<>(HttpStatus.OK.value(),
                     "Updated category successfully",
-                    new CategoryResponse(category.getId(), category.getName(), category.getDescription()));
+                    response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {

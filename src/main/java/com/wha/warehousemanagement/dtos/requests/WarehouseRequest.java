@@ -1,4 +1,4 @@
-package com.wha.warehousemanagement.dtos;
+package com.wha.warehousemanagement.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,12 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryDTO {
-
-    private Integer id;
-
-    private String name;
-
-    private String description;
-
+public class WarehouseRequest {
+        private String name;
+        private String description;
+        private String address;
 }

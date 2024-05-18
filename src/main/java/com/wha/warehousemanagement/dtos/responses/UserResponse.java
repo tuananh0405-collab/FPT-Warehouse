@@ -1,10 +1,7 @@
-package com.wha.warehousemanagement.dtos;
-
+package com.wha.warehousemanagement.dtos.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.wha.warehousemanagement.models.Role;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserDTO {
+public class UserResponse {
     private int id;
     private String username;
     private String fullName;
@@ -21,5 +18,4 @@ public class UserDTO {
     private String phone;
     private String address;
     private String role;
-    WarehouseDTO warehouse;
 }

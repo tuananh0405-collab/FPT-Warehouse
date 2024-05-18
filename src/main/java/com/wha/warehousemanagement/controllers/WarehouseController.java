@@ -1,6 +1,6 @@
 package com.wha.warehousemanagement.controllers;
 
-import com.wha.warehousemanagement.dtos.WarehouseDTO;
+import com.wha.warehousemanagement.dtos.requests.WarehouseRequest;
 import com.wha.warehousemanagement.services.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +24,13 @@ public class WarehouseController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addWarehouse(@RequestBody WarehouseDTO warehouseDTO) {
-        return ResponseEntity.ok(warehouseService.addWarehouse(warehouseDTO));
+    public ResponseEntity<?> addWarehouse(@RequestBody WarehouseRequest request) {
+        return ResponseEntity.ok(warehouseService.addWarehouse(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateWarehouse(@PathVariable("id") int id, @RequestBody WarehouseDTO warehouseDTO) {
-        return ResponseEntity.ok(warehouseService.updateWarehouseById(id, warehouseDTO));
+    public ResponseEntity<?> updateWarehouse(@PathVariable("id") int id, @RequestBody WarehouseRequest request) {
+        return ResponseEntity.ok(warehouseService.updateWarehouseById(id, request));
     }
 
     @DeleteMapping("/{id}")

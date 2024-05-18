@@ -1,14 +1,12 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.UserDTO;
-import com.wha.warehousemanagement.dtos.WarehouseDTO;
+import com.wha.warehousemanagement.dtos.requests.UserRequest;
+import com.wha.warehousemanagement.dtos.responses.UserResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.UserMapper;
-import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.UserRepository;
-import com.wha.warehousemanagement.repositories.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,27 +17,16 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final WarehouseRepository warehouseRepository;
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final WarehouseMapper warehouseMapper;
 
     public ResponseObject<?> getAllUsers() {
         try {
-            List<User> users = userRepository.findAll();
-            if (users.isEmpty()) {
-                throw new CustomException(ErrorCode.USER_NOT_FOUND);
-            }
-            List<UserDTO> userDTOs = users.stream()
-                    .map(user -> {
-                        UserDTO userDTO = userMapper.toDto(user);
-                        WarehouseDTO warehouseDTO = warehouseMapper.toDto(user.getWarehouse());
-                        userDTO.setWarehouse(warehouseDTO);
-                        return userDTO;
-                    })
+            List<UserResponse> responses = userRepository.findAll()
+                    .stream().map(userMapper::toDto)
                     .collect(Collectors.toList());
-            return new ResponseObject<>(HttpStatus.OK.value(), "Get all users successfully", userDTOs);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all users successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
@@ -49,13 +36,10 @@ public class UserService {
 
     public ResponseObject<?> getUserById(int id) {
         try {
-            User user = userRepository.findById(id).orElseThrow(
-                    () -> new CustomException(ErrorCode.USER_NOT_FOUND)
-            );
-            UserDTO userDTO = userMapper.toDto(user);
-            WarehouseDTO warehouseDTO = warehouseMapper.toDto(user.getWarehouse());
-            userDTO.setWarehouse(warehouseDTO);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Get user by id successfully", userDTO);
+            UserResponse response = userRepository.findById(id)
+                    .map(userMapper::toDto)
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get user by id successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -63,27 +47,18 @@ public class UserService {
         }
     }
 
-    public ResponseObject<?> updateUser(int id, UserDTO userReceived) {
+    public ResponseObject<?> updateUser(int id, UserRequest request) {
         try {
-            User updatedUser = userRepository.findById(id).map(user -> {
-                user.setFullName(userReceived.getFullName());
-                user.setUsername(userReceived.getUsername());
-                user.setPassword(userReceived.getPassword());
-                user.setEmail(userReceived.getEmail());
-                user.setPhone(userReceived.getPhone());
-                user.setAddress(userReceived.getAddress());
-                user.setRole(Role.valueOf(userReceived.getRole()));
-                return userRepository.save(user);
-            }).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-            if (userReceived.getWarehouse() != null) {
-                Warehouse warehouse = warehouseRepository.findById(userReceived.getWarehouse().getId()).orElseThrow(
-                        () -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)
-                );
-                updatedUser.setWarehouse(warehouse);
-            }
-
-            return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", null);
+            User user = userRepository.findById(id).orElseThrow(
+                    () -> new CustomException(ErrorCode.USER_NOT_FOUND)
+            );
+            user.setFullName(request.getFullName());
+            user.setUsername(request.getUsername());
+            user.setPassword(request.getPassword());
+            user.setRole(Role.valueOf(request.getRole()));
+            userRepository.save(user);
+            UserResponse response = userMapper.toDto(user);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {

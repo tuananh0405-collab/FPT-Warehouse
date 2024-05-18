@@ -1,8 +1,8 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.TokenDTO;
-import com.wha.warehousemanagement.dtos.UserLoginDTO;
-import com.wha.warehousemanagement.dtos.UserSignUpDTO;
+import com.wha.warehousemanagement.dtos.requests.UserLoginRequest;
+import com.wha.warehousemanagement.dtos.requests.UserSignUpRequest;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.models.ResponseObject;
@@ -29,22 +29,22 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
 
-    public ResponseObject<Object> signUp(UserSignUpDTO userSignUpDTO) {
+    public ResponseObject<Object> signUp(UserSignUpRequest request) {
         try {
-            if (userRepository.existsByUsername(userSignUpDTO.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername())) {
                 throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
             }
-            if (userSignUpDTO.getPassword().length() < 8) {
+            if (request.getPassword().length() < 8) {
                 throw new CustomException(ErrorCode.PASSWORD_TOO_SHORT);
             }
             User user = new User(
-                    userSignUpDTO.getFullName(),
-                    userSignUpDTO.getUsername(),
-                    passwordEncoder.encode(userSignUpDTO.getPassword()),
-                    userSignUpDTO.getEmail(),
-                    userSignUpDTO.getPhone(),
-                    userSignUpDTO.getAddress(),
-                    userSignUpDTO.getRole()
+                    request.getFullName(),
+                    request.getUsername(),
+                    passwordEncoder.encode(request.getPassword()),
+                    request.getEmail(),
+                    request.getPhone(),
+                    request.getAddress(),
+                    request.getRole()
             );
             User userResult = userRepository.save(user);
             return new ResponseObject<>(HttpStatus.OK.value(), "User signed up successfully", userResult);
@@ -55,16 +55,16 @@ public class AuthService {
         }
     }
 
-    public ResponseObject<TokenDTO> login(UserLoginDTO userLoginDTO) {
+    public ResponseObject<TokenDTO> login(UserLoginRequest request) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    userLoginDTO.getUsername(), userLoginDTO.getPassword()
+                    request.getUsername(), request.getPassword()
             ));
-            User user = userRepository.findByUsername(userLoginDTO.getUsername()).orElseThrow();
+            User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
             String jwt = jwtUtils.generateToken(user);
             String refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
             TokenDTO tokenData = new TokenDTO();
-            tokenData.setUsername(userLoginDTO.getUsername());
+            tokenData.setUsername(request.getUsername());
             tokenData.setToken(jwt);
             tokenData.setRefreshToken(refreshToken);
             tokenData.setExpirationTime("24h");
