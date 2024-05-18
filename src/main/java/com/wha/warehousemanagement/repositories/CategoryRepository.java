@@ -12,6 +12,7 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
     Optional<Category> findByName(String name);
+    boolean existsByName(String name);
     @Query("SELECT new com.wha.warehousemanagement.dtos.responses.CategoryResponse(c.id, c.name, c.description) FROM Category c ORDER BY c.id desc")
     List<CategoryResponse> getAllCategoryResponses();
 }

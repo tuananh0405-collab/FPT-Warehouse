@@ -59,6 +59,10 @@ public enum ErrorCode {
     ZONE_EMPTY(1053, "Zone is empty"),
     ZONE_NAME_BLANK(1054, "Zone name cannot be blank"),
     ZONE_ALREADY_EXISTS(1055, "Zone already exists"),
+    IMPORT_ADD_FAILED(1056, "Import added unsuccessfully"),
+    IMPORT_NOT_FOUND(1057, "Import not found"),
+    EXPORT_ADD_FAILED(1058, "Export added unsuccessfully"),
+    EXPORT_NOT_FOUND(1059, "Export not found")
     ;
 
     private final int code;

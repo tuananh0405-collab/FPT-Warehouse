@@ -1,6 +1,6 @@
 package com.wha.warehousemanagement.controllers;
 
-import com.wha.warehousemanagement.dtos.ProviderDTO;
+import com.wha.warehousemanagement.dtos.requests.ProviderRequest;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ProviderService;
 import lombok.RequiredArgsConstructor;
@@ -17,32 +17,32 @@ public class ProviderController {
     private final ProviderService providerService;
 
     @PostMapping
-    public ResponseEntity<ResponseObject<ProviderDTO>> addCategory(@RequestBody ProviderDTO ProviderDTO) {
-        return ResponseEntity.ok(providerService.addProvider(ProviderDTO));
+    public ResponseEntity<?> addCategory(@RequestBody ProviderRequest request) {
+        return ResponseEntity.ok(providerService.addProvider(request));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseObject<List<ProviderDTO>>> getAllProviders() {
+    public ResponseEntity<?> getAllProviders() {
         return ResponseEntity.ok(providerService.getAllProviders());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<ProviderDTO>> getProviderById(@PathVariable("id") int id) {
+    public ResponseEntity<?> getProviderById(@PathVariable("id") int id) {
         return ResponseEntity.ok(providerService.getProviderById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<ProviderDTO>> updateProvider(@PathVariable("id") int id, @RequestBody ProviderDTO providerDTO) {
-        return ResponseEntity.ok(providerService.updateProvider(id, providerDTO));
+    public ResponseEntity<?> updateProvider(@PathVariable("id") int id, @RequestBody ProviderRequest request) {
+        return ResponseEntity.ok(providerService.updateProvider(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<Object>> deleteProvider(@PathVariable("id") int id) {
+    public ResponseEntity<?> deleteProvider(@PathVariable("id") int id) {
         return ResponseEntity.ok(providerService.deleteProviderById(id));
     }
 
     @DeleteMapping
-    public ResponseEntity<ResponseObject<Object>> deleteAllProviders() {
+    public ResponseEntity<?> deleteAllProviders() {
         return ResponseEntity.ok(providerService.deleteAllProviders());
     }
 

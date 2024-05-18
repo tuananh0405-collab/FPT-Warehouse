@@ -6,18 +6,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProviderRequest {
-    private String name;
+public class ImportRequest {
+    private String description;
 
-    private String email;
+    private String status;
 
-    private String phone;
+    private Date receivedDate;
 
-    private String address;
-
+    private Integer providerId;
 }
