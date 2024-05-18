@@ -1,8 +1,13 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.ProviderDTO;
+import com.wha.warehousemanagement.dtos.requests.ProviderRequest;
+import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
+import com.wha.warehousemanagement.dtos.responses.ProductResponse;
+import com.wha.warehousemanagement.dtos.responses.ProviderResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.ProviderMapper;
+import com.wha.warehousemanagement.models.Category;
 import com.wha.warehousemanagement.models.Provider;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.ProviderRepository;
@@ -12,84 +17,103 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProviderService {
 
     private final ProviderRepository providerRepository;
+    private final ProviderMapper providerMapper;
 
-    public ResponseObject<ProviderDTO> addProvider(ProviderDTO providerDTO) {
-        if (providerDTO.getName() == null || providerDTO.getName().trim().isEmpty()) {
+    public ResponseObject<?> addProvider(ProviderRequest providerRequest) {
+        if (providerRequest.getName() == null || providerRequest.getName().trim().isEmpty()) {
             throw new CustomException(ErrorCode.PROVIDER_NAME_BLANK);
-        } else if (providerRepository.findByName(providerDTO.getName()).isPresent()) {
+        } else if (providerRepository.findByName(providerRequest.getName()).isPresent()) {
             throw new CustomException(ErrorCode.PROVIDER_ALREADY_EXISTS);
         }
         try {
             Provider provider = new Provider();
-            provider.setName(providerDTO.getName());
-            provider.setEmail(providerDTO.getEmail());
-            provider.setPhone(providerDTO.getPhone());
-            provider.setAddress(providerDTO.getAddress());
+            provider.setName(providerRequest.getName());
+            provider.setEmail(providerRequest.getEmail());
+            provider.setPhone(providerRequest.getPhone());
+            provider.setAddress(providerRequest.getAddress());
             providerRepository.save(provider);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Provider added successfully", providerDTO);
+            Optional<ProviderResponse> response = getLastProviderResponse();
+            if (response.isEmpty()) {
+                throw new CustomException(ErrorCode.PROVIDER_ADD_FAILED);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(),
+                    "Provider added successfully",
+                    response.get());
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.PROVIDER_ADD_FAILED);
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to add provider", null);
         }
     }
 
-    public ResponseObject<List<ProviderDTO>> getAllProviders() {
-        List<ProviderDTO> list = new ArrayList<>();
-        providerRepository.findAll().forEach(provider -> {
-            ProviderDTO providerDTO = new ProviderDTO(
-                    provider.getId(),
-                    provider.getName(),
-                    provider.getEmail(),
-                    provider.getPhone(),
-                    provider.getAddress()
-            );
-            list.add(providerDTO);
-        });
-        return new ResponseObject<>(HttpStatus.OK.value(), "Get all providers successfully", list);
+    private Optional<ProviderResponse> getLastProviderResponse() {
+        List<ProviderResponse> responses = providerRepository.getAllProviderResponses();
+        if (!responses.isEmpty()) {
+            return Optional.of(responses.get(0));
+        } else {
+            return Optional.empty();
+        }
     }
 
-    public ResponseObject<ProviderDTO> getProviderById(int id) {
-        Provider provider = providerRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
-        ProviderDTO providerDTO = new ProviderDTO(
-                provider.getId(),
-                provider.getName(),
-                provider.getEmail(),
-                provider.getPhone(),
-                provider.getAddress()
-        );
-        return new ResponseObject<>(HttpStatus.OK.value(), "Get provider by id successfully", providerDTO);
+    public ResponseObject<?> getAllProviders() {
+        try {
+            List<ProviderResponse> list = providerRepository.findAll()
+                    .stream()
+                    .map(providerMapper::toDto)
+                    .collect(Collectors.toList());
+            if (list.isEmpty()) {
+                throw new CustomException(ErrorCode.PROVIDER_NOT_FOUND);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all providers successfully", list);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all providers", null);
+        }
     }
 
-    public ResponseObject<ProviderDTO> updateProvider(int id, ProviderDTO providerDTO) {
+    public ResponseObject<?> getProviderById(int id) {
         try {
             Provider provider = providerRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
-            if (providerDTO.getName() != null &&
-                    !providerDTO.getName().trim().isEmpty() &&
-                    !providerDTO.getName().equals(provider.getName()) &&
-                    providerRepository.existsByName(providerDTO.getName())) {
-                throw new CustomException(ErrorCode.PROVIDER_ALREADY_EXISTS);
+            ProviderResponse response = providerMapper.toDto(provider);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get provider by id successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get provider by id", null);
+        }
+    }
+
+    public ResponseObject<?> updateProvider(int id, ProviderRequest request) {
+        try {
+            Provider provider = providerRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
+            if (request.getName() != null && !request.getName().trim().isEmpty()) {
+                if (providerRepository.existsByName(request.getName())) {
+                    throw new CustomException(ErrorCode.PROVIDER_ALREADY_EXISTS);
+                }
+                provider.setName(request.getName());
             }
-            if (providerDTO.getName() != null && !providerDTO.getName().trim().isEmpty()) {
-                provider.setName(providerDTO.getName());
+            if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+                provider.setEmail(request.getEmail());
             }
-            if (providerDTO.getEmail() != null && !providerDTO.getEmail().trim().isEmpty()) {
-                provider.setEmail(providerDTO.getEmail());
+            if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+                provider.setPhone(request.getPhone());
             }
-            if (providerDTO.getPhone() != null && !providerDTO.getPhone().trim().isEmpty()) {
-                provider.setPhone(providerDTO.getPhone());
-            }
-            if (providerDTO.getAddress() != null && !providerDTO.getAddress().trim().isEmpty()) {
-                provider.setAddress(providerDTO.getAddress());
+            if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
+                provider.setAddress(request.getAddress());
             }
             providerRepository.save(provider);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Updated provider successfully", providerDTO);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Updated provider successfully", request);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -97,7 +121,7 @@ public class ProviderService {
         }
     }
 
-    public ResponseObject<Object> deleteProviderById(int id) {
+    public ResponseObject<?> deleteProviderById(int id) {
         try {
             Provider provider = providerRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
@@ -110,7 +134,7 @@ public class ProviderService {
         }
     }
 
-    public ResponseObject<Object> deleteAllProviders() {
+    public ResponseObject<?> deleteAllProviders() {
         try {
             List<Provider> list = providerRepository.findAll();
             if (!list.isEmpty()) {

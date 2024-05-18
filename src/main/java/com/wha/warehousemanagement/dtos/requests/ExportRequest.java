@@ -1,4 +1,4 @@
-package com.wha.warehousemanagement.dtos;
+package com.wha.warehousemanagement.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -6,21 +6,23 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProviderDTO {
+public class ExportRequest {
 
-    private int id;
+    private String customerName;
 
-    private String name;
+    private String description;
 
-    private String email;
+    private String status;
 
-    private String phone;
+    private Date exportDate;
 
-    private String address;
+    private String customerAddress;
 
 }

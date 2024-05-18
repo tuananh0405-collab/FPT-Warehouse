@@ -91,13 +91,18 @@ public class CategoryService {
         try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-            category.setName(request.getName());
-            category.setDescription(request.getDescription());
+            if (request.getName() != null && !request.getName().trim().isEmpty()) {
+                if (categoryRepository.existsByName(request.getName())) {
+                    throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
+                }
+                category.setName(request.getName());
+            }
+            if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {
+                category.setDescription(request.getDescription());
+            }
             categoryRepository.save(category);
             CategoryResponse response = categoryMapper.toDto(category);
-            return new ResponseObject<>(HttpStatus.OK.value(),
-                    "Updated category successfully",
-                    response);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Updated category successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
