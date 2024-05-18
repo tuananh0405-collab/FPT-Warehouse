@@ -5,9 +5,11 @@ import com.wha.warehousemanagement.dtos.responses.ImportResponse;
 import com.wha.warehousemanagement.dtos.responses.ProviderResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.ImportDetailMapper;
 import com.wha.warehousemanagement.mappers.ImportMapper;
 import com.wha.warehousemanagement.mappers.ProviderMapper;
 import com.wha.warehousemanagement.models.*;
+import com.wha.warehousemanagement.repositories.ImportDetailRepository;
 import com.wha.warehousemanagement.repositories.ImportRepository;
 import com.wha.warehousemanagement.repositories.ProviderRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +27,8 @@ public class ImportService {
     private final ImportMapper importMapper;
     private final ProviderRepository providerRepository;
     private final ProviderMapper providerMapper;
+    private final ImportDetailRepository importDetailRepository;
+    private final ImportDetailMapper importDetailMapper;
 
     public ResponseObject<?> addImport(ImportRequest request) {
         try {
@@ -52,7 +55,12 @@ public class ImportService {
             List<ImportResponse> responses = importRepository.findAll()
                     .stream().map(anImport -> {
                                 ImportResponse response = importMapper.toDto(anImport);
+//                                 Need to take importDetail for import
+//                                List<ImportDetailResponse> importDetailResponses = importDetailRepository
+//                                        .findImportDetailResponsesByImportId(anImport.getId());
+
                                 ProviderResponse providerResponse = providerMapper.toDto(anImport.getProvider());
+//                                response.setImportDetails(importDetailResponses);
                                 response.setProvider(providerResponse);
                                 return response;
                             }
