@@ -1,7 +1,8 @@
-package com.wha.warehousemanagement.dtos;
+package com.wha.warehousemanagement.dtos.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wha.warehousemanagement.models.ZoneStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,14 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class OrderDetailDTO {
-
+public class ZoneResponse {
     private Integer id;
-
-    private Integer orderId;
-
-    private Integer productId;
-
-    private int quantity;
-
+    private String name;
+    private String description;
+    private ZoneStatus zoneStatus;
 }

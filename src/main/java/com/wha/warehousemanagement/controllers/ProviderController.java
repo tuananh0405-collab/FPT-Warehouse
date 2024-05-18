@@ -3,6 +3,7 @@ package com.wha.warehousemanagement.controllers;
 import com.wha.warehousemanagement.dtos.ProviderDTO;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ProviderService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,13 +11,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/provider")
+@RequiredArgsConstructor
 public class ProviderController {
 
     private final ProviderService providerService;
 
-    public ProviderController(ProviderService providerService) {
-        this.providerService = providerService;
-    }
     @PostMapping
     public ResponseEntity<ResponseObject<ProviderDTO>> addCategory(@RequestBody ProviderDTO ProviderDTO) {
         return ResponseEntity.ok(providerService.addProvider(ProviderDTO));

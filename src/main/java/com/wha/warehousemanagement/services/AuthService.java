@@ -1,14 +1,14 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.TokenDTO;
-import com.wha.warehousemanagement.dtos.UserLoginDTO;
-import com.wha.warehousemanagement.dtos.UserSignUpDTO;
+import com.wha.warehousemanagement.dtos.requests.UserLoginRequest;
+import com.wha.warehousemanagement.dtos.requests.UserSignUpRequest;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.User;
 import com.wha.warehousemanagement.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -28,30 +29,22 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    public AuthService(UserRepository userRepository, JWTUtils jwtUtils, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
-        this.jwtUtils = jwtUtils;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-    }
-
-    public ResponseObject<Object> signUp(UserSignUpDTO userSignUpDTO) {
+    public ResponseObject<Object> signUp(UserSignUpRequest request) {
         try {
-            if (userRepository.existsByUsername(userSignUpDTO.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername())) {
                 throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
             }
-            if (userSignUpDTO.getPassword().length() < 8) {
+            if (request.getPassword().length() < 8) {
                 throw new CustomException(ErrorCode.PASSWORD_TOO_SHORT);
             }
             User user = new User(
-                    userSignUpDTO.getFullName(),
-                    userSignUpDTO.getUsername(),
-                    passwordEncoder.encode(userSignUpDTO.getPassword()),
-                    userSignUpDTO.getEmail(),
-                    userSignUpDTO.getPhone(),
-                    userSignUpDTO.getAddress(),
-                    userSignUpDTO.getRole()
+                    request.getFullName(),
+                    request.getUsername(),
+                    passwordEncoder.encode(request.getPassword()),
+                    request.getEmail(),
+                    request.getPhone(),
+                    request.getAddress(),
+                    request.getRole()
             );
             User userResult = userRepository.save(user);
             return new ResponseObject<>(HttpStatus.OK.value(), "User signed up successfully", userResult);
@@ -62,19 +55,20 @@ public class AuthService {
         }
     }
 
-
-    public ResponseObject<TokenDTO> login(UserLoginDTO userLoginDTO) {
+    public ResponseObject<TokenDTO> login(UserLoginRequest request) {
         try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    request.getUsername(), request.getPassword()
+            ));
+            User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
+            String jwt = jwtUtils.generateToken(user);
+            String refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
             TokenDTO tokenData = new TokenDTO();
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userLoginDTO.getUsername(), userLoginDTO.getPassword()));
-            var user = userRepository.findByUsername(userLoginDTO.getUsername()).orElseThrow();
-            var jwt = jwtUtils.generateToken(user);
-            var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
-            tokenData.setUsername(userLoginDTO.getUsername());
+            tokenData.setUsername(request.getUsername());
             tokenData.setToken(jwt);
             tokenData.setRefreshToken(refreshToken);
             tokenData.setExpirationTime("24h");
-            return new ResponseObject<>(200, "Login successfully", tokenData);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Login successfully", tokenData);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Invalid username or password", null);
         }

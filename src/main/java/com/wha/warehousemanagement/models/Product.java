@@ -26,31 +26,19 @@ public class Product {
     @Column(name = "product_description")
     private String description;
 
-    @Column(name = "product_quantity")
-    private int quantity;
-
-    @Column(name = "product_country")
-    private String country;
-
-    @Column(name = "product_received_date")
-    private Date receivedDate;
-
-    @OneToMany(mappedBy = "product")
-    private Set<ShipmentProduct> shipmentProducts;
+    @Column(name = "product_origin")
+    private String origin;
 
     @ManyToOne()
     @JoinColumn(name = "category_id", nullable = true)
     private Category category;
 
     @OneToMany(mappedBy = "product")
-    private Set<OrderDetail> orderDetails;
+    private Set<ImportDetail> importDetails;
 
-    public Product(String name, String description, int quantity, String country, Date receivedDate, Category category) {
-        this.name = name;
-        this.description = description;
-        this.quantity = quantity;
-        this.country = country;
-        this.receivedDate = receivedDate;
-        this.category = category;
-    }
+    @OneToMany(mappedBy = "product")
+    private Set<Inventory> inventories;
+
+    @OneToMany(mappedBy = "product")
+    private Set<ExportDetail> exportDetails;
 }

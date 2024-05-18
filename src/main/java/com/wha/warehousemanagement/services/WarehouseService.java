@@ -1,68 +1,67 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.WarehouseDTO;
+import com.wha.warehousemanagement.dtos.requests.WarehouseRequest;
+import com.wha.warehousemanagement.dtos.responses.WarehouseResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.Warehouse;
 import com.wha.warehousemanagement.repositories.WarehouseRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class WarehouseService {
+
     private final WarehouseRepository warehouseRepository;
+    private final WarehouseMapper warehouseMapper;
 
-    public WarehouseService(WarehouseRepository warehouseRepository) {
-        this.warehouseRepository = warehouseRepository;
-    }
-
-    public ResponseObject<List<WarehouseDTO>> getAllWarehouses() {
+    public ResponseObject<?> getAllWarehouses() {
         try {
-            List<WarehouseDTO> list = warehouseRepository.findAll().stream()
-                    .map(WarehouseMapper.INSTANCE::warehouseToWarehouseDTO)
+            List<WarehouseResponse> responses = warehouseRepository.findAll()
+                    .stream().map(warehouseMapper::toDto)
                     .collect(Collectors.toList());
-            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouses fetched successfully", list);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouses fetched successfully", responses);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch warehouses", null);
         }
     }
 
-    public ResponseObject<WarehouseDTO> getWarehouseById(int id) {
+    public ResponseObject<?> getWarehouseById(int id) {
         try {
-            Optional<Warehouse> warehouse = warehouseRepository.findById(id);
-            WarehouseDTO warehouseDTO = warehouse.map(WarehouseMapper.INSTANCE::warehouseToWarehouseDTO).orElse(null);
-            if (warehouseDTO == null) {
-                throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
-            }
-            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse fetched successfully", warehouseDTO);
+            WarehouseResponse response = warehouseRepository.findById(id)
+                    .map(warehouseMapper::toDto)
+                    .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse fetched successfully", response);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to fetch warehouse", null);
         }
     }
 
-    public ResponseObject<Warehouse> addWarehouse(WarehouseDTO warehouseDTO) {
+    public ResponseObject<?> addWarehouse(WarehouseRequest request) {
         try {
-            if (warehouseRepository.existsByName(warehouseDTO.getName())) {
-                throw new CustomException(ErrorCode.WAREHOUSE_ALREADY_EXISTS);
-            } else if (warehouseRepository.existsByAddress(warehouseDTO.getAddress())) {
-                throw new CustomException(ErrorCode.WAREHOUSE_ADDRESS_ALREADY_EXISTS);
+            if (warehouseRepository.existsByName(request.getName())) {
+                throw new CustomException(ErrorCode.WAREHOUSE_NAME_EXISTS);
+            }
+            if (warehouseRepository.existsByAddress(request.getAddress())) {
+                throw new CustomException(ErrorCode.WAREHOUSE_ADDRESS_EXISTS);
             }
             Warehouse warehouse = new Warehouse();
-            warehouse.setName(warehouseDTO.getName());
-            warehouse.setDescription(warehouseDTO.getDescription());
+            warehouse.setName(request.getName());
+            warehouse.setDescription(request.getDescription());
+            warehouse.setAddress(request.getAddress());
             warehouse.setCreatedAt(new Date());
-            warehouse.setAddress(warehouseDTO.getAddress());
-            System.out.println(warehouse);
             warehouseRepository.save(warehouse);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse added successfully", warehouse);
+            WarehouseResponse response = warehouseMapper.toDto(warehouseRepository.findAll().get(warehouseRepository.findAll().size() - 1));
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse added successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -70,29 +69,25 @@ public class WarehouseService {
         }
     }
 
-    public ResponseObject<Warehouse> updateWarehouseById(int id, WarehouseDTO warehouseDTO) {
+    public ResponseObject<?> updateWarehouseById(int id, WarehouseRequest request) {
         try {
-            Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
-            boolean isUpdated = false;
-            if (warehouseDTO.getName() != null && !warehouseDTO.getName().equals(warehouse.getName())) {
-                warehouse.setName(warehouseDTO.getName());
-                isUpdated = true;
+            if (!warehouseRepository.existsById(id)) {
+                throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
             }
-            if (warehouseDTO.getDescription() != null && !warehouseDTO.getDescription().equals(warehouse.getDescription())) {
-                warehouse.setDescription(warehouseDTO.getDescription());
-                isUpdated = true;
+            if (warehouseRepository.existsByName(request.getName())) {
+                throw new CustomException(ErrorCode.WAREHOUSE_NAME_EXISTS);
             }
-            if (warehouseDTO.getAddress() != null && !warehouseDTO.getAddress().equals(warehouse.getAddress())) {
-                warehouse.setAddress(warehouseDTO.getAddress());
-                isUpdated = true;
+            if (warehouseRepository.existsByAddress(request.getAddress())) {
+                throw new CustomException(ErrorCode.WAREHOUSE_ADDRESS_EXISTS);
             }
-            if (isUpdated) {
-                warehouse.setUpdatedAt(new Date());
-                warehouseRepository.save(warehouse);
-                return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse updated successfully", warehouse);
-            } else {
-                return new ResponseObject<>(HttpStatus.OK.value(), "No changes made", warehouse);
-            }
+            Optional<Warehouse> warehouse = warehouseRepository.findById(id);
+            warehouse.get().setName(request.getName());
+            warehouse.get().setDescription(request.getDescription());
+            warehouse.get().setAddress(request.getAddress());
+            warehouse.get().setUpdatedAt(new Date());
+            warehouseRepository.save(warehouse.get());
+            WarehouseResponse response = warehouseMapper.toDto(warehouse.get());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse updated successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {

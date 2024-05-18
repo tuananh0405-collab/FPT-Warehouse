@@ -31,5 +31,5 @@ public class Provider {
     private String address;
 
     @OneToMany(mappedBy = "provider")
-    private Set<Shipment> shipments;
+    private Set<Import> imports;
 }

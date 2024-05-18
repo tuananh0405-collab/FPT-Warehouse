@@ -1,12 +1,10 @@
 package com.wha.warehousemanagement.mappers;
 
-import com.wha.warehousemanagement.dtos.UserDTO;
+import com.wha.warehousemanagement.dtos.responses.UserResponse;
 import com.wha.warehousemanagement.models.User;
 import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
+import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = "spring")
-public interface UserMapper {
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
-    UserDTO userToUserDTO(User user);
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface UserMapper extends EntityMapper<UserResponse, User>{
 }

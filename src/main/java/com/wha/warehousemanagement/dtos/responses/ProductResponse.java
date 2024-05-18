@@ -1,4 +1,4 @@
-package com.wha.warehousemanagement.dtos;
+package com.wha.warehousemanagement.dtos.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -13,24 +13,13 @@ import java.util.Date;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class WarehouseDTO {
-
-    private Integer id;
+public class ProductResponse {
 
     private String name;
 
     private String description;
 
-    private String address;
+    private String origin;
 
-    private Date createdAt;
-
-    private Date updatedAt;
-
-    public WarehouseDTO(Integer id, String name, String description, String address) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.address = address;
-    }
+    private CategoryResponse category;
 }

@@ -1,53 +1,51 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.ProductDTO;
+import com.wha.warehousemanagement.dtos.requests.ProductRequest;
+import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
+import com.wha.warehousemanagement.dtos.responses.ProductResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.CategoryMapper;
+import com.wha.warehousemanagement.mappers.ProductMapper;
 import com.wha.warehousemanagement.models.Category;
 import com.wha.warehousemanagement.models.Product;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.CategoryRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
-
+    private final ProductMapper productMapper;
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
-        this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
-    }
-
-    public ResponseObject<ProductDTO> addProduct(ProductDTO productDTO) {
+    public ResponseObject<ProductResponse> addProduct(ProductRequest request) {
         try {
-            if (productDTO.getName() == null) {
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
                 throw new CustomException(ErrorCode.PRODUCT_NAME_BLANK);
-            } else if (productRepository.findByName(productDTO.getName()).isPresent()) {
+            } else if (productRepository.findByName(request.getName()).isPresent()) {
                 throw new CustomException(ErrorCode.PRODUCT_ALREADY_EXISTS);
             }
-            Optional<Category> category = categoryRepository.getCategoryById(productDTO.getCategoryId());
-            if (category.isEmpty()) {
-                throw new CustomException(ErrorCode.CATEGORY_NOT_FOUND);
-            }
-            Product product = new Product(
-                    productDTO.getName(),
-                    productDTO.getDescription(),
-                    productDTO.getQuantity(),
-                    productDTO.getCountry(),
-                    productDTO.getReceivedDate(),
-                    category.get()
-            );
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+            Product product = new Product();
+            product.setName(request.getName());
+            product.setDescription(request.getDescription());
+            product.setOrigin(request.getOrigin());
+            product.setCategory(category);
             productRepository.save(product);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Product added successfully", productDTO);
+            ProductResponse response = productMapper.toDto(product);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Product added successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -55,52 +53,50 @@ public class ProductService {
         }
     }
 
-    public ResponseObject<List<Product>> getAllProducts() {
-        try {
-            List<Product> list = new ArrayList<>(productRepository.findAll());
-            if (!list.isEmpty()) {
-                return new ResponseObject<>(HttpStatus.OK.value(), "Get all products successfully", list);
-            } else {
-                throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
-            }
-        } catch (CustomException e) {
-            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+    public ResponseObject<?> getAllProducts() {
+      try{
+          List<ProductResponse> responses = productRepository.findAll()
+                  .stream().map(
+                            product -> {
+                                ProductResponse response = productMapper.toDto(product);
+                                CategoryResponse categoryResponse = categoryMapper.toDto(product.getCategory());
+                                response.setCategory(categoryResponse);
+                                return response;
+                            }
+                  )
+                  .collect(Collectors.toList());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all products successfully", responses);
+      } catch (CustomException e) {
+            return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to add product", null);
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed get products details", null);
         }
     }
 
-    public ResponseObject<ProductDTO> getProductById(int id) {
-        try {
-            ProductDTO productDTO = productRepository.getProductDTOById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-            return new ResponseObject<>(HttpStatus.OK.value(), "Get product by id successfully", productDTO);
-        } catch (CustomException e) {
-            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
-        } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to add product", null);
-        }
-    }
-
-    public ResponseObject<Product> updateProduct(int id, ProductDTO productDTO) {
+    public ResponseObject<ProductResponse> getProductById(int id) {
         try {
             Product product = productRepository.getProductById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-            if (productDTO.getName() != null && !productDTO.getName().equals(product.getName())) {
-                product.setName(productDTO.getName());
-            }
-            if (productDTO.getDescription() != null && !productDTO.getDescription().equals(product.getDescription())) {
-                product.setDescription(productDTO.getDescription());
-            }
-            if (productDTO.getQuantity() != null) {
-                product.setQuantity(productDTO.getQuantity());
-            }
-            if (productDTO.getCountry() != null && !productDTO.getCountry().equals(product.getCountry())) {
-                product.setCountry(productDTO.getCountry());
-            }
-            if (productDTO.getReceivedDate() != null && !productDTO.getReceivedDate().equals(product.getReceivedDate())) {
-                product.setReceivedDate(productDTO.getReceivedDate());
-            }
+            ProductResponse response = productMapper.toDto(product);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get product by id successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to add product", null);
+        }
+    }
+
+    public ResponseObject<ProductResponse> updateProduct(int id, ProductRequest request) {
+        try {
+            Product product = productRepository.getProductById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+            product.setName(request.getName());
+            product.setDescription(request.getDescription());
+            product.setOrigin(request.getOrigin());
+            product.setCategory(category);
             productRepository.save(product);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Updated product successfully", product);
+            ProductResponse response = productMapper.toDto(product);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Updated product successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
