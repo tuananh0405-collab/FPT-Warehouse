@@ -32,17 +32,21 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.addInventory(id, request));
     }
 
-    //localhost:8080/inventory/product/1?page=1&sortBy=id&direction=asc
+    //localhost:6060/inventory/product/1?page=1&sortBy=id&direction=asc&categoryId=
     @GetMapping("/product/{warehouseId}")
     public ResponseEntity<?> getInventoryByWarehouseId(
             @PathVariable("warehouseId") int warehouseId,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "direction", defaultValue = "asc") String direction
+            @RequestParam(value = "direction", defaultValue = "asc") String direction,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId
     ) {
         int limit = 20;
         page = page - 1;
-        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(warehouseId, page, limit, sortBy, direction));
+        if (categoryId == 0){
+            categoryId = null;
+        }
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(warehouseId, page, limit, sortBy, direction, categoryId));
     }
 
     //localhost:8080/inventory/total-product/1
