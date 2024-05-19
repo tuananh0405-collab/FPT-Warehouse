@@ -11,9 +11,11 @@ import com.wha.warehousemanagement.repositories.InventoryRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
 import com.wha.warehousemanagement.repositories.ZoneRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,6 +105,37 @@ public class InventoryService {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to add inventory", null);
+        }
+    }
+
+    public ResponseObject<?> getInventoryByWarehouseId(int warehouseId, int page, int limit) {
+        try {
+            PageRequest pageable = PageRequest.of(page, limit);
+            List<InventoryResponse> response = inventoryRepository.findByWarehouseId(warehouseId, pageable)
+                .stream()
+                .map(imp -> {
+                    InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
+                    inventoryResponse.setProduct(productMapper.toDto(imp.getProduct()));
+                    inventoryResponse.setZoneName(imp.getZone().getName());
+                    return inventoryResponse;
+                })
+                .collect(Collectors.toList());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all inventories", null);
+        }
+    }
+
+    public ResponseObject<?> getTotalProductByWarehouseId(int warehouseId) {
+        try {
+            Long totalProduct = inventoryRepository.countInventoriesByWarehouseId(warehouseId);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Total product retrieved successfully", totalProduct);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get total product", null);
         }
     }
 }

@@ -31,4 +31,21 @@ public class InventoryController {
     public ResponseEntity<?> addInventory(@RequestBody InventoryRequest request, @PathVariable int id) {
         return ResponseEntity.ok(inventoryService.addInventory(id, request));
     }
+
+    //localhost:8080/inventory/product/1?page=1
+    @GetMapping("/product/{warehouseId}")
+    public ResponseEntity<?> getInventoryByWarehouseId(
+            @PathVariable("warehouseId") int warehouseId,
+            @RequestParam(value = "page", defaultValue = "1") int page
+    ) {
+        int limit = 20;
+        page = page - 1;
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(warehouseId, page, limit));
+    }
+
+    //localhost:8080/inventory/total-product/1
+    @GetMapping("/total-product/{warehouseId}")
+    public ResponseEntity<?> getTotalProductByWarehouseId(@PathVariable("warehouseId") int warehouseId) {
+        return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseId(warehouseId));
+    }
 }
