@@ -9,7 +9,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
-    @Query("SELECT i FROM Inventory i JOIN i.zone z JOIN z.warehouse w WHERE w.id = :warehouseId")
+    @Query("SELECT i FROM Inventory i " +
+            "JOIN i.product p " +
+            "JOIN i.zone z " +
+            "JOIN z.warehouse w " +
+            "WHERE w.id = :warehouseId")
     Page<Inventory> findByWarehouseId(Integer warehouseId, Pageable pageable);
 
     @Query("SELECT COUNT(i) FROM Inventory i JOIN i.zone z JOIN z.warehouse w WHERE w.id = :warehouseId")

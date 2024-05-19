@@ -12,10 +12,10 @@ import com.wha.warehousemanagement.repositories.ProductRepository;
 import com.wha.warehousemanagement.repositories.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.awt.print.Pageable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -106,18 +106,20 @@ public class InventoryService {
         }
     }
 
-    public ResponseObject<?> getInventoryByWarehouseId(int warehouseId, int page, int limit) {
+    public ResponseObject<?> getInventoryByWarehouseId(int warehouseId, int page, int limit, String sortBy, String direction) {
         try {
-            PageRequest pageable = PageRequest.of(page, limit);
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort sort = Sort.by(sortDirection, sortBy);
+            PageRequest pageable = PageRequest.of(page, limit, sort);
             List<InventoryResponse> response = inventoryRepository.findByWarehouseId(warehouseId, pageable)
-                .stream()
-                .map(imp -> {
-                    InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
-                    inventoryResponse.setProduct(productMapper.toDto(imp.getProduct()));
-                    inventoryResponse.setZoneName(imp.getZone().getName());
-                    return inventoryResponse;
-                })
-                .collect(Collectors.toList());
+                    .stream()
+                    .map(imp -> {
+                        InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
+                        inventoryResponse.setProduct(productMapper.toDto(imp.getProduct()));
+                        inventoryResponse.setZoneName(imp.getZone().getName());
+                        return inventoryResponse;
+                    })
+                    .collect(Collectors.toList());
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
