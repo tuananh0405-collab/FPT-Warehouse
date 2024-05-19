@@ -98,8 +98,6 @@ public class InventoryService {
 
     public ResponseObject<?> addInventory(int id, InventoryRequest request) {
         try {
-           //Handle case Zone is full,
-            //Handle case consolidate goods
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventory added successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);

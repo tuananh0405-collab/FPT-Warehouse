@@ -3,6 +3,7 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.requests.ImportRequest;
 import com.wha.warehousemanagement.dtos.responses.ImportDetailResponse;
 import com.wha.warehousemanagement.dtos.responses.ImportResponse;
+import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.dtos.responses.ProviderResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
@@ -14,6 +15,7 @@ import com.wha.warehousemanagement.repositories.ImportDetailRepository;
 import com.wha.warehousemanagement.repositories.ImportRepository;
 import com.wha.warehousemanagement.repositories.ProviderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -152,6 +154,32 @@ public class ImportService {
             }
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete imports", null);
+        }
+    }
+
+    public ResponseObject<?> getAllImports(int page, int limit) {
+        try {
+            PageRequest pageable = PageRequest.of(page, limit);
+            List<ImportResponse> response = importRepository.findAllImports(pageable)
+                    .stream()
+                    .map(importMapper::toDto)
+                    .collect(Collectors.toList());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Imports retrieved successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all imports", null);
+        }
+    }
+
+    public ResponseObject<?> getTotalImports() {
+        try {
+            Long totalImport = importRepository.countAllImports();
+            return new ResponseObject<>(HttpStatus.OK.value(), "Total import retrieved successfully", totalImport);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get total import", null);
         }
     }
 }
