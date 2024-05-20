@@ -17,4 +17,5 @@ public class UserRequest {
     private String phone;
     private String address;
     private String role;
+    private Integer warehouseId;
 }
