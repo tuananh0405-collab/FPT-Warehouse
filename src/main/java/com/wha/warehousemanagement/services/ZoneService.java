@@ -109,4 +109,19 @@ public class ZoneService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete zone", null);
         }
     }
+
+    public ResponseObject<?> getZonesByWarehouseId (int id) {
+        try {
+            List<ZoneResponse> responses = zoneRepository.findAllByWarehouse_Id(id)
+                    .stream().map(zoneMapper::toDto).toList();
+            if (responses.isEmpty())
+                throw new CustomException(ErrorCode.ZONE_NOT_FOUND);
+            return new ResponseObject<>(HttpStatus.OK.value(), "All zones fetched successfully", responses);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all zones", null);
+        }
+    }
+
 }

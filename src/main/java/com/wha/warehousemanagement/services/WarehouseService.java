@@ -7,6 +7,7 @@ import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.Warehouse;
+import com.wha.warehousemanagement.repositories.UserRepository;
 import com.wha.warehousemanagement.repositories.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ public class WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
     private final WarehouseMapper warehouseMapper;
+    private final UserRepository userRepository;
 
     public ResponseObject<?> getAllWarehouses() {
         try {
@@ -107,6 +109,20 @@ public class WarehouseService {
             return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse deleted successfully", null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete warehouse", null);
+        }
+    }
+
+    public ResponseObject<?> getWarehousesByUserId(int id) {
+        try {
+            if (!userRepository.existsById(id)) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            }
+            WarehouseResponse response = warehouseMapper.toDto(warehouseRepository.findByUserId(id));
+            return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse fetched successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update warehouse", null);
         }
     }
 

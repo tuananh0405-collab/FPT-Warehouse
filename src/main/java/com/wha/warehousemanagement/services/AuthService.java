@@ -65,6 +65,8 @@ public class AuthService {
             String refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
             TokenDTO tokenData = new TokenDTO();
             tokenData.setUsername(request.getUsername());
+            tokenData.setUserId(user.getId());
+            tokenData.setWarehouseId(user.getWarehouse().getId());
             tokenData.setToken(jwt);
             tokenData.setRefreshToken(refreshToken);
             tokenData.setExpirationTime("24h");

@@ -1,4 +1,4 @@
-package com.wha.warehousemanagement.dtos.responses;
+package com.wha.warehousemanagement.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,13 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryResponse {
-    private Integer id;
-    private String name;
-    private String description;
-
-    public CategoryResponse(String name) {
-        this.name = name;
-    }
-
+public class ExportDetailRequest {
+    private Integer productId;
+    private Integer exportId;
+    private Integer quantity;
+    private Integer zoneId;
 }

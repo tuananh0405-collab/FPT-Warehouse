@@ -38,4 +38,9 @@ public class WarehouseController {
         return ResponseEntity.ok(warehouseService.deleteWarehouseById(id));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getWarehousesByUserId(@PathVariable int userId) {
+        return ResponseEntity.ok(warehouseService.getWarehousesByUserId(userId));
+    }
+
 }

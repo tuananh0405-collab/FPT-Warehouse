@@ -10,6 +10,4 @@ import java.util.List;
 
 @Repository
 public interface ExportRepository extends JpaRepository<Export, Integer> {
-    @Query("SELECT new com.wha.warehousemanagement.dtos.responses.ExportResponse(c.id, c.customerName, c.description, c.status, c.exportDate, c.customerAddress) FROM Export c ORDER BY c.id desc")
-    List<ExportResponse> getAllExportResponses();
 }
