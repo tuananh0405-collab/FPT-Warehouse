@@ -62,7 +62,11 @@ public enum ErrorCode {
     IMPORT_ADD_FAILED(1056, "Import added unsuccessfully"),
     IMPORT_NOT_FOUND(1057, "Import not found"),
     EXPORT_ADD_FAILED(1058, "Export added unsuccessfully"),
-    EXPORT_NOT_FOUND(1059, "Export not found")
+    EXPORT_NOT_FOUND(1059, "Export not found"),
+    IMPORT_DETAIL_NOT_FOUND(1060, "Import detail not found"),
+    EXPORT_DETAIL_NOT_FOUND(1060, "Export detail not found"),
+    INVENTORY_NOT_FOUND(1061, "Inventory not found"),
+    ZONE_FULL(1062, "Zone is full"),
     ;
 
     private final int code;
