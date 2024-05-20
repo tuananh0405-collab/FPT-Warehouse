@@ -106,12 +106,12 @@ public class InventoryService {
         }
     }
 
-    public ResponseObject<?> getInventoryByWarehouseId(int warehouseId, int page, int limit, String sortBy, String direction, Integer categoryId) {
+    public ResponseObject<?> getInventoryByWarehouseId(int warehouseId, int page, int limit, String sortBy, String direction, Integer categoryId, String zoneName) {
         try {
             Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
             Sort sort = Sort.by(sortDirection, sortBy);
             PageRequest pageable = PageRequest.of(page, limit, sort);
-            List<InventoryResponse> response = inventoryRepository.findByWarehouseIdAndCategoryId(warehouseId, categoryId, pageable)
+            List<InventoryResponse> response = inventoryRepository.findByWarehouseIdAndCategoryId(warehouseId, categoryId, zoneName, pageable)
                     .stream()
                     .map(imp -> {
                         InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
@@ -127,6 +127,7 @@ public class InventoryService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all inventories", null);
         }
     }
+
 
 
     public ResponseObject<?> getTotalProductByWarehouseId(int warehouseId) {

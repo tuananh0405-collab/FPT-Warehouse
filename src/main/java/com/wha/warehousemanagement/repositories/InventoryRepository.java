@@ -14,8 +14,10 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
             "JOIN p.category c " +
             "JOIN i.zone z " +
             "JOIN z.warehouse w " +
-            "WHERE w.id = :warehouseId AND (:categoryId IS NULL OR c.id = :categoryId)")
-    Page<Inventory> findByWarehouseIdAndCategoryId(Integer warehouseId, Integer categoryId, Pageable pageable);
+            "WHERE w.id = :warehouseId " +
+            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+            "AND (:zoneName IS NULL OR z.name = :zoneName)")
+    Page<Inventory> findByWarehouseIdAndCategoryId(Integer warehouseId, Integer categoryId, String zoneName, Pageable pageable);
 
     @Query("SELECT COUNT(i) FROM Inventory i JOIN i.zone z JOIN z.warehouse w WHERE w.id = :warehouseId")
     Long countInventoriesByWarehouseId(Integer warehouseId);

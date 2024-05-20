@@ -32,21 +32,25 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.addInventory(id, request));
     }
 
-    //localhost:6060/inventory/product/1?page=1&sortBy=id&direction=asc&categoryId=
+    //localhost:6060/inventory/product/1?page=1&sortBy=id&direction=asc&categoryId=&zoneName=A1
     @GetMapping("/product/{warehouseId}")
     public ResponseEntity<?> getInventoryByWarehouseId(
             @PathVariable("warehouseId") int warehouseId,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(value = "direction", defaultValue = "asc") String direction,
-            @RequestParam(value = "categoryId", required = false) Integer categoryId
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "zoneName", required = false) String zoneName
     ) {
         int limit = 20;
         page = page - 1;
-        if (categoryId == 0){
+        if (categoryId != null && categoryId == 0) {
             categoryId = null;
         }
-        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(warehouseId, page, limit, sortBy, direction, categoryId));
+        if (zoneName != null && zoneName.isBlank()){
+            zoneName = null;
+        }
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(warehouseId, page, limit, sortBy, direction, categoryId, zoneName));
     }
 
     //localhost:8080/inventory/total-product/1

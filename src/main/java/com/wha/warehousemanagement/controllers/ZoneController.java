@@ -37,6 +37,8 @@ private final ZoneService zoneService;
         return ResponseEntity.ok(zoneService.deleteZoneById(id));
     }
 
+
+    //localhost:6060/zone/warehouse/1
     @GetMapping("/warehouse/{id}")
     public ResponseEntity<?> getZonesByWarehouseId(@PathVariable("id") int id) {
         return ResponseEntity.ok(zoneService.getZonesByWarehouseId(id));
