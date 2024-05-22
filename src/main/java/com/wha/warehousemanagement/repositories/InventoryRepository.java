@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
+
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     @Query("SELECT i FROM Inventory i " +
@@ -18,6 +20,16 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
             "AND (:categoryId IS NULL OR c.id = :categoryId) " +
             "AND (:zoneName IS NULL OR z.name = :zoneName)")
     Page<Inventory> findByWarehouseIdAndCategoryId(Integer warehouseId, Integer categoryId, String zoneName, Pageable pageable);
+
+    @Query("SELECT COUNT(i) FROM Inventory i " +
+            "JOIN i.product p " +
+            "JOIN p.category c " +
+            "JOIN i.zone z " +
+            "JOIN z.warehouse w " +
+            "WHERE w.id = :warehouseId " +
+            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+            "AND (:zoneName IS NULL OR z.name = :zoneName)")
+    Long countInventoriesByWarehouseIdAndCategoryId(Integer warehouseId, Integer categoryId, String zoneName);
 
     @Query("SELECT COUNT(i) FROM Inventory i JOIN i.zone z JOIN z.warehouse w WHERE w.id = :warehouseId")
     Long countInventoriesByWarehouseId(Integer warehouseId);

@@ -32,25 +32,34 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.addInventory(id, request));
     }
 
-    //localhost:6060/inventory/product/1?page=1&sortBy=id&direction=asc&categoryId=&zoneName=A1
-    @GetMapping("/product/{warehouseId}")
+    //localhost:6060/inventory/products/?page=1&sortBy=id&search=product:1
+    @GetMapping("/products/")
     public ResponseEntity<?> getInventoryByWarehouseId(
-            @PathVariable("warehouseId") int warehouseId,
             @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "direction", defaultValue = "asc") String direction,
-            @RequestParam(value = "categoryId", required = false) Integer categoryId,
-            @RequestParam(value = "zoneName", required = false) String zoneName
+            @RequestParam(value = "sortBy", defaultValue = "id:asc") String sortBy,
+            @RequestParam(required = false) Integer warehouseId,
+            @RequestParam(required = false) String... search
     ) {
         int limit = 20;
         page = page - 1;
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(page, limit, sortBy,warehouseId, search));
+    }
+
+
+    //localhost:6060/inventory/total-product-filter/1?categoryId=1&zoneName=A1
+    @GetMapping("/total-product-filter/{warehouseId}")
+    public ResponseEntity<?> getTotalProductByWarehouseIdFilter(
+            @PathVariable("warehouseId") int warehouseId,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "zoneName", required = false) String zoneName
+    ) {
         if (categoryId != null && categoryId == 0) {
             categoryId = null;
         }
         if (zoneName != null && zoneName.isBlank()){
             zoneName = null;
         }
-        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(warehouseId, page, limit, sortBy, direction, categoryId, zoneName));
+        return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseIdFilter(warehouseId, categoryId, zoneName));
     }
 
     //localhost:8080/inventory/total-product/1
