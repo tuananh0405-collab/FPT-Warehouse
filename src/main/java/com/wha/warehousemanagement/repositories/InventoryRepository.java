@@ -33,4 +33,9 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
     @Query("SELECT COUNT(i) FROM Inventory i JOIN i.zone z JOIN z.warehouse w WHERE w.id = :warehouseId")
     Long countInventoriesByWarehouseId(Integer warehouseId);
+
+
+    // zones transfer
+    Inventory findByProductIdAndZoneId(int productId, int zoneId);
+    //
 }

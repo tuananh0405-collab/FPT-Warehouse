@@ -8,11 +8,14 @@ import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.InventoryMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
 import com.wha.warehousemanagement.models.Inventory;
+import com.wha.warehousemanagement.models.Product;
 import com.wha.warehousemanagement.models.ResponseObject;
+import com.wha.warehousemanagement.models.Zone;
 import com.wha.warehousemanagement.repositories.InventoryRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
 import com.wha.warehousemanagement.repositories.SearchRepository;
 import com.wha.warehousemanagement.repositories.ZoneRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -41,7 +44,7 @@ public class InventoryService {
                         InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
                         InventoryResponse.builder()
                                 .product(productMapper.toDto(imp.getProduct()))
-                                .zoneName(imp.getZone().getName()).build();
+                                .zoneName(imp.getZone().getName()).quantity(0).build();
                         return inventoryResponse;
                     })
                     .collect(Collectors.toList());
@@ -53,17 +56,37 @@ public class InventoryService {
         }
     }
 
+//    public ResponseObject<?> getInventoryById(Integer id) {
+//        try {
+//            InventoryResponse response = inventoryRepository.findById(id)
+//                .map(imp -> {
+//                    InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
+//                    InventoryResponse.builder()
+//                            .product(productMapper.toDto(imp.getProduct()))
+//                            .zoneName(imp.getZone().getName()).quantity().build();
+//                    return inventoryResponse;
+//                })
+//                .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+//            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", response);
+//        } catch (CustomException e) {
+//            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+//        } catch (Exception e) {
+//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get inventory", null);
+//        }
+//    }
+
     public ResponseObject<?> getInventoryById(Integer id) {
         try {
             InventoryResponse response = inventoryRepository.findById(id)
-                .map(imp -> {
-                    InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
-                    InventoryResponse.builder()
-                            .product(productMapper.toDto(imp.getProduct()))
-                            .zoneName(imp.getZone().getName()).build();
-                    return inventoryResponse;
-                })
-                .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                    .map(imp -> {
+                        InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
+                        return InventoryResponse.builder()
+                                .product(productMapper.toDto(imp.getProduct()))
+                                .zoneName(imp.getZone().getName())
+                                .quantity(imp.getQuantity()) // Cung cấp giá trị quantity
+                                .build();
+                    })
+                    .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -146,4 +169,33 @@ public class InventoryService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get total product", null);
         }
     }
+
+
+    //zones transfer
+    @Transactional
+    public void transferProductBetweenZones(int productId, int fromZoneId, int toZoneId, int quantity) {
+        // Giảm số lượng sản phẩm trong zone xuất phát
+        Inventory fromInventory = inventoryRepository.findByProductIdAndZoneId(productId, fromZoneId);
+        if (fromInventory == null || fromInventory.getQuantity() < quantity) {
+            throw new RuntimeException("Không đủ số lượng sản phẩm để chuyển");
+        }
+        fromInventory.setQuantity(fromInventory.getQuantity() - quantity);
+        inventoryRepository.save(fromInventory);
+
+        // Tăng số lượng sản phẩm trong zone đích
+        Inventory toInventory = inventoryRepository.findByProductIdAndZoneId(productId, toZoneId);
+        if (toInventory == null) {
+            Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+            Zone zone = zoneRepository.findById(toZoneId).orElseThrow(() -> new RuntimeException("Zone not found"));
+
+            toInventory = new Inventory();
+            toInventory.setProduct(product);
+            toInventory.setZone(zone);
+            toInventory.setQuantity(0);
+        }
+        toInventory.setQuantity(toInventory.getQuantity() + quantity);
+        inventoryRepository.save(toInventory);
+    }
+    //
+
 }

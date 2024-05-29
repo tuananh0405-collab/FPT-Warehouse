@@ -3,6 +3,7 @@ package com.wha.warehousemanagement.controllers;
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
 import com.wha.warehousemanagement.services.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,4 +68,19 @@ public class InventoryController {
     public ResponseEntity<?> getTotalProductByWarehouseId(@PathVariable("warehouseId") int warehouseId) {
         return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseId(warehouseId));
     }
+
+    //zones transfer
+    @PostMapping("/transfer")
+    public ResponseEntity<String> transferProduct(@RequestParam int productId,
+                                                  @RequestParam int fromZoneId,
+                                                  @RequestParam int toZoneId,
+                                                  @RequestParam int quantity) {
+        try {
+            inventoryService.transferProductBetweenZones(productId, fromZoneId, toZoneId, quantity);
+            return ResponseEntity.ok("Chuyển sản phẩm thànhóh công");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    //
 }
