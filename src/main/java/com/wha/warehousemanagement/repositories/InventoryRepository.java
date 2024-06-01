@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
+import java.util.List;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
@@ -37,5 +38,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
     // zones transfer
     Inventory findByProductIdAndZoneId(int productId, int zoneId);
-    //
+
+    List<Inventory> findByProductIdOrderByExpiredAtAsc(Integer productId);
 }

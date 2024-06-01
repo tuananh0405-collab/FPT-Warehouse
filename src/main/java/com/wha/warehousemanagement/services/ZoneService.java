@@ -54,6 +54,7 @@ public class ZoneService {
             if (request.getName() == null || request.getName().trim().isEmpty()) {
                 throw new CustomException(ErrorCode.ZONE_NAME_BLANK);
             }
+            //them exist trong warehouseId
             if (zoneRepository.existsByName(request.getName())) {
                 throw new CustomException(ErrorCode.ZONE_ALREADY_EXISTS);
             }
