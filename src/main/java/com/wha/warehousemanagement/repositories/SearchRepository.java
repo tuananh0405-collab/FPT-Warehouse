@@ -34,7 +34,7 @@ public class SearchRepository {
 
     private final InventoryMapper inventoryMapper;
     private final ProductMapper productMapper;
-    private static final String SEARCH_OPERATOR = "([\\w.]+?)([:><])(.*)";
+    private static final String SEARCH_OPERATOR = "([\\w.]+?)([:])(.*)";
     private static final String SORT_BY = "([\\w.]+?)(:)(asc|desc)";
     @PersistenceContext
     private EntityManager entityManager;
