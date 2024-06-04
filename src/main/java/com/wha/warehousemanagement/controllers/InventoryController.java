@@ -3,6 +3,7 @@ package com.wha.warehousemanagement.controllers;
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
 import com.wha.warehousemanagement.services.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,25 +33,34 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.addInventory(id, request));
     }
 
-    //localhost:6060/inventory/product/1?page=1&sortBy=id&direction=asc&categoryId=&zoneName=A1
-    @GetMapping("/product/{warehouseId}")
+    //localhost:6060/inventory/products/?page=1&sortBy=id&search=product:1
+    @GetMapping("/products/")
     public ResponseEntity<?> getInventoryByWarehouseId(
-            @PathVariable("warehouseId") int warehouseId,
             @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "direction", defaultValue = "asc") String direction,
-            @RequestParam(value = "categoryId", required = false) Integer categoryId,
-            @RequestParam(value = "zoneName", required = false) String zoneName
+            @RequestParam(value = "sortBy", defaultValue = "id:asc") String sortBy,
+            @RequestParam(required = false) Integer warehouseId,
+            @RequestParam(required = false) String... search
     ) {
         int limit = 20;
         page = page - 1;
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(page, limit, sortBy,warehouseId, search));
+    }
+
+
+    //localhost:6060/inventory/total-product-filter/1?categoryId=1&zoneName=A1
+    @GetMapping("/total-product-filter/{warehouseId}")
+    public ResponseEntity<?> getTotalProductByWarehouseIdFilter(
+            @PathVariable("warehouseId") int warehouseId,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "zoneName", required = false) String zoneName
+    ) {
         if (categoryId != null && categoryId == 0) {
             categoryId = null;
         }
         if (zoneName != null && zoneName.isBlank()){
             zoneName = null;
         }
-        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(warehouseId, page, limit, sortBy, direction, categoryId, zoneName));
+        return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseIdFilter(warehouseId, categoryId, zoneName));
     }
 
     //localhost:8080/inventory/total-product/1
@@ -58,4 +68,19 @@ public class InventoryController {
     public ResponseEntity<?> getTotalProductByWarehouseId(@PathVariable("warehouseId") int warehouseId) {
         return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseId(warehouseId));
     }
+
+    //zones transfer
+    @PostMapping("/transfer")
+    public ResponseEntity<String> transferProduct(@RequestParam int productId,
+                                                  @RequestParam int fromZoneId,
+                                                  @RequestParam int toZoneId,
+                                                  @RequestParam int quantity) {
+        try {
+            inventoryService.transferProductBetweenZones(productId, fromZoneId, toZoneId, quantity);
+            return ResponseEntity.ok("Chuyển sản phẩm thànhóh công");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    //
 }
