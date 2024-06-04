@@ -1,7 +1,6 @@
 package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.ExportDetailRequest;
-import com.wha.warehousemanagement.dtos.requests.ImportDetailRequest;
 import com.wha.warehousemanagement.services.ExportDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -38,5 +37,10 @@ public class ExportDetailController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExportDetail(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(exportDetailService.deleteExportDetail(id));
+    }
+
+    @GetMapping("/suggest")
+    public ResponseEntity<?> suggestExportDetail(@RequestBody List<ExportDetailRequest> requests) {
+        return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
     }
 }

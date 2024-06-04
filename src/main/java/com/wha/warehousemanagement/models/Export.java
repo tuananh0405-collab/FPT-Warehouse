@@ -38,4 +38,7 @@ public class Export {
     @OneToMany(mappedBy = "export")
     private Set<ExportDetail> exportDetails;
 
+    public Export(Integer exportId) {
+        this.id = exportId;
+    }
 }
