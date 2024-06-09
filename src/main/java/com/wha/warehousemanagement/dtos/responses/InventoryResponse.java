@@ -19,4 +19,5 @@ public class InventoryResponse {
     private int quantity;
     private Date expiredAt;
     private String zoneName;
+    private Integer zoneId;
 }

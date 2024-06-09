@@ -40,4 +40,43 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     Inventory findByProductIdAndZoneId(int productId, int zoneId);
 
     List<Inventory> findByProductIdOrderByExpiredAtAsc(Integer productId);
+
+    @Query("SELECT i FROM Inventory i " +
+            "JOIN i.product p " +
+            "JOIN p.category c " +
+            "JOIN i.zone z " +
+            "JOIN z.warehouse w " +
+            "WHERE w.id = :warehouseId " +
+            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+            "AND (:zoneName IS NULL OR z.name = :zoneName) " +
+            "AND (:productName IS NULL OR p.name LIKE %:productName%) " +
+            "AND (:quantityLow IS NULL OR i.quantity >= :quantityLow) " +
+            "AND (:quantityHigh IS NULL OR i.quantity <= :quantityHigh)")
+    Page<Inventory> searchInventoriesWithFilters(
+            Integer warehouseId,
+            Integer categoryId,
+            String zoneName,
+            String productName,
+            Integer quantityLow,
+            Integer quantityHigh,
+            Pageable pageable);
+
+    @Query("SELECT COUNT(i) FROM Inventory i " +
+            "JOIN i.product p " +
+            "JOIN p.category c " +
+            "JOIN i.zone z " +
+            "JOIN z.warehouse w " +
+            "WHERE w.id = :warehouseId " +
+            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+            "AND (:zoneName IS NULL OR z.name = :zoneName) " +
+            "AND (:productName IS NULL OR p.name LIKE %:productName%) " +
+            "AND (:quantityLow IS NULL OR i.quantity >= :quantityLow) " +
+            "AND (:quantityHigh IS NULL OR i.quantity <= :quantityHigh)")
+    Long countInventoriesWithFilters(
+            Integer warehouseId,
+            Integer categoryId,
+            String zoneName,
+            String productName,
+            Integer quantityLow,
+            Integer quantityHigh);
 }
