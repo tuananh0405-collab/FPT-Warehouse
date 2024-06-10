@@ -31,8 +31,4 @@ public class ImportDetail {
 
     @Column(name = "import_detail_expired_at")
     private Date expiredAt;
-
-    @ManyToOne()
-    @JoinColumn(name = "zone_id", nullable = true)
-    private Zone zone;
 }
