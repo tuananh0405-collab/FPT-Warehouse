@@ -18,6 +18,7 @@ public class ExportController {
         return ResponseEntity.ok(exportService.addExport(request));
     }
 
+    //
     @GetMapping
     public ResponseEntity<?> getAllExports() {
         return ResponseEntity.ok(exportService.getAllExports());
@@ -43,4 +44,22 @@ public class ExportController {
         return ResponseEntity.ok(exportService.deleteAllExports());
     }
 
+    //localhost:6060/export/search?page=1&sortBy=id&exportDate=2021-09-01&customerName=customer&customerAddress=address&status=COMPLETED
+    @GetMapping("/exportDetails/search")
+    public ResponseEntity<?> searchExportDetails(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam("warehouseId") int warehouseId,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction,
+            @RequestParam(value = "exportDate", required = false) String exportDate,
+            @RequestParam(value = "customerName", required = false) String customerName,
+            @RequestParam(value = "customerAddress", required = false) String customerAddress,
+            @RequestParam(value = "status", required = false) String status
+    ) {
+        int limit = 20;
+        page = page - 1;
+        return ResponseEntity.ok(exportService.searchExportDetails(
+                page, limit, sortBy,direction,warehouseId, exportDate, customerName, customerAddress, status
+        ));
+    }
 }

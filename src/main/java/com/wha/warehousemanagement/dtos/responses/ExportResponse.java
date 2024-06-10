@@ -2,11 +2,13 @@ package com.wha.warehousemanagement.dtos.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wha.warehousemanagement.models.ExportDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -26,4 +28,6 @@ public class ExportResponse {
     private Date exportDate;
 
     private String customerAddress;
+
+    private List<ExportDetailResponse> exportDetails;
 }

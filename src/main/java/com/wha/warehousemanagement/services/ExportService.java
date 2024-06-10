@@ -17,9 +17,13 @@ import com.wha.warehousemanagement.models.Status;
 import com.wha.warehousemanagement.repositories.CategoryRepository;
 import com.wha.warehousemanagement.repositories.ExportRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,6 +34,7 @@ public class ExportService {
 
     private final ExportRepository exportRepository;
     private final ExportMapper exportMapper;
+    private final ExportDetailService exportDetailService;
 
     public ResponseObject<?> addExport(ExportRequest request) {
         try {
@@ -37,7 +42,7 @@ public class ExportService {
             export.setCustomerName(request.getCustomerName());
             export.setDescription(request.getDescription());
             export.setStatus(Status.valueOf(request.getStatus()));
-            export.setExportDate(request.getExportDate());
+            export.setExportDate(new Date());
             export.setCustomerAddress(request.getCustomerAddress());
             exportRepository.save(export);
             ExportResponse response = exportMapper.toDto(export);
@@ -66,6 +71,9 @@ public class ExportService {
             Export export = exportRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
             ExportResponse response = exportMapper.toDto(export);
+
+            response.setExportDetails(exportDetailService.getExportDetailByExportId(id));
+
             return new ResponseObject<>(HttpStatus.OK.value(), "Get export by id successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -86,9 +94,6 @@ public class ExportService {
             }
             if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
                 export.setStatus(Status.valueOf(request.getStatus()));
-            }
-            if (request.getExportDate() != null) {
-                export.setExportDate(request.getExportDate());
             }
             if (request.getCustomerAddress() != null && !request.getCustomerAddress().trim().isEmpty()) {
                 export.setCustomerAddress(request.getCustomerAddress());
@@ -127,6 +132,25 @@ public class ExportService {
             }
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete exports", null);
+        }
+    }
+
+    public ResponseObject<List<ExportResponse>> searchExportDetails(
+            int page, int limit, String sortBy,String direction, int warehouseId, String exportDate, String customerName,
+            String customerAddress, String status) {
+        try {
+            if (direction == "asc") {
+                direction = "ASC";
+            } else {
+                direction = "DESC";
+            }
+            Sort.Direction sortDirection = Sort.Direction.fromString(direction.equals("asc") ? "ASC" : "DESC");
+            Pageable pageable = PageRequest.of(page, limit, Sort.by(sortDirection, sortBy));
+            List<ExportResponse> exports = exportMapper.toDto(exportRepository.searchExportDetails(
+                    warehouseId, exportDate, customerName, customerAddress, status, pageable).getContent());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Search export details successfully", exports);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to search export details", null);
         }
     }
 

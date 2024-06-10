@@ -101,6 +101,22 @@ public class ExportDetailService {
         }
     }
 
+    public List<ExportDetailResponse> getExportDetailByExportId(Integer exportId) {
+        try {
+            return exportDetailRepository.findByExportId(exportId)
+                    .stream()
+                    .map(imp -> {
+                        ExportDetailResponse response = exportDetailMapper.toDto(imp);
+                        response.setProduct(productMapper.toDto(imp.getProduct()));
+                        response.setZoneName(imp.getZone().getName());
+                        return response;
+                    })
+                    .toList();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public ResponseObject<?> deleteExportDetail(Integer id) {
         try {
             ExportDetail exportDetail = exportDetailRepository.findById(id)
@@ -136,7 +152,6 @@ public class ExportDetailService {
             });
 
             List<ExportDetailResponse> suggestedDetails = new ArrayList<>();
-
 
             // loop through the requests and find the suggested details
             for (ExportDetailRequest request : requests) {

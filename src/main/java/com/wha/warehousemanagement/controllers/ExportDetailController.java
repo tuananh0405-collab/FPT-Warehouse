@@ -34,6 +34,7 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.updateExportDetail(id, request));
     }
 
+    //localhost:6060/export-details/1
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExportDetail(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(exportDetailService.deleteExportDetail(id));

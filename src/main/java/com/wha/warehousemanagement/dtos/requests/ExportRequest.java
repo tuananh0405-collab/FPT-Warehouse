@@ -21,8 +21,6 @@ public class ExportRequest {
 
     private String status;
 
-    private Date exportDate;
-
     private String customerAddress;
 
 }
