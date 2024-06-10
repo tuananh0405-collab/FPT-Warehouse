@@ -43,4 +43,9 @@ public class ExportDetailController {
     public ResponseEntity<?> suggestExportDetail(@RequestBody List<ExportDetailRequest> requests) {
         return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
     }
+
+    @GetMapping("/export/{exportId}")
+    public ResponseEntity<?> getExportDetailsByExportId(@PathVariable("exportId") Integer exportId) {
+        return ResponseEntity.ok(exportDetailService.getExportDetailsByExportId(exportId));
+    }
 }
