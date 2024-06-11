@@ -18,5 +18,4 @@ public class ImportDetailRequest {
     private Integer importId;
     private Integer quantity;
     private Date expiredAt;
-    private Integer zoneId;
 }

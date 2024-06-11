@@ -43,9 +43,8 @@ public class InventoryController {
     ) {
         int limit = 20;
         page = page - 1;
-        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(page, limit, sortBy,warehouseId, search));
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseId(page, limit, sortBy, warehouseId, search));
     }
-
 
     //localhost:6060/inventory/total-product-filter/1?categoryId=1&zoneName=A1
     @GetMapping("/total-product-filter/{warehouseId}")
@@ -57,7 +56,7 @@ public class InventoryController {
         if (categoryId != null && categoryId == 0) {
             categoryId = null;
         }
-        if (zoneName != null && zoneName.isBlank()){
+        if (zoneName != null && zoneName.isBlank()) {
             zoneName = null;
         }
         return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseIdFilter(warehouseId, categoryId, zoneName));
@@ -77,10 +76,45 @@ public class InventoryController {
                                                   @RequestParam int quantity) {
         try {
             inventoryService.transferProductBetweenZones(productId, fromZoneId, toZoneId, quantity);
-            return ResponseEntity.ok("Chuyển sản phẩm thànhóh công");
+            return ResponseEntity.ok("Chuyển sản phẩm thành công");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-    //
+
+    // Sửa lại URL để tránh xung đột
+    @GetMapping("/products-with-filters/")
+    public ResponseEntity<?> getInventoryByWarehouseIdWithFilters(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(required = false) Integer warehouseId,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) String zoneName,
+            @RequestParam(required = false) Integer quantityLow,
+            @RequestParam(required = false) Integer quantityHigh
+    ) {
+        int limit = 20;
+        page = page - 1;
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseIdWithFilters(
+                page, limit, warehouseId, productName, categoryId, zoneName, quantityLow, quantityHigh));
+    }
+
+    @GetMapping("/total-product-with-filters/")
+    public ResponseEntity<?> getTotalProductByWarehouseIdWithFilters(
+            @RequestParam(value = "warehouseId") int warehouseId,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "zoneName", required = false) String zoneName,
+            @RequestParam(value = "productName", required = false) String productName,
+            @RequestParam(value = "quantityLow", required = false) Integer quantityLow,
+            @RequestParam(value = "quantityHigh", required = false) Integer quantityHigh
+    ) {
+        if (categoryId != null && categoryId == 0) {
+            categoryId = null;
+        }
+        if (zoneName != null && zoneName.isBlank()) {
+            zoneName = null;
+        }
+        return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseIdWithFilters(
+                warehouseId, categoryId, zoneName, productName, quantityLow, quantityHigh));
+    }
 }

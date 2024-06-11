@@ -42,7 +42,7 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private Set<ExportDetail> exportDetails;
 
-    public Product(Integer productId) {
-        this.id = productId;
-    }
+//    public Product(Integer productId) {
+//        this.id = productId;
+//    }
 }

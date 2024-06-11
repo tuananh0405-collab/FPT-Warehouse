@@ -45,7 +45,7 @@ public class ExportDetailService {
                         return response;
                     })
                     .collect(Collectors.toList());
-            return new ResponseObject<>(HttpStatus.OK.value(), "export details retrieved successfully", responses);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export details retrieved successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -101,6 +101,22 @@ public class ExportDetailService {
         }
     }
 
+    public List<ExportDetailResponse> getExportDetailByExportId(Integer exportId) {
+        try {
+            return exportDetailRepository.findByExportId(exportId)
+                    .stream()
+                    .map(imp -> {
+                        ExportDetailResponse response = exportDetailMapper.toDto(imp);
+                        response.setProduct(productMapper.toDto(imp.getProduct()));
+                        response.setZoneName(imp.getZone().getName());
+                        return response;
+                    })
+                    .toList();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public ResponseObject<?> deleteExportDetail(Integer id) {
         try {
             ExportDetail exportDetail = exportDetailRepository.findById(id)
@@ -137,7 +153,6 @@ public class ExportDetailService {
 
             List<ExportDetailResponse> suggestedDetails = new ArrayList<>();
 
-
             // loop through the requests and find the suggested details
             for (ExportDetailRequest request : requests) {
                 List<Inventory> inventories = inventoryMap.get(request.getProductId());
@@ -162,14 +177,16 @@ public class ExportDetailService {
                         suggestedDetails.add(new ExportDetailResponse(null, export,
                                 product,
                                 quantityToExport,
-                                inventory.getZone() == null ? null : inventory.getZone().getName()));
+                                inventory.getZone() == null ? null : inventory.getZone().getName(),
+                                inventory.getExpiredAt())); // thêm expiredAt
                         break;
                     } else {
                         // if the quantity to export is greater than the quantity in the inventory
                         suggestedDetails.add(new ExportDetailResponse(null, export,
                                 product,
                                 inventory.getQuantity(),
-                                inventory.getZone() == null ? null : inventory.getZone().getName()));
+                                inventory.getZone() == null ? null : inventory.getZone().getName(),
+                                inventory.getExpiredAt())); // thêm expiredAt
                         quantityToExport -= inventory.getQuantity();
                     }
 
@@ -181,6 +198,33 @@ public class ExportDetailService {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to suggest export details", null);
+        }
+    }
+
+    public ResponseObject<?> getExportDetailsByExportId(Integer exportId) {
+        try {
+            List<ExportDetailResponse> responses = exportDetailRepository.findByExportId(exportId)
+                    .stream()
+                    .map(imp -> {
+                        ExportDetailResponse response = exportDetailMapper.toDto(imp);
+                        response.setExportBill(exportMapper.toDto(imp.getExport()));
+                        response.setProduct(productMapper.toDto(imp.getProduct()));
+                        response.setZoneName(imp.getZone().getName());
+
+                        // Lấy thông tin expiredAt từ inventory
+                        Inventory inventory = inventoryRepository.findByProductIdAndZoneId(imp.getProduct().getId(), imp.getZone().getId());
+                        if (inventory != null) {
+                            response.setExpiredAt(inventory.getExpiredAt());
+                        }
+
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export details retrieved successfully", responses);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get export details", null);
         }
     }
 

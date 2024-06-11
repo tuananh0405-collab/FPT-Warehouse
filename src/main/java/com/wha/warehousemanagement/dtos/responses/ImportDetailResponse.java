@@ -16,13 +16,11 @@ public class ImportDetailResponse {
     private ProductResponse product;
     private Integer quantity;
     private String expiredAt;
-    private String zoneName;
 
     public ImportDetailResponse(ProductResponse product, Integer quantity, String expiredAt, String zoneName) {
         this.id = id;
         this.product = product;
         this.quantity = quantity;
         this.expiredAt = expiredAt;
-        this.zoneName = zoneName;
     }
 }

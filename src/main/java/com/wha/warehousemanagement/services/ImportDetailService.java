@@ -5,13 +5,14 @@ import com.wha.warehousemanagement.dtos.responses.ImportDetailResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ImportDetailMapper;
-import com.wha.warehousemanagement.mappers.ImportMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
-import com.wha.warehousemanagement.models.*;
+import com.wha.warehousemanagement.models.ImportDetail;
+import com.wha.warehousemanagement.models.Import;
+import com.wha.warehousemanagement.models.Product;
+import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.ImportDetailRepository;
 import com.wha.warehousemanagement.repositories.ImportRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
-import com.wha.warehousemanagement.repositories.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,6 @@ public class ImportDetailService {
     private final ImportDetailMapper importDetailMapper;
     private final ImportRepository importRepository;
     private final ProductRepository productRepository;
-    private final ZoneRepository zoneRepository;
     private final ProductMapper productMapper;
 
     public ResponseObject<?> getAllImportDetails() {
@@ -37,7 +37,6 @@ public class ImportDetailService {
                     .map(imp -> {
                         ImportDetailResponse response = importDetailMapper.toDto(imp);
                         response.setProduct(productMapper.toDto(imp.getProduct()));
-                        response.setZoneName(imp.getZone().getName());
                         return response;
                     })
                     .collect(Collectors.toList());
@@ -55,7 +54,6 @@ public class ImportDetailService {
                     .map(imp -> {
                         ImportDetailResponse importDetailResponse = importDetailMapper.toDto(imp);
                         importDetailResponse.setProduct(productMapper.toDto(imp.getProduct()));
-                        importDetailResponse.setZoneName(imp.getZone().getName());
                         return importDetailResponse;
                     })
                     .orElseThrow(() -> new CustomException(ErrorCode.IMPORT_DETAIL_NOT_FOUND));
@@ -115,14 +113,10 @@ public class ImportDetailService {
                 .orElseThrow(() -> new CustomException(ErrorCode.IMPORT_NOT_FOUND));
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-        Zone zone = zoneRepository.findById(request.getZoneId())
-                .orElseThrow(() -> new CustomException(ErrorCode.ZONE_NOT_FOUND));
         importDetail.setAnImport(anImport);
         importDetail.setProduct(product);
         importDetail.setQuantity(request.getQuantity());
         importDetail.setExpiredAt(request.getExpiredAt());
-        importDetail.setZone(zone);
         return importDetail;
     }
-
 }

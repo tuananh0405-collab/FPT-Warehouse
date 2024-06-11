@@ -59,6 +59,7 @@ public class ProductService {
                     .stream().map(
                             product -> {
                                 ProductResponse response = productMapper.toDto(product);
+                                System.out.println(response);
                                 CategoryResponse categoryResponse = categoryMapper.toDto(product.getCategory());
                                 response.setCategory(categoryResponse);
                                 return response;
@@ -76,7 +77,9 @@ public class ProductService {
     public ResponseObject<ProductResponse> getProductById(int id) {
         try {
             Product product = productRepository.getProductById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+            System.out.println(product);
             ProductResponse response = productMapper.toDto(product);
+            System.out.println(response);
             return new ResponseObject<>(HttpStatus.OK.value(), "Get product by id successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);

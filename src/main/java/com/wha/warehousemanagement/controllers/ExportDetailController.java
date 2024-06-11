@@ -34,6 +34,7 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.updateExportDetail(id, request));
     }
 
+    //localhost:6060/export-details/1
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExportDetail(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(exportDetailService.deleteExportDetail(id));
@@ -42,5 +43,10 @@ public class ExportDetailController {
     @GetMapping("/suggest")
     public ResponseEntity<?> suggestExportDetail(@RequestBody List<ExportDetailRequest> requests) {
         return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
+    }
+
+    @GetMapping("/export/{exportId}")
+    public ResponseEntity<?> getExportDetailsByExportId(@PathVariable("exportId") Integer exportId) {
+        return ResponseEntity.ok(exportDetailService.getExportDetailsByExportId(exportId));
     }
 }

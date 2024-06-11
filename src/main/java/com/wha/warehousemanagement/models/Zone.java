@@ -36,8 +36,5 @@ public class Zone {
     private Set<Inventory> inventories;
 
     @OneToMany(mappedBy = "zone")
-    private Set<ImportDetail> importDetails;
-
-    @OneToMany(mappedBy = "zone")
     private Set<ExportDetail> exportDetails;
 }

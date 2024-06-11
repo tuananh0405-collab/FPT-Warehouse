@@ -21,6 +21,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,18 +38,18 @@ public class InventoryService {
     private final SearchRepository searchRepository;
 
     public ResponseObject<?> getAllInventories() {
-        try{
+        try {
             List<InventoryResponse> response =
-                inventoryRepository.findAll()
-                    .stream()
-                    .map(imp -> {
-                        InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
-                        InventoryResponse.builder()
-                                .product(productMapper.toDto(imp.getProduct()))
-                                .zoneName(imp.getZone().getName()).quantity(0).build();
-                        return inventoryResponse;
-                    })
-                    .collect(Collectors.toList());
+                    inventoryRepository.findAll()
+                            .stream()
+                            .map(imp -> {
+                                InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
+                                InventoryResponse.builder()
+                                        .product(productMapper.toDto(imp.getProduct()))
+                                        .zoneName(imp.getZone().getName()).quantity(0).build();
+                                return inventoryResponse;
+                            })
+                            .collect(Collectors.toList());
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -109,14 +111,14 @@ public class InventoryService {
     public ResponseObject<?> updateInventory(int id, InventoryRequest request) {
         try {
             inventoryRepository.findById(id)
-                .map(imp -> {
-                    imp.setProduct(productRepository.findById(request.getProductId()).orElse(null));
-                    imp.setQuantity(request.getQuantity());
-                    imp.setExpiredAt(request.getExpiredAt());
-                    imp.setZone(zoneRepository.findById(request.getZoneId()).orElse(null));
-                    return inventoryRepository.save(imp);
-                })
-                .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                    .map(imp -> {
+                        imp.setProduct(productRepository.findById(request.getProductId()).orElse(null));
+                        imp.setQuantity(request.getQuantity());
+                        imp.setExpiredAt(request.getExpiredAt());
+                        imp.setZone(zoneRepository.findById(request.getZoneId()).orElse(null));
+                        return inventoryRepository.save(imp);
+                    })
+                    .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventory updated successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -136,10 +138,10 @@ public class InventoryService {
     }
 
     public ResponseObject<?> getInventoryByWarehouseId(
-           int pageNo, int limit, String sortBy, int warehouseId, String... search
+            int pageNo, int limit, String sortBy, int warehouseId, String... search
     ) {
         try {
-            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", searchRepository.searchInventories(pageNo, limit, sortBy,warehouseId, search));
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", searchRepository.searchInventories(pageNo, limit, sortBy, warehouseId, search));
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -196,6 +198,35 @@ public class InventoryService {
         toInventory.setQuantity(toInventory.getQuantity() + quantity);
         inventoryRepository.save(toInventory);
     }
-    //
 
+    //
+    public ResponseObject<?> getInventoryByWarehouseIdWithFilters(
+            int pageNo, int limit, int warehouseId,
+            String productName, Integer categoryId, String zoneName,
+            Integer quantityLow, Integer quantityHigh) {
+        try {
+            Pageable pageable = PageRequest.of(pageNo, limit);
+            Page<Inventory> inventories = inventoryRepository.searchInventoriesWithFilters(
+                    warehouseId, categoryId, zoneName, productName, quantityLow, quantityHigh, pageable);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", inventories);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all inventories", null);
+        }
+    }
+
+    public ResponseObject<?> getTotalProductByWarehouseIdWithFilters(
+            int warehouseId, Integer categoryId, String zoneName,
+            String productName, Integer quantityLow, Integer quantityHigh) {
+        try {
+            Long totalProduct = inventoryRepository.countInventoriesWithFilters(
+                    warehouseId, categoryId, zoneName, productName, quantityLow, quantityHigh);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Total product retrieved successfully", totalProduct);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get total product", null);
+        }
+    }
 }

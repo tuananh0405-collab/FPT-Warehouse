@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,4 +19,5 @@ public class ExportDetailResponse {
     private ProductResponse product;
     private Integer quantity;
     private String zoneName;
+    private Date expiredAt;
 }
