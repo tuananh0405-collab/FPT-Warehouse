@@ -54,7 +54,7 @@ public class ExportService {
             List<ExportResponse> responses = exportRepository.findAll()
                     .stream().map(exportMapper::toDto
                     )
-                    .collect(Collectors.toList());
+                    .toList();
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all exports successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);

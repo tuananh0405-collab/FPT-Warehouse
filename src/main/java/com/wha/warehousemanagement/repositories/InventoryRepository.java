@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -38,7 +39,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     // zones transfer
     Inventory findByProductIdAndZoneId(int productId, int zoneId);
 
-    List<Inventory> findByProductIdOrderByExpiredAtAsc(Integer productId);
+    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.warehouse.id = :warehouseId ORDER BY i.expiredAt ASC")
+    List<Inventory> findByProductIdAndWarehouseIdOrderByExpiredAtAsc(@Param("productId") Integer productId, @Param("warehouseId") Integer warehouseId);
+
+    @Query("SELECT SUM(i.quantity) FROM Inventory i WHERE i.product.id = :productId AND i.zone.warehouse.id = :warehouseId")
+    Integer countTotalQuantityByProductIdAndWarehouseId(@Param("productId") Integer productId, @Param("warehouseId") Integer warehouseId);
 
     @Query("SELECT i FROM Inventory i " +
             "JOIN i.product p " +

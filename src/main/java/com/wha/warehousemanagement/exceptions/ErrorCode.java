@@ -67,6 +67,7 @@ public enum ErrorCode {
     EXPORT_DETAIL_NOT_FOUND(1060, "Export detail not found"),
     INVENTORY_NOT_FOUND(1061, "Inventory not found"),
     ZONE_FULL(1062, "Zone is full"),
+    INSUFFICIENT_INVENTORY(1063, "Product quantity is insufficient"),
     ;
 
     private final int code;
