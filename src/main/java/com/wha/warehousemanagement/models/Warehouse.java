@@ -31,12 +31,21 @@ public class Warehouse {
     @Column(name = "warehouse_created_at")
     private Date createdAt;
 
-    @Column(name = "warehouse_updated_at")
-    private Date updatedAt;
-
     @OneToMany(mappedBy = "warehouse")
     private Set<Zone> zones;
 
     @OneToMany(mappedBy = "warehouse")
     private Set<User> users;
+
+    @OneToMany(mappedBy = "warehouseFrom")
+    private Set<Import> importsFrom;
+
+    @OneToMany(mappedBy = "warehouseTo")
+    private Set<Import> importsTo;
+
+    @OneToMany(mappedBy = "warehouseFrom")
+    private Set<Export> exportsFrom;
+
+    @OneToMany(mappedBy = "warehouseTo")
+    private Set<Export> exportsTo;
 }

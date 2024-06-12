@@ -17,6 +17,5 @@ public class ProductResponse {
     private Integer id;
     private String name;
     private String description;
-    private String origin;
     private CategoryResponse category;
 }

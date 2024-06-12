@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,13 +81,12 @@ public class WarehouseService {
             if (warehouseRepository.existsByAddress(request.getAddress())) {
                 throw new CustomException(ErrorCode.WAREHOUSE_ADDRESS_EXISTS);
             }
-            Optional<Warehouse> warehouse = warehouseRepository.findById(id);
-            warehouse.get().setName(request.getName());
-            warehouse.get().setDescription(request.getDescription());
-            warehouse.get().setAddress(request.getAddress());
-            warehouse.get().setUpdatedAt(new Date());
-            warehouseRepository.save(warehouse.get());
-            WarehouseResponse response = warehouseMapper.toDto(warehouse.get());
+            Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+            warehouse.setName(request.getName());
+            warehouse.setDescription(request.getDescription());
+            warehouse.setAddress(request.getAddress());
+            warehouseRepository.save(warehouse);
+            WarehouseResponse response = warehouseMapper.toDto(warehouse);
             return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse updated successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);

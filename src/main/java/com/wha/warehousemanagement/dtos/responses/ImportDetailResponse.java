@@ -13,14 +13,8 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ImportDetailResponse {
     private Integer id;
+    private ImportResponse importResponse;
     private ProductResponse product;
     private Integer quantity;
     private String expiredAt;
-
-    public ImportDetailResponse(ProductResponse product, Integer quantity, String expiredAt, String zoneName) {
-        this.id = id;
-        this.product = product;
-        this.quantity = quantity;
-        this.expiredAt = expiredAt;
-    }
 }

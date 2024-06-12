@@ -24,6 +24,4 @@ public class WarehouseResponse {
         private String address;
 
         private Date createdAt;
-
-        private Date updatedAt;
 }

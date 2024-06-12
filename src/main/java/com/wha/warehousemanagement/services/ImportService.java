@@ -1,24 +1,25 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ImportRequest;
+import com.wha.warehousemanagement.dtos.responses.CustomerResponse;
 import com.wha.warehousemanagement.dtos.responses.ImportDetailResponse;
 import com.wha.warehousemanagement.dtos.responses.ImportResponse;
-import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
-import com.wha.warehousemanagement.dtos.responses.ProviderResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.CustomerMapper;
 import com.wha.warehousemanagement.mappers.ImportDetailMapper;
 import com.wha.warehousemanagement.mappers.ImportMapper;
-import com.wha.warehousemanagement.mappers.ProviderMapper;
 import com.wha.warehousemanagement.models.*;
+import com.wha.warehousemanagement.repositories.CustomerRepository;
 import com.wha.warehousemanagement.repositories.ImportDetailRepository;
 import com.wha.warehousemanagement.repositories.ImportRepository;
-import com.wha.warehousemanagement.repositories.ProviderRepository;
+import com.wha.warehousemanagement.repositories.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,20 +29,24 @@ public class ImportService {
 
     private final ImportRepository importRepository;
     private final ImportMapper importMapper;
-    private final ProviderRepository providerRepository;
-    private final ProviderMapper providerMapper;
+    private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
     private final ImportDetailRepository importDetailRepository;
     private final ImportDetailMapper importDetailMapper;
+    private final WarehouseRepository warehouseRepository;
 
     public ResponseObject<?> addImport(ImportRequest request) {
         try {
-            Provider provider = providerRepository.findById(request.getProviderId())
+            Customer customer = customerRepository.findById(request.getCustomerId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
             Import anImport = new Import();
             anImport.setDescription(request.getDescription());
             anImport.setStatus(Status.valueOf(request.getStatus()));
-            anImport.setReceivedDate(request.getReceivedDate());
-            anImport.setProvider(provider);
+            anImport.setImportType(ImportExportType.valueOf(request.getImportType()));
+            anImport.setTransferKey(request.getTransferKey());
+            anImport.setWarehouseFrom(warehouseRepository.findById(request.getWarehouseIdFrom()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            anImport.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            anImport.setCustomer(customer);
             importRepository.save(anImport);
             ImportResponse response = importMapper.toDto(anImport);
             return new ResponseObject<>(HttpStatus.OK.value(), "Import added successfully", response);
@@ -61,11 +66,10 @@ public class ImportService {
 
                                 List<ImportDetailResponse> importDetailResponses = importDetailRepository
                                         .findAllByAnImport_Id(anImport.getId())
-                                        .stream().map(importDetailMapper::toDto).collect(Collectors.toList());
+                                        .stream().map(importDetailMapper::toDto).toList();
 
-                                ProviderResponse providerResponse = providerMapper.toDto(anImport.getProvider());
-                                response.setImportDetails(importDetailResponses);
-                                response.setProvider(providerResponse);
+                                CustomerResponse customerResponse = customerMapper.toDto(anImport.getCustomer());
+                                response.setCustomer(customerResponse);
                                 return response;
                             }
                     )
@@ -86,11 +90,10 @@ public class ImportService {
 
                         List<ImportDetailResponse> importDetailResponses = importDetailRepository
                                 .findAllByAnImport_Id(anImport.getId())
-                                .stream().map(importDetailMapper::toDto).collect(Collectors.toList());
+                                .stream().map(importDetailMapper::toDto).toList();
 
-                        ProviderResponse providerResponse = providerMapper.toDto(anImport.getProvider());
-                        importResponse.setImportDetails(importDetailResponses);
-                        importResponse.setProvider(providerResponse);
+                        CustomerResponse customerResponse = customerMapper.toDto(anImport.getCustomer());
+                        importResponse.setCustomer(customerResponse);
                         return importResponse;
                     })
                     .orElseThrow(() -> new CustomException(ErrorCode.IMPORT_NOT_FOUND));
@@ -109,16 +112,26 @@ public class ImportService {
             if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {
                 anImport.setDescription(request.getDescription());
             }
-            if (request.getStatus() != null) {
+            if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
                 anImport.setStatus(Status.valueOf(request.getStatus()));
+                if (request.getStatus().equals("SUCCEED")) {
+                    anImport.setReceivedDate(new Date());
+                }
             }
-            if (request.getReceivedDate() != null) {
-                anImport.setDescription(request.getDescription());
+            if (request.getImportType() != null && !request.getImportType().trim().isEmpty()) {
+                anImport.setImportType(ImportExportType.valueOf(request.getImportType()));
             }
-            if (request.getProviderId() != null) {
-                Provider provider = providerRepository.findById(request.getProviderId())
-                        .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
-                anImport.setProvider(provider);
+            if (request.getTransferKey() != null && !request.getTransferKey().trim().isEmpty()) {
+                anImport.setTransferKey(request.getTransferKey());
+            }
+            if (request.getWarehouseIdFrom() != null) {
+                anImport.setWarehouseFrom(warehouseRepository.findById(request.getWarehouseIdFrom()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            }
+            if (request.getWarehouseIdTo() != null) {
+                anImport.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            }
+            if (request.getCustomerId() != null) {
+                anImport.setCustomer(customerRepository.findById(request.getCustomerId()).orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND)));
             }
             importRepository.save(anImport);
             ImportResponse response = importMapper.toDto(anImport);

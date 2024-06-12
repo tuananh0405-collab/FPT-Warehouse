@@ -11,25 +11,29 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "providers")
-public class Provider {
+@Table(name = "customers")
+public class Customer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "provider_id")
+    @Column(name = "customer_id")
     private Integer id;
 
-    @Column(name = "provider_name")
+    @Column(name = "customer_name")
     private String name;
 
-    @Column(name = "provider_email")
+    @Column(name = "customer_email")
     private String email;
 
-    @Column(name = "provider_phone")
+    @Column(name = "customer_phone")
     private String phone;
 
-    @Column(name = "provider_address")
+    @Column(name = "customer_address")
     private String address;
 
-    @OneToMany(mappedBy = "provider")
+    @OneToMany(mappedBy = "customer")
+    private Set<Export> exports;
+
+    @OneToMany(mappedBy = "customer")
     private Set<Import> imports;
 }

@@ -1,46 +1,42 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.requests.ProviderRequest;
-import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
-import com.wha.warehousemanagement.dtos.responses.ProductResponse;
-import com.wha.warehousemanagement.dtos.responses.ProviderResponse;
+import com.wha.warehousemanagement.dtos.requests.CustomerRequest;
+import com.wha.warehousemanagement.dtos.responses.CustomerResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
-import com.wha.warehousemanagement.mappers.ProviderMapper;
-import com.wha.warehousemanagement.models.Category;
-import com.wha.warehousemanagement.models.Provider;
+import com.wha.warehousemanagement.mappers.CustomerMapper;
+import com.wha.warehousemanagement.models.Customer;
 import com.wha.warehousemanagement.models.ResponseObject;
-import com.wha.warehousemanagement.repositories.ProviderRepository;
+import com.wha.warehousemanagement.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProviderService {
+public class CustomerService {
 
-    private final ProviderRepository providerRepository;
-    private final ProviderMapper providerMapper;
+    private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
 
-    public ResponseObject<?> addProvider(ProviderRequest providerRequest) {
-        if (providerRequest.getName() == null || providerRequest.getName().trim().isEmpty()) {
+    public ResponseObject<?> addProvider(CustomerRequest customerRequest) {
+        if (customerRequest.getName() == null || customerRequest.getName().trim().isEmpty()) {
             throw new CustomException(ErrorCode.PROVIDER_NAME_BLANK);
-        } else if (providerRepository.findByName(providerRequest.getName()).isPresent()) {
+        } else if (customerRepository.findByName(customerRequest.getName()).isPresent()) {
             throw new CustomException(ErrorCode.PROVIDER_ALREADY_EXISTS);
         }
         try {
-            Provider provider = new Provider();
-            provider.setName(providerRequest.getName());
-            provider.setEmail(providerRequest.getEmail());
-            provider.setPhone(providerRequest.getPhone());
-            provider.setAddress(providerRequest.getAddress());
-            providerRepository.save(provider);
-            Optional<ProviderResponse> response = getLastProviderResponse();
+            Customer customer = new Customer();
+            customer.setName(customerRequest.getName());
+            customer.setEmail(customerRequest.getEmail());
+            customer.setPhone(customerRequest.getPhone());
+            customer.setAddress(customerRequest.getAddress());
+            customerRepository.save(customer);
+            Optional<CustomerResponse> response = getLastCustomerResponse();
             if (response.isEmpty()) {
                 throw new CustomException(ErrorCode.PROVIDER_ADD_FAILED);
             }
@@ -54,8 +50,8 @@ public class ProviderService {
         }
     }
 
-    private Optional<ProviderResponse> getLastProviderResponse() {
-        List<ProviderResponse> responses = providerRepository.getAllProviderResponses();
+    private Optional<CustomerResponse> getLastCustomerResponse() {
+        List<CustomerResponse> responses = customerRepository.getAllCustomerResponses();
         if (!responses.isEmpty()) {
             return Optional.of(responses.get(0));
         } else {
@@ -63,11 +59,11 @@ public class ProviderService {
         }
     }
 
-    public ResponseObject<?> getAllProviders() {
+    public ResponseObject<?> getAllCustomers() {
         try {
-            List<ProviderResponse> list = providerRepository.findAll()
+            List<CustomerResponse> list = customerRepository.findAll()
                     .stream()
-                    .map(providerMapper::toDto)
+                    .map(customerMapper::toDto)
                     .collect(Collectors.toList());
             if (list.isEmpty()) {
                 throw new CustomException(ErrorCode.PROVIDER_NOT_FOUND);
@@ -80,11 +76,11 @@ public class ProviderService {
         }
     }
 
-    public ResponseObject<?> getProviderById(int id) {
+    public ResponseObject<?> getCustomerById(int id) {
         try {
-            Provider provider = providerRepository.findById(id)
+            Customer customer = customerRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
-            ProviderResponse response = providerMapper.toDto(provider);
+            CustomerResponse response = customerMapper.toDto(customer);
             return new ResponseObject<>(HttpStatus.OK.value(), "Get provider by id successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -93,26 +89,26 @@ public class ProviderService {
         }
     }
 
-    public ResponseObject<?> updateProvider(int id, ProviderRequest request) {
+    public ResponseObject<?> updateCustomer(int id, CustomerRequest request) {
         try {
-            Provider provider = providerRepository.findById(id)
+            Customer customer = customerRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
             if (request.getName() != null && !request.getName().trim().isEmpty()) {
-                if (providerRepository.existsByName(request.getName())) {
+                if (customerRepository.existsByName(request.getName())) {
                     throw new CustomException(ErrorCode.PROVIDER_ALREADY_EXISTS);
                 }
-                provider.setName(request.getName());
+                customer.setName(request.getName());
             }
             if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
-                provider.setEmail(request.getEmail());
+                customer.setEmail(request.getEmail());
             }
             if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
-                provider.setPhone(request.getPhone());
+                customer.setPhone(request.getPhone());
             }
             if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
-                provider.setAddress(request.getAddress());
+                customer.setAddress(request.getAddress());
             }
-            providerRepository.save(provider);
+            customerRepository.save(customer);
             return new ResponseObject<>(HttpStatus.OK.value(), "Updated provider successfully", request);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -121,11 +117,11 @@ public class ProviderService {
         }
     }
 
-    public ResponseObject<?> deleteProviderById(int id) {
+    public ResponseObject<?> deleteCustomerById(int id) {
         try {
-            Provider provider = providerRepository.findById(id)
+            Customer customer = customerRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
-            providerRepository.delete(provider);
+            customerRepository.delete(customer);
             return new ResponseObject<>(HttpStatus.OK.value(), "Deleted provider successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -134,11 +130,11 @@ public class ProviderService {
         }
     }
 
-    public ResponseObject<?> deleteAllProviders() {
+    public ResponseObject<?> deleteAllCustomers() {
         try {
-            List<Provider> list = providerRepository.findAll();
+            List<Customer> list = customerRepository.findAll();
             if (!list.isEmpty()) {
-                providerRepository.deleteAll();
+                customerRepository.deleteAll();
                 return new ResponseObject<>(HttpStatus.OK.value(), "Deleted all providers successfully", null);
             } else {
                 return new ResponseObject<>(HttpStatus.NO_CONTENT.value(), "No providers to delete", null);
@@ -147,5 +143,4 @@ public class ProviderService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete providers", null);
         }
     }
-
 }

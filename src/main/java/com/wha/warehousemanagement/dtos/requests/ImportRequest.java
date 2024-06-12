@@ -18,7 +18,13 @@ public class ImportRequest {
 
     private String status;
 
-    private Date receivedDate;
+    private String importType;
 
-    private Integer providerId;
+    private String transferKey;
+
+    private Integer warehouseIdFrom;
+
+    private Integer warehouseIdTo;
+
+    private Integer customerId;
 }

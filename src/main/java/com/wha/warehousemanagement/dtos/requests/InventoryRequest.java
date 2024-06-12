@@ -15,7 +15,7 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class InventoryRequest {
     private Integer productId;
-    private int quantity;
+    private Integer quantity;
     private Date expiredAt;
     private Integer zoneId;
 }

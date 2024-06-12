@@ -68,8 +68,6 @@ public class SearchRepository {
         List<InventoryResponse> inventoryResponseList = inventoryList.stream().map(inventory -> {
             InventoryResponse inventoryResponse = inventoryMapper.toDto(inventory);
             inventoryResponse.setProduct(productMapper.toDto(inventory.getProduct()));
-            inventoryResponse.setZoneName(inventory.getZone().getName());
-            inventoryResponse.setZoneId(inventory.getZone().getId());
             return inventoryResponse;
         }).collect(Collectors.toList());
 

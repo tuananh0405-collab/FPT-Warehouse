@@ -1,16 +1,12 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.PageResponse;
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
 import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.InventoryMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
-import com.wha.warehousemanagement.models.Inventory;
-import com.wha.warehousemanagement.models.Product;
-import com.wha.warehousemanagement.models.ResponseObject;
-import com.wha.warehousemanagement.models.Zone;
+import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.InventoryRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
 import com.wha.warehousemanagement.repositories.SearchRepository;
@@ -18,7 +14,6 @@ import com.wha.warehousemanagement.repositories.ZoneRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -42,13 +37,8 @@ public class InventoryService {
             List<InventoryResponse> response =
                     inventoryRepository.findAll()
                             .stream()
-                            .map(imp -> {
-                                InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
-                                InventoryResponse.builder()
-                                        .product(productMapper.toDto(imp.getProduct()))
-                                        .zoneName(imp.getZone().getName()).quantity(0).build();
-                                return inventoryResponse;
-                            })
+                            .map(inventoryMapper::toDto
+                            )
                             .collect(Collectors.toList());
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
         } catch (CustomException e) {
@@ -79,16 +69,9 @@ public class InventoryService {
 
     public ResponseObject<?> getInventoryById(Integer id) {
         try {
-            InventoryResponse response = inventoryRepository.findById(id)
-                    .map(imp -> {
-                        InventoryResponse inventoryResponse = inventoryMapper.toDto(imp);
-                        return InventoryResponse.builder()
-                                .product(productMapper.toDto(imp.getProduct()))
-                                .zoneName(imp.getZone().getName())
-                                .quantity(imp.getQuantity()) // Cung cấp giá trị quantity
-                                .build();
-                    })
+            Inventory inventory = inventoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+            InventoryResponse response = inventoryMapper.toDto(inventory);
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -110,16 +93,23 @@ public class InventoryService {
 
     public ResponseObject<?> updateInventory(int id, InventoryRequest request) {
         try {
-            inventoryRepository.findById(id)
-                    .map(imp -> {
-                        imp.setProduct(productRepository.findById(request.getProductId()).orElse(null));
-                        imp.setQuantity(request.getQuantity());
-                        imp.setExpiredAt(request.getExpiredAt());
-                        imp.setZone(zoneRepository.findById(request.getZoneId()).orElse(null));
-                        return inventoryRepository.save(imp);
-                    })
+            Inventory inventory = inventoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
-            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory updated successfully", null);
+            if (request.getProductId() != null) {
+                inventory.setProduct(productRepository.findById(request.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+            }
+            if (request.getQuantity() != null) {
+                inventory.setQuantity(request.getQuantity());
+            }
+            if (request.getExpiredAt() != null) {
+                inventory.setExpiredAt(request.getExpiredAt());
+            }
+            if (request.getZoneId() != null) {
+                inventory.setZone(zoneRepository.findById(request.getZoneId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+            }
+            inventoryRepository.save(inventory);
+            InventoryResponse response = inventoryMapper.toDto(inventory);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory updated successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {

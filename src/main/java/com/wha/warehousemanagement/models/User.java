@@ -1,6 +1,5 @@
 package com.wha.warehousemanagement.models;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

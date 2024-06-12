@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
-    private int id;
+    private Integer id;
     private String username;
     private String fullName;
     private String password;

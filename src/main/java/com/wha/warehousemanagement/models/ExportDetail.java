@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,7 +29,6 @@ public class ExportDetail {
     @Column(name = "export_detail_quantity")
     private Integer quantity;
 
-    @ManyToOne()
-    @JoinColumn(name = "zone_id", nullable = true)
-    private Zone zone;
+    @Column(name = "export_detail_expired_at")
+    private Date expiredAt;
 }

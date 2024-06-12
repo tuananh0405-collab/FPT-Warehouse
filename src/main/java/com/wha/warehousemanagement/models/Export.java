@@ -19,9 +19,6 @@ public class Export {
     @Column(name = "export_id")
     private Integer id;
 
-    @Column(name = "export_customer_name")
-    private String customerName;
-
     @Column(name = "export_description")
     private String description;
 
@@ -32,13 +29,26 @@ public class Export {
     @Column(name = "export_date")
     private Date exportDate;
 
-    @Column(name = "export_customer_address")
-    private String customerAddress;
+    @Column(name = "export_type")
+    @Enumerated(EnumType.STRING)
+    private ImportExportType exportType;
+
+    @Column(name = "transfer_key")
+    private String transferKey;
+
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id_from", nullable = true)
+    private Warehouse warehouseFrom;
+
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id_to", nullable = true)
+    private Warehouse warehouseTo;
+
+    @ManyToOne
+    @JoinColumn(name = "customer", nullable = true)
+    private Customer customer;
 
     @OneToMany(mappedBy = "export")
     private Set<ExportDetail> exportDetails;
 
-    public Export(Integer exportId) {
-        this.id = exportId;
-    }
 }

@@ -40,10 +40,10 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.deleteExportDetail(id));
     }
 
-    @GetMapping("/suggest")
-    public ResponseEntity<?> suggestExportDetail(@RequestBody List<ExportDetailRequest> requests) {
-        return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
-    }
+//    @GetMapping("/suggest")
+//    public ResponseEntity<?> suggestExportDetail(@RequestBody List<ExportDetailRequest> requests) {
+//        return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
+//    }
 
     @GetMapping("/export/{exportId}")
     public ResponseEntity<?> getExportDetailsByExportId(@PathVariable("exportId") Integer exportId) {

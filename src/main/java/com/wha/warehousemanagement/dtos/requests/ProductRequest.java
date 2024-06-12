@@ -13,6 +13,5 @@ import lombok.NoArgsConstructor;
 public class ProductRequest {
         private String name;
         private String description;
-        private String origin;
         private Integer categoryId;
 }

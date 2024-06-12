@@ -15,9 +15,8 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExportDetailResponse {
     private Integer id;
-    private ExportResponse exportBill;
+    private ExportResponse export;
     private ProductResponse product;
     private Integer quantity;
-    private String zoneName;
     private Date expiredAt;
 }

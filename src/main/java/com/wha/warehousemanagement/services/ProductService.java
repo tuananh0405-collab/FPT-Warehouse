@@ -41,7 +41,6 @@ public class ProductService {
             Product product = new Product();
             product.setName(request.getName());
             product.setDescription(request.getDescription());
-            product.setOrigin(request.getOrigin());
             product.setCategory(category);
             productRepository.save(product);
             ProductResponse response = productMapper.toDto(product);
@@ -95,7 +94,6 @@ public class ProductService {
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
             product.setName(request.getName());
             product.setDescription(request.getDescription());
-            product.setOrigin(request.getOrigin());
             product.setCategory(category);
             productRepository.save(product);
             ProductResponse response = productMapper.toDto(product);

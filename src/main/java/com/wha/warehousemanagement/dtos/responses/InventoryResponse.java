@@ -16,8 +16,7 @@ import java.util.Date;
 public class InventoryResponse {
     private Integer id;
     private ProductResponse product;
-    private int quantity;
+    private Integer quantity;
     private Date expiredAt;
-    private String zoneName;
-    private Integer zoneId;
+    private ZoneResponse zone;
 }

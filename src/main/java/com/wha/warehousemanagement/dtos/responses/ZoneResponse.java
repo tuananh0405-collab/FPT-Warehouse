@@ -17,4 +17,5 @@ public class ZoneResponse {
     private String name;
     private String description;
     private ZoneStatus zoneStatus;
+    private WarehouseResponse warehouse;
 }

@@ -29,9 +29,24 @@ public class Import {
     @Column(name = "import_received_date")
     private Date receivedDate;
 
+    @Column(name = "import_type")
+    @Enumerated(EnumType.STRING)
+    private ImportExportType importType;
+
+    @Column(name = "transfer_key")
+    private String transferKey;
+
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id_from", nullable = true)
+    private Warehouse warehouseFrom;
+
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id_to", nullable = true)
+    private Warehouse warehouseTo;
+
     @ManyToOne()
-    @JoinColumn(name = "provider_id", nullable = true)
-    private Provider provider;
+    @JoinColumn(name = "customer_id", nullable = true)
+    private Customer customer;
 
     @OneToMany(mappedBy = "anImport")
     private Set<ImportDetail> importDetails;

@@ -1,15 +1,13 @@
 package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.ProductRequest;
-import com.wha.warehousemanagement.dtos.responses.ProductResponse;
-import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("product")
+@RequestMapping("/product")
 @RequiredArgsConstructor
 public class ProductController {
 

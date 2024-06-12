@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.Set;
 
 @Data
@@ -26,9 +25,6 @@ public class Product {
     @Column(name = "product_description")
     private String description;
 
-    @Column(name = "product_origin")
-    private String origin;
-
     @ManyToOne()
     @JoinColumn(name = "category_id", nullable = true)
     private Category category;
@@ -41,8 +37,4 @@ public class Product {
 
     @OneToMany(mappedBy = "product")
     private Set<ExportDetail> exportDetails;
-
-//    public Product(Integer productId) {
-//        this.id = productId;
-//    }
 }

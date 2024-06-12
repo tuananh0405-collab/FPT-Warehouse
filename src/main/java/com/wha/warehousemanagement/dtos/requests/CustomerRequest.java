@@ -1,4 +1,4 @@
-package com.wha.warehousemanagement.dtos.responses;
+package com.wha.warehousemanagement.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,10 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProviderResponse {
-
-    private Integer id;
-
+public class CustomerRequest {
     private String name;
 
     private String email;
@@ -22,5 +19,4 @@ public class ProviderResponse {
     private String phone;
 
     private String address;
-
 }
