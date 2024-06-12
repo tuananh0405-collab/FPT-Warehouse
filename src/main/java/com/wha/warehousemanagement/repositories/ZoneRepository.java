@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface ZoneRepository extends JpaRepository<Zone, Integer> {
     boolean existsByName(String name);
-    List<Zone> findAllByWarehouse_Id(int id);
+    List<Zone> findAllByWarehouse_Id(int warehouseId);
 }

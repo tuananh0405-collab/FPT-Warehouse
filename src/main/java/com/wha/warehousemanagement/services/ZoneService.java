@@ -111,9 +111,9 @@ public class ZoneService {
         }
     }
 
-    public ResponseObject<?> getZonesByWarehouseId (int id) {
+    public ResponseObject<?> getZonesByWarehouseId (int warehouseId) {
         try {
-            List<ZoneResponse> responses = zoneRepository.findAllByWarehouse_Id(id)
+            List<ZoneResponse> responses = zoneRepository.findAllByWarehouse_Id(warehouseId)
                     .stream().map(zoneMapper::toDto).toList();
             if (responses.isEmpty())
                 throw new CustomException(ErrorCode.ZONE_NOT_FOUND);
