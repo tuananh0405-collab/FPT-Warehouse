@@ -52,10 +52,27 @@ public class UserService {
             User user = userRepository.findById(id).orElseThrow(
                     () -> new CustomException(ErrorCode.USER_NOT_FOUND)
             );
-            user.setFullName(request.getFullName());
-            user.setUsername(request.getUsername());
-            user.setPassword(request.getPassword());
-            user.setRole(Role.valueOf(request.getRole()));
+            if (user.getFullName() != null && !user.getFullName().trim().isEmpty()) {
+                user.setFullName(request.getFullName());
+            }
+            if (user.getUsername() != null && !user.getUsername().trim().isEmpty()) {
+                user.setUsername(request.getUsername());
+            }
+            if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
+                user.setPassword(request.getPassword());
+            }
+            if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+                user.setFullName(request.getFullName());
+            }
+            if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+                user.setPhone(request.getPhone());
+            }
+            if (user.getAddress() != null && !user.getAddress().trim().isEmpty()) {
+                user.setAddress(request.getAddress());
+            }
+            if (user.getRole() != null && !user.getFullName().trim().isEmpty()) {
+                user.setRole(Role.valueOf(request.getRole()));
+            }
             userRepository.save(user);
             UserResponse response = userMapper.toDto(user);
             return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", response);
