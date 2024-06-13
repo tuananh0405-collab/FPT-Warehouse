@@ -117,4 +117,16 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getTotalProductByWarehouseIdWithFilters(
                 warehouseId, categoryId, zoneName, productName, quantityLow, quantityHigh));
     }
+
+    @GetMapping("/warehouse/{warehouseId}")
+    public ResponseEntity<?> getInventoriesByWarehouseIdWithFilters(
+            @PathVariable("warehouseId") Integer warehouseId,
+            @RequestParam("pageNo") int pageNo,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("includeExpired") boolean includeExpired,
+            @RequestParam("includeNearExpired") boolean includeNearExpired,
+            @RequestParam("includeValid") boolean includeValid) {
+        return ResponseEntity.ok(inventoryService.getInventoriesByWarehouseIdWithFilters(
+                warehouseId, pageNo, pageSize, includeExpired, includeNearExpired, includeValid));
+    }
 }

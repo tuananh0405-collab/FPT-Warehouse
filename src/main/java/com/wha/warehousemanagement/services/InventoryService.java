@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -217,6 +218,25 @@ public class InventoryService {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get total product", null);
+        }
+    }
+
+    public ResponseObject<Page<InventoryResponse>> getInventoriesByWarehouseIdWithFilters(
+            Integer warehouseId, int pageNo, int pageSize, boolean includeExpired,
+            boolean includeNearExpired, boolean includeValid) {
+        try {
+            Date currentDate = new Date();
+            Date nearExpiredDate = new Date(currentDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days from now
+            Pageable pageable = PageRequest.of(pageNo - 1, pageSize); // Subtract 1 from pageNo
+
+            Page<Inventory> inventories = inventoryRepository.findInventoriesByWarehouseIdWithFilters(
+                    warehouseId, currentDate, nearExpiredDate, includeExpired, includeNearExpired, includeValid, pageable);
+            Page<InventoryResponse> response = inventories.map(inventoryMapper::toDto);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get inventories", null);
         }
     }
 }

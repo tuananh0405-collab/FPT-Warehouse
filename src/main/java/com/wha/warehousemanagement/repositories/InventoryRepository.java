@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -83,4 +84,17 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
             String productName,
             Integer quantityLow,
             Integer quantityHigh);
+
+    @Query("SELECT i FROM Inventory i WHERE i.zone.warehouse.id = :warehouseId " +
+            "AND ((:includeExpired = true AND i.expiredAt < :currentDate) OR " +
+            "(:includeNearExpired = true AND i.expiredAt BETWEEN :currentDate AND :nearExpiredDate) OR " +
+            "(:includeValid = true AND i.expiredAt > :nearExpiredDate))")
+    Page<Inventory> findInventoriesByWarehouseIdWithFilters(
+            @Param("warehouseId") Integer warehouseId,
+            @Param("currentDate") Date currentDate,
+            @Param("nearExpiredDate") Date nearExpiredDate,
+            @Param("includeExpired") boolean includeExpired,
+            @Param("includeNearExpired") boolean includeNearExpired,
+            @Param("includeValid") boolean includeValid,
+            Pageable pageable);
 }
