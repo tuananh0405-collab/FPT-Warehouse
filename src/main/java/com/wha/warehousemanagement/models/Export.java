@@ -48,7 +48,7 @@ public class Export {
     @JoinColumn(name = "customer", nullable = true)
     private Customer customer;
 
-    @OneToMany(mappedBy = "export")
+    @OneToMany(mappedBy = "export", fetch = FetchType.LAZY)
     private Set<ExportDetail> exportDetails;
 
 }

@@ -34,6 +34,6 @@ public class Customer {
     @OneToMany(mappedBy = "customer")
     private Set<Export> exports;
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
     private Set<Import> imports;
 }

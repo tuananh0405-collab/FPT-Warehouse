@@ -82,9 +82,15 @@ public class WarehouseService {
                 throw new CustomException(ErrorCode.WAREHOUSE_ADDRESS_EXISTS);
             }
             Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
-            warehouse.setName(request.getName());
-            warehouse.setDescription(request.getDescription());
-            warehouse.setAddress(request.getAddress());
+            if (request.getName() != null && !request.getName().trim().isEmpty()) {
+                warehouse.setName(request.getName());
+            }
+            if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {
+                warehouse.setDescription(request.getDescription());
+            }
+            if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
+                warehouse.setAddress(request.getAddress());
+            }
             warehouseRepository.save(warehouse);
             WarehouseResponse response = warehouseMapper.toDto(warehouse);
             return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse updated successfully", response);

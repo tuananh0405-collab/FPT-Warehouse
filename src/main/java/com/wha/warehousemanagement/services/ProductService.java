@@ -89,12 +89,17 @@ public class ProductService {
 
     public ResponseObject<ProductResponse> updateProduct(int id, ProductRequest request) {
         try {
-            Product product = productRepository.getProductById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-            Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-            product.setName(request.getName());
-            product.setDescription(request.getDescription());
-            product.setCategory(category);
+            Product product = productRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+            if (request.getName() != null && !request.getName().trim().isEmpty()) {
+                product.setName(request.getName());
+            }
+            if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {
+                product.setDescription(request.getDescription());
+            }
+            if (request.getCategoryId() != null) {
+                product.setCategory(categoryRepository.findById(request.getCategoryId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND)));
+            }
             productRepository.save(product);
             ProductResponse response = productMapper.toDto(product);
             return new ResponseObject<>(HttpStatus.OK.value(), "Updated product successfully", response);
@@ -107,7 +112,7 @@ public class ProductService {
 
     public ResponseObject<Object> deleteProductById(int id) {
         try {
-            Product product = productRepository.getProductById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+            Product product = productRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
             productRepository.delete(product);
             return new ResponseObject<>(HttpStatus.OK.value(), "Deleted product successfully", null);
         } catch (CustomException e) {

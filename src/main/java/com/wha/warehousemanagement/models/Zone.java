@@ -32,6 +32,6 @@ public class Zone {
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
 
-    @OneToMany(mappedBy = "zone")
+    @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
     private Set<Inventory> inventories;
 }

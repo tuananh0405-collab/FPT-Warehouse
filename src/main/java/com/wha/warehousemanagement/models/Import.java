@@ -48,6 +48,6 @@ public class Import {
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
 
-    @OneToMany(mappedBy = "anImport")
+    @OneToMany(mappedBy = "anImport", fetch = FetchType.LAZY)
     private Set<ImportDetail> importDetails;
 }

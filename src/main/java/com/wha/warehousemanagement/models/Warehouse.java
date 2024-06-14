@@ -31,21 +31,21 @@ public class Warehouse {
     @Column(name = "warehouse_created_at")
     private Date createdAt;
 
-    @OneToMany(mappedBy = "warehouse")
+    @OneToMany(mappedBy = "warehouse", fetch = FetchType.LAZY)
     private Set<Zone> zones;
 
-    @OneToMany(mappedBy = "warehouse")
+    @OneToMany(mappedBy = "warehouse", fetch = FetchType.LAZY)
     private Set<User> users;
 
-    @OneToMany(mappedBy = "warehouseFrom")
+    @OneToMany(mappedBy = "warehouseFrom", fetch = FetchType.LAZY)
     private Set<Import> importsFrom;
 
-    @OneToMany(mappedBy = "warehouseTo")
+    @OneToMany(mappedBy = "warehouseTo", fetch = FetchType.LAZY)
     private Set<Import> importsTo;
 
-    @OneToMany(mappedBy = "warehouseFrom")
+    @OneToMany(mappedBy = "warehouseFrom", fetch = FetchType.LAZY)
     private Set<Export> exportsFrom;
 
-    @OneToMany(mappedBy = "warehouseTo")
+    @OneToMany(mappedBy = "warehouseTo", fetch = FetchType.LAZY)
     private Set<Export> exportsTo;
 }
