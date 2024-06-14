@@ -26,4 +26,6 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
 //                                     @Param("customerAddress") String customerAddress,
 //                                     @Param("status") String status,
 //                                     Pageable pageable);
+
+    boolean existsByTransferKey(String transferKey);
 }

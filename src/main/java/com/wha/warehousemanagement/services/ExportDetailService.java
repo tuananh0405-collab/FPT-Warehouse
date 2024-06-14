@@ -2,10 +2,7 @@ package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ExportDetailRequest;
 import com.wha.warehousemanagement.dtos.requests.SuggestedExportProductsRequest;
-import com.wha.warehousemanagement.dtos.responses.ExportDetailResponse;
-import com.wha.warehousemanagement.dtos.responses.ExportResponse;
-import com.wha.warehousemanagement.dtos.responses.ProductResponse;
-import com.wha.warehousemanagement.dtos.responses.SuggestedExportProductsResponse;
+import com.wha.warehousemanagement.dtos.responses.*;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ExportDetailMapper;
@@ -101,15 +98,18 @@ public class ExportDetailService {
         }
     }
 
-    public List<ExportDetailResponse> getExportDetailByExportId(Integer exportId) {
+    public List<ExportDetailWithExportIdResponse> getExportDetailWithExportIdByExportId(Integer exportId) {
         try {
             return exportDetailRepository.findByExportId(exportId)
                     .stream()
                     .map(imp -> {
-                        ExportDetailResponse response = exportDetailMapper.toDto(imp);
-                        response.setProduct(productMapper.toDto(imp.getProduct()));
-                        response.setExport(exportMapper.toDto(imp.getExport()));
-                        return response;
+                        return new ExportDetailWithExportIdResponse(
+                                null,
+                                imp.getExport().getId(),
+                                productMapper.toDto(imp.getProduct()),
+                                imp.getQuantity(),
+                                imp.getExpiredAt()
+                        );
                     })
                     .toList();
         } catch (Exception e) {
@@ -149,6 +149,7 @@ public class ExportDetailService {
 
             // Vòng lặp để lấy ra các inventory của mỗi product theo warehouseId và sắp xếp theo expiredAt
             requests.forEach(request -> {
+                // Chỉ lấy ra hàng còn hạn sử dụng
                 List<Inventory> inventories = inventoryRepository.findByProductIdAndWarehouseIdOrderByExpiredAtAsc(
                         request.getProductId(), request.getWarehouseId());
                 inventoryMap.put(request.getProductId(), inventories);
@@ -160,7 +161,7 @@ public class ExportDetailService {
             // Vòng lặp để xử lý từng request
             for (SuggestedExportProductsRequest request : requests) {
                 List<Inventory> inventories = inventoryMap.get(request.getProductId());
-
+                // int totalQuantityInWarehouse = inventories.stream().mapToInt(Inventory::getQuantity).sum();
                 int totalQuantityInWarehouse = inventoryRepository.countTotalQuantityByProductIdAndWarehouseId(request.getProductId(), request.getWarehouseId());
                 if(totalQuantityInWarehouse < request.getQuantity()){
                     // Nếu số lượng tồn kho không đủ để xuất thì trả về thông báo
@@ -202,7 +203,7 @@ public class ExportDetailService {
                     if (inventory.getQuantity() >= quantityToExport) {
                         suggestedDetails.add(new SuggestedExportProductsResponse(
                                 null,
-                                "Đủ hàng",
+                                "",
                                 product,
                                 quantityToExport,
                                 inventory.getExpiredAt(),
@@ -215,7 +216,7 @@ public class ExportDetailService {
                         // Nếu số lượng inventory không đủ để xuất thì lấy hết số lượng inventory đó -> giảm số lượng cần xuất -> lấy inventory tiếp theo
                         suggestedDetails.add(new SuggestedExportProductsResponse(
                                 null,
-                                "Đủ hàng",
+                                "",
                                 product,
                                 inventory.getQuantity(),
                                 inventory.getExpiredAt(),

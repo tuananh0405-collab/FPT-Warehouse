@@ -1,6 +1,9 @@
 package com.wha.warehousemanagement.controllers;
 
+import com.wha.warehousemanagement.dtos.requests.ExportByAdminReqRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
+import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
+import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ExportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -62,4 +65,10 @@ public class ExportController {
 //                page, limit, sortBy,direction,warehouseId, exportDate, customerName, customerAddress, status
 //        ));
 //    }
+
+    // For Admin create export request in warehouse A and import request for warehouse B (only product and quantity)
+    @PostMapping("/admin/req-transfer")
+    public ResponseEntity<ResponseObject<ExportByAdminReqResponse>> createExportRequest(@RequestBody ExportByAdminReqRequest request) {
+        return ResponseEntity.ok(exportService.createTransferBetweenWarehouses(request));
+    }
 }

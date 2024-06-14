@@ -1,24 +1,25 @@
 package com.wha.warehousemanagement.services;
 
+import com.wha.warehousemanagement.dtos.requests.ExportByAdminReqRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
+import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
+import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.dtos.responses.ExportResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ExportMapper;
+import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.*;
-import com.wha.warehousemanagement.repositories.CustomerRepository;
-import com.wha.warehousemanagement.repositories.ExportRepository;
-import com.wha.warehousemanagement.repositories.WarehouseRepository;
+import com.wha.warehousemanagement.repositories.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,12 @@ public class ExportService {
     private final ExportDetailService exportDetailService;
     private final WarehouseRepository warehouseRepository;
     private final CustomerRepository customerRepository;
+    private final ImportRepository importRepository;
+    private final WarehouseMapper warehouseMapper;
+    private final InventoryRepository inventoryRepository;
+    private final ExportDetailRepository exportDetailRepository;
+    private final ImportDetailRepository importDetailRepository;
+    private final ProductRepository productRepository;
 
     public ResponseObject<?> addExport(ExportRequest request) {
         try {
@@ -157,4 +164,144 @@ public class ExportService {
 //        }
 //    }
 
+    @Transactional
+    public ResponseObject<ExportByAdminReqResponse> createTransferBetweenWarehouses (ExportByAdminReqRequest request) {
+        Warehouse warehouseFrom = warehouseRepository.findById(request.getWarehouseFromId())
+                .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+        Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseToId())
+                .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+
+        // Tạo transferKey
+        String transferKey = generateUniqueTransferKey();
+
+        // Tạo Export
+        Export export = new Export();
+        try{
+            export.setDescription(request.getDescription());
+            export.setStatus(Status.PENDING);
+            export.setExportDate(request.getExportDate());
+            export.setExportType(ImportExportType.WAREHOUSE);
+            export.setTransferKey(transferKey);
+            export.setWarehouseFrom(warehouseFrom);
+            export.setWarehouseTo(warehouseTo);
+
+            exportRepository.save(export);
+            for (Map.Entry<Integer, Integer> entry : request.getProductsRequested().entrySet()) {
+                Product product = productRepository.findById(entry.getKey())
+                        // dang loi cho nay
+                        .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
+                ExportDetail exportDetail = new ExportDetail();
+                exportDetail.setProduct(product);
+                exportDetail.setQuantity(entry.getValue());
+                exportDetail.setExport(export);
+                exportDetailRepository.save(exportDetail);
+            }
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to create EXPORT transfer between warehouses", null);
+        }
+
+        // Tạo Import tương ứng
+        Import anImport = new Import();
+        try {
+            anImport.setDescription(request.getDescription());
+            anImport.setStatus(Status.PENDING);
+            anImport.setReceivedDate(request.getExportDate());
+            anImport.setImportType(ImportExportType.WAREHOUSE);
+            anImport.setTransferKey(transferKey);
+            anImport.setWarehouseFrom(warehouseFrom);
+            anImport.setWarehouseTo(warehouseTo);
+
+            importRepository.save(anImport);
+            for (Map.Entry<Integer, Integer> entry : request.getProductsRequested().entrySet()) {
+                Product product = productRepository.findById(entry.getKey())
+                        .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+                ImportDetail importDetail = new ImportDetail();
+                importDetail.setProduct(product);
+                importDetail.setQuantity(entry.getValue());
+                importDetail.setAnImport(anImport);
+                importDetailRepository.save(importDetail);
+            }
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to create IMPORT transfer between warehouses", null);
+        }
+
+        // Tạo response
+        ExportByAdminReqResponse response = new ExportByAdminReqResponse();
+        response.setId(export.getId());
+        response.setDescription(export.getDescription());
+        response.setStatus(export.getStatus().toString());
+        response.setExportDate(export.getExportDate());
+        response.setExportType(export.getExportType().toString());
+        response.setTransferKey(transferKey);
+        response.setWarehouseFrom(warehouseMapper.toDto(warehouseFrom));
+        response.setWarehouseTo(warehouseMapper.toDto(warehouseTo));
+        response.setExportDetails(exportDetailService.getExportDetailWithExportIdByExportId(export.getId()));
+
+        return new ResponseObject<>(HttpStatus.OK.value(), "Transfer from Warehouse " + warehouseFrom.getName() + " to Warehouse " + warehouseTo.getName() + " is created successfully", response);
+    }
+
+    private String generateUniqueTransferKey() {
+        String transferKey;
+        do {
+            transferKey = UUID.randomUUID().toString();
+        } while (exportRepository.existsByTransferKey(transferKey));
+        return transferKey;
+    }
+
+//    private void checkAvailableProducts(Integer warehouseId, Map<Integer, Integer> productsRequested) {
+//        for (Map.Entry<Integer, Integer> entry : productsRequested.entrySet()) {
+//            Integer productId = entry.getKey();
+//            Integer quantityRequested = entry.getValue();
+//
+//            // Tính tổng số lượng hàng trong kho
+//            List<Inventory> inventories = inventoryRepository.findByProductIdAndWarehouseIdOrderByExpiredAtAsc(warehouseId, productId);
+//            int totalInventoryQuantity = inventories.stream().mapToInt(Inventory::getQuantity).sum();
+//
+//            // Tính tổng số lượng hàng đang PENDING trong các đơn xuất
+//            int totalPendingExportQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, productId);
+//
+//            // Số lượng khả dụng = tổng số lượng hàng trong kho - tổng số lượng hàng đang PENDING
+//            int availableQuantity = totalInventoryQuantity - totalPendingExportQuantity;
+//
+//            if (availableQuantity < quantityRequested) {
+//                CustomException e = new CustomException();
+//                e.setErrorCode(null);
+//                e.setMessage("Not enough quantity of product with id " + productId + " in warehouse with id " + warehouseId);
+//                throw e;
+//            }
+//        }
+//    }
+
+//    private void reserveProducts(Integer warehouseId, Map<Integer, Integer> productsRequested) {
+//        for (Map.Entry<Integer, Integer> entry : productsRequested.entrySet()) {
+//            Integer productId = entry.getKey();
+//            Integer quantityRequested = entry.getValue();
+//            List<Inventory> inventories = inventoryRepository.findByProductIdAndWarehouseIdOrderByExpiredAtAsc(warehouseId, productId);
+//
+//            // Tổng số lượng hàng trong kho
+//            int totalAvailableQuantity = inventories.stream().mapToInt(Inventory::getQuantity).sum();
+//
+//            // Nếu tổng số lượng hàng trong kho nhỏ hơn số lượng hàng cần xuất
+//            if (totalAvailableQuantity < quantityRequested) {
+//                throw new CustomException(ErrorCode.OUT_OF_QUANTITY);
+//            }
+//
+//            int remainingQuantityToReserve = quantityRequested;
+//
+//            // Duyệt qua từng hàng trong kho để giữ số lượng hàng cần xuất
+//            for (Inventory inventory : inventories) {
+//                int availableQuantity = inventory.getQuantity();
+//                if (availableQuantity >= remainingQuantityToReserve) {
+//                    inventory.setHeldQuantity(inventory.getHeldQuantity() + remainingQuantityToReserve);
+//                    inventoryRepository.save(inventory);
+//                    break;
+//                } else {
+//                    inventory.setHeldQuantity(inventory.getHeldQuantity() + availableQuantity);
+//                    remainingQuantityToReserve -= availableQuantity;
+//                    inventoryRepository.save(inventory);
+//                }
+//            }
+//        }
+//    }
 }

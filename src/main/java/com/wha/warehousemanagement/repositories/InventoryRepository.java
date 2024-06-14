@@ -40,7 +40,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     // zones transfer
     Inventory findByProductIdAndZoneId(int productId, int zoneId);
 
-    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.warehouse.id = :warehouseId ORDER BY i.expiredAt ASC")
+    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.warehouse.id = :warehouseId AND i.expiredAt >= CURRENT_DATE ORDER BY i.expiredAt ASC")
     List<Inventory> findByProductIdAndWarehouseIdOrderByExpiredAtAsc(@Param("productId") Integer productId, @Param("warehouseId") Integer warehouseId);
 
     @Query("SELECT SUM(i.quantity) FROM Inventory i WHERE i.product.id = :productId AND i.zone.warehouse.id = :warehouseId")

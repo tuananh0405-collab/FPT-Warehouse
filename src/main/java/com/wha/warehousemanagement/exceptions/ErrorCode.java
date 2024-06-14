@@ -68,7 +68,10 @@ public enum ErrorCode {
     INVENTORY_NOT_FOUND(1061, "Inventory not found"),
     ZONE_FULL(1062, "Zone is full"),
     INSUFFICIENT_INVENTORY(1063, "Product quantity is insufficient"),
-    WAREHOUSE_NOT_EMPTY(1064, "Warehouse is not empty")
+    PRODUCT_NOT_ENOUGH_IN_WAREHOUSE(1064, "Product quantity is not enough in warehouse"),
+    OUT_OF_STOCK(1065, "Product not available in the warehouse"),
+    OUT_OF_QUANTITY(1066, "Product quantity is not enough"),
+    INVALID_STATUS_TO_EXPORT(1067, "Only pending exports can be processed"),
     ;
 
     private final int code;

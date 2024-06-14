@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Setter
 public class CustomException extends RuntimeException {
     private ErrorCode errorCode;
+    private String message;
+
+    public CustomException() {
+    }
 
     public CustomException(ErrorCode errorCode) {
         super(errorCode.getMessage());
