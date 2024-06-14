@@ -106,9 +106,17 @@ public class WarehouseService {
             if (!warehouseRepository.existsById(id)) {
                 throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
             }
-            // need to check if warehouse is empty
-            // -> zone has no shipments (has no products)
-            // -> can delete warehouse
+
+            Warehouse warehouse = warehouseRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+
+            boolean hasInventories = warehouse.getZones().stream()
+                    .anyMatch(zone -> !zone.getInventories().isEmpty());
+
+            if (hasInventories) {
+                throw new CustomException(ErrorCode.WAREHOUSE_NOT_EMPTY);
+            }
+
             warehouseRepository.deleteById(id);
             return new ResponseObject<>(HttpStatus.OK.value(), "Warehouse deleted successfully", null);
         } catch (Exception e) {

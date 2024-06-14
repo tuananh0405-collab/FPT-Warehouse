@@ -68,6 +68,7 @@ public enum ErrorCode {
     INVENTORY_NOT_FOUND(1061, "Inventory not found"),
     ZONE_FULL(1062, "Zone is full"),
     INSUFFICIENT_INVENTORY(1063, "Product quantity is insufficient"),
+    WAREHOUSE_NOT_EMPTY(1064, "Warehouse is not empty")
     ;
 
     private final int code;
