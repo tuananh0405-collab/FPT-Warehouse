@@ -164,6 +164,7 @@ public class ExportService {
 //        }
 //    }
 
+    //
     @Transactional
     public ResponseObject<ExportByAdminReqResponse> createTransferBetweenWarehouses (ExportByAdminReqRequest request) {
         Warehouse warehouseFrom = warehouseRepository.findById(request.getWarehouseFromId())
@@ -304,4 +305,48 @@ public class ExportService {
 //            }
 //        }
 //    }
+
+    // Do not need to check by warehouseId because when the inventories on the monitor of a particular STAFF, it only shows the inventories of that warehouse
+    // So, the staff can only choose the products to export from the warehouse that he/she is managing
+    // So do the PENDING status because staff can only process the PENDING exports
+    @Transactional
+    public ResponseObject<?> processExportRequest(processExportByStaffRequest request) {
+        Export export = exportRepository.findById(request.getExportId())
+                .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+
+        if (export.getStatus() != Status.PENDING) {
+            throw new CustomException(ErrorCode.INVALID_STATUS_TO_EXPORT);
+        }
+
+        // Duyệt qua các sản phẩm và số lượng cần xuất
+        for (Map.Entry<Integer, Integer> entry : request.getSelectedInventories().entrySet()) {
+            Integer inventoryId = entry.getKey();
+            Integer quantityToExport = entry.getValue();
+
+            Inventory inventory = inventoryRepository.findById(inventoryId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+
+            if (inventory.getQuantity() < quantityToExport) {
+                throw new CustomException(ErrorCode.OUT_OF_STOCK);
+            }
+
+            // Trừ số lượng trong inventory
+            inventory.setQuantity(inventory.getQuantity() - quantityToExport);
+            try {
+                inventoryRepository.save(inventory);
+            } catch (Exception e) {
+                return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update inventories", null);
+            }
+        }
+
+        // Cập nhật trạng thái của Export thành SHIPPING
+        export.setStatus(Status.SHIPPING);
+        try {
+            exportRepository.save(export);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export", null);
+        }
+
+        return new ResponseObject<>(HttpStatus.OK.value(), "Export processed successfully", null);
+    }
 }

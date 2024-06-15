@@ -17,5 +17,5 @@ public class processExportByStaffRequest {
     private int exportId;
 
     // key: inventory id, value: quantity
-    Map<Integer, Integer> productQuantity;
+    Map<Integer, Integer> selectedInventories;
 }
