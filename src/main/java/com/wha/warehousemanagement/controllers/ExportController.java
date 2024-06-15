@@ -2,6 +2,7 @@ package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.ExportByAdminReqRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
+import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ExportService;
@@ -70,5 +71,10 @@ public class ExportController {
     @PostMapping("/admin/req-transfer")
     public ResponseEntity<ResponseObject<ExportByAdminReqResponse>> createExportRequest(@RequestBody ExportByAdminReqRequest request) {
         return ResponseEntity.ok(exportService.createTransferBetweenWarehouses(request));
+    }
+
+    @PostMapping("/staff/process-export")
+    public ResponseEntity<?> processExportByStaff(@RequestBody processExportByStaffRequest request) {
+        return ResponseEntity.ok(exportService.processExportRequest(request));
     }
 }

@@ -347,6 +347,14 @@ public class ExportService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export", null);
         }
 
+        try {
+            Import relatedImport = importRepository.findByTransferKey(export.getTransferKey());
+            relatedImport.setStatus(Status.SHIPPING);
+            importRepository.save(relatedImport);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update import", null);
+        }
+
         return new ResponseObject<>(HttpStatus.OK.value(), "Export processed successfully", null);
     }
 }

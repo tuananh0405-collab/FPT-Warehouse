@@ -19,4 +19,6 @@ public interface ImportRepository extends JpaRepository<Import, Integer> {
     @Query("SELECT COUNT(i) FROM Import i")
     Long countAllImports();
 
+    Import findByTransferKey(String transferKey);
+
 }
