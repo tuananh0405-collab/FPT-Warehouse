@@ -1,8 +1,11 @@
 package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
+import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
+import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -98,7 +101,7 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getInventoryByWarehouseIdWithFilters(
                 page, limit, warehouseId, productName, categoryId, zoneName, quantityLow, quantityHigh));
     }
-
+//localhost:6060/inventory/total-product-with-filters/?warehouseId=1&categoryId=1&zoneName=A1&productName=product&quantityLow=1&quantityHigh=10
     @GetMapping("/total-product-with-filters/")
     public ResponseEntity<?> getTotalProductByWarehouseIdWithFilters(
             @RequestParam(value = "warehouseId") int warehouseId,
@@ -128,5 +131,33 @@ public class InventoryController {
             @RequestParam("includeValid") boolean includeValid) {
         return ResponseEntity.ok(inventoryService.getInventoriesByWarehouseIdWithFilters(
                 warehouseId, pageNo, pageSize, includeExpired, includeNearExpired, includeValid));
+    }
+
+    //localhost:6060/inventory/1/admin-view?pageNo=1&sortBy=productName&direction=asc&categoryId=1&zoneId=1&search=product
+    @GetMapping("/{warehouseId}/admin-view")
+    public ResponseEntity<ResponseObject<Page<InventoriesByAdminViewResponse>>> getInventoriesForAdminMornitor(
+            @PathVariable("warehouseId") Integer warehouseId,
+            @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+            @RequestParam(value = "sortBy", defaultValue = "product.name") String sortBy,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam( value = "zoneId", required = false) Integer zoneId,
+            @RequestParam(value = "search", required = false) String search
+    ) {
+        int limit = 20;
+        pageNo = pageNo - 1;
+
+        if (categoryId != null && categoryId == 0) {
+            categoryId = null;
+        }
+        if (zoneId != null && zoneId == 0) {
+            zoneId = null;
+        }
+        if (search != null && search.isBlank()) {
+            search = null;
+        }
+
+        return ResponseEntity.ok(inventoryService.getInventoryByWarehouseIdWithFiltersForAdmin(
+                pageNo, limit, warehouseId, sortBy, direction, categoryId, zoneId, search));
     }
 }

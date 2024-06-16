@@ -72,6 +72,7 @@ public enum ErrorCode {
     OUT_OF_STOCK(1065, "Product not available in the warehouse"),
     OUT_OF_QUANTITY(1066, "Product quantity is not enough"),
     INVALID_STATUS_TO_EXPORT(1067, "Only pending exports can be processed"),
+    WAREHOUSE_NOT_EMPTY(1068, "Warehouse is not empty"),
     ;
 
     private final int code;

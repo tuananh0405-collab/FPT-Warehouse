@@ -75,6 +75,6 @@ public class ExportController {
 
     @PostMapping("/staff/process-export")
     public ResponseEntity<?> processExportByStaff(@RequestBody processExportByStaffRequest request) {
-        return ResponseEntity.ok(exportService.processExportRequest(request));
+        return ResponseEntity.ok(exportService.processExportRequestToTransfer(request));
     }
 }

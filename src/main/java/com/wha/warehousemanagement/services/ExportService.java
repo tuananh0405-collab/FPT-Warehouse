@@ -310,7 +310,7 @@ public class ExportService {
     // So, the staff can only choose the products to export from the warehouse that he/she is managing
     // So do the PENDING status because staff can only process the PENDING exports
     @Transactional
-    public ResponseObject<?> processExportRequest(processExportByStaffRequest request) {
+    public ResponseObject<?> processExportRequestToTransfer(processExportByStaffRequest request) {
         Export export = exportRepository.findById(request.getExportId())
                 .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
 
