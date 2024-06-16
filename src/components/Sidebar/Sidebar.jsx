@@ -1,12 +1,12 @@
 import  { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Sidebar.css";
-import Logo from "../imgs/warehouse-1073.png";
+import Logo from "../../imgs/warehouse-1073.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
-import { SidebarData } from "../Data/Data";
+import { SidebarData } from "../../Data/Data";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
-import { logout } from "../redux/features/auth/authSlice";
+import { logout } from "../../redux/features/auth/authSlice";
 
 const Sidebar = () => {
   const [expanded, setExpaned] = useState(true);

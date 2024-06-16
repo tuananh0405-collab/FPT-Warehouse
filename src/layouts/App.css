@@ -50,3 +50,15 @@
     grid-template-columns: 1fr;
   } 
 }
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.8); /* Optional: add a semi-transparent background */
+  z-index: 1000; /* Ensure it covers the entire screen */
+}

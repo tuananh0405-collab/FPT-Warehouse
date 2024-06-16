@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Error404 from "../../utils/Error404";
 
 const AdminRoute = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -7,7 +8,8 @@ const AdminRoute = () => {
   return userInfo && (role.includes('ADMIN')) ? (
       <Outlet />
   ) : (
-    <Navigate to="/login" replace />
+    // <Navigate to="/login" replace />
+    <Error404/>
   );
 };
 export default AdminRoute;

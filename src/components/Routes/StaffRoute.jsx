@@ -3,8 +3,8 @@ import { Navigate, Outlet } from "react-router-dom";
 
 const StaffRoute = () => {
   const { userInfo } = useSelector((state) => state.auth);
-
-  return userInfo ? <Outlet /> : <Navigate to="/login" replace />;
+  const role = localStorage.getItem('role')
+  return userInfo&& (role.includes('STAFF')) ? <Outlet /> : <Navigate to="/login" replace />;
 
 };
 

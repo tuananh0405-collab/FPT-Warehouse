@@ -21,6 +21,8 @@ import DataWarehouse from "./components/Data/Warehouse/DataWarehouse.jsx";
 import DataZone from "./components/Data/Zone/DataZone.jsx";
 import DataCategory from "./components/Data/Category/DataCategory.jsx";
 import Error404 from "./utils/Error404.jsx";
+import Loading from "./utils/Loading.jsx";
+import WarehouseZone from "./components/Data/Zone/WarehouseZone.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -34,10 +36,15 @@ const router = createBrowserRouter(
           <Route path="/products" element={<Products />} />
           <Route path="/data/warehouse" element={<DataWarehouse />} />
           <Route path="/data/zone" element={<DataZone />} />
+          <Route path="/data/zone/warehouseId/:id" element={<WarehouseZone />} />
           <Route path="/data/category" element={<DataCategory />} />
         </Route>
 
-        <Route path="" element={<StaffRoute />}></Route>
+        <Route path="" element={<StaffRoute />}>
+          <Route path="/loading" element={<Loading />} />
+          <Route path="/orders2" element={<Orders />} />
+
+        </Route>
       </Route>
 
       <Route path="/login" element={<Auth />}></Route>

@@ -1,17 +1,11 @@
-// import { Modal, Button, Form, Input } from "antd";
+// import React from 'react';
+// import { Modal, Button, Form, Input } from 'antd';
 
-// const CategoryModal = ({
-//   isModalVisible,
-//   handleOk,
-//   handleCancel,
-//   handleDelete,
-//   selectedCategory,
-//   form,
-// }) => {
+// const ZoneModal = ({ visible, handleOk, handleCancel, handleDelete, selectedZone, form }) => {
 //   return (
 //     <Modal
-//       title="Edit Category"
-//       visible={isModalVisible}
+//       title="Zone Details"
+//       visible={visible}
 //       onOk={handleOk}
 //       onCancel={handleCancel}
 //       footer={[
@@ -26,20 +20,20 @@
 //         </Button>,
 //       ]}
 //     >
-//       {selectedCategory && (
+//       {selectedZone && (
 //         <Form
 //           form={form}
 //           layout="vertical"
 //           initialValues={{
-//             name: selectedCategory.name,
-//             description: selectedCategory.description,
+//             name: selectedZone.name,
+//             description: selectedZone.description,
 //           }}
 //         >
 //           <Form.Item label="Name" name="name">
-//             <Input placeholder={selectedCategory.name} />
+//             <Input placeholder={selectedZone.name} />
 //           </Form.Item>
 //           <Form.Item label="Description" name="description">
-//             <Input placeholder={selectedCategory.description} />
+//             <Input placeholder={selectedZone.description} />
 //           </Form.Item>
 //         </Form>
 //       )}
@@ -47,32 +41,26 @@
 //   );
 // };
 
-// export default CategoryModal;
+// export default ZoneModal;
 
-import { Modal, Button, Form, Input } from "antd";
-import { useEffect } from "react";
 
-const CategoryModal = ({
-  isModalVisible,
-  handleOk,
-  handleCancel,
-  handleDelete,
-  selectedCategory,
-  form,
-}) => {
+import React, { useEffect } from 'react';
+import { Modal, Button, Form, Input } from 'antd';
+
+const ZoneModal = ({ visible, handleOk, handleCancel, handleDelete, selectedZone, form }) => {
   useEffect(() => {
-    if (selectedCategory) {
+    if (selectedZone) {
       form.setFieldsValue({
-        name: selectedCategory.name,
-        description: selectedCategory.description,
+        name: selectedZone.name,
+        description: selectedZone.description,
       });
     }
-  }, [selectedCategory, form]);
+  }, [selectedZone, form]);
 
   return (
     <Modal
-      title="Edit Category"
-      visible={isModalVisible}
+      title="Zone Details"
+      visible={visible}
       onOk={handleOk}
       onCancel={handleCancel}
       footer={[
@@ -87,12 +75,12 @@ const CategoryModal = ({
         </Button>,
       ]}
     >
-      {selectedCategory && (
+      {selectedZone && (
         <Form form={form} layout="vertical">
-          <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please input the category name!' }]}>
+          <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please input the zone name!' }]}>
             <Input />
           </Form.Item>
-          <Form.Item label="Description" name="description" rules={[{ required: true, message: 'Please input the category description!' }]}>
+          <Form.Item label="Description" name="description" rules={[{ required: true, message: 'Please input the zone description!' }]}>
             <Input />
           </Form.Item>
         </Form>
@@ -101,4 +89,4 @@ const CategoryModal = ({
   );
 };
 
-export default CategoryModal;
+export default ZoneModal;

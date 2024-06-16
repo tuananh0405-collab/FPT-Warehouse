@@ -5,7 +5,7 @@ const OrdersComponent = () => {
   return (
     <div className="MainDash">
       <h1>Orders</h1>
-      <Table/>
+      {/* <Table/> */}
     </div>
   );
 };

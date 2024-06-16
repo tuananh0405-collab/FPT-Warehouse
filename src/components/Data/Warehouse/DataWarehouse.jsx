@@ -1,17 +1,4 @@
 import Breadcrumbs from "../../../utils/Breadcumbs";
-
-// const DataWarehouse = () => {
-//   return (
-//     <div style={{ padding: "20px" }}>
-//       <Breadcrumbs />
-//       <div>DataWarehouse</div>
-//     </div>
-//   );
-// };
-
-// export default DataWarehouse;
-
-
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import {
