@@ -44,10 +44,29 @@ public class ExportService {
             export.setStatus(Status.valueOf(request.getStatus()));
             export.setExportDate(new Date());
             export.setExportType(ImportExportType.valueOf(request.getExportType()));
-            export.setTransferKey(request.getTransferKey());
-            export.setWarehouseFrom(warehouseRepository.findById(request.getWarehouseIdFrom()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
-            export.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
-            export.setCustomer(customerRepository.findById(request.getCustomerId()).orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND)));
+
+            if (request.getTransferKey() != null && !request.getTransferKey().trim().isEmpty()) {
+                export.setTransferKey(request.getTransferKey());
+            }
+
+            // Handle warehouseFrom
+            if (request.getWarehouseIdFrom() != null) {
+                export.setWarehouseFrom(warehouseRepository.findById(request.getWarehouseIdFrom())
+                        .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            }
+
+            // Handle warehouseTo
+            if (request.getWarehouseIdTo() != null) {
+                export.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo())
+                        .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            }
+
+            // Handle customer
+            if (request.getCustomerId() != null) {
+                export.setCustomer(customerRepository.findById(request.getCustomerId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND)));
+            }
+
             exportRepository.save(export);
             ExportResponse response = exportMapper.toDto(export);
             return new ResponseObject<>(HttpStatus.OK.value(), "Export added successfully", response);
