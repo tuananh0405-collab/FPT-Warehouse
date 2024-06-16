@@ -26,11 +26,16 @@ const LoginComponent = () => {
       const res = await login(formData).unwrap();
       dispatch(setCredentials({ ...res }));
 
-      const decoded = jwtDecode(res.data.token) 
+      const decoded = jwtDecode(res.data.token)
       console.log(decoded.role);
       localStorage.setItem('role', decoded.role);
+      if (decoded.role === 'ADMIN') {
+        navigate("/dashboard");
+      } else if (decoded.role === 'STAFF') {
+        navigate('/staff')
+      }
+      // navigate("/dashboard");
 
-      navigate("/dashboard");
       console.log("Login successful");
     } catch (err) {
       console.log("Login failed: ", err);

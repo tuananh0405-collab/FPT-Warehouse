@@ -14,9 +14,13 @@ export const warehousesApiSlice = apiSlice.injectEndpoints({
       keepUnusedDataFor: 5,
     }),
     getWarehouseById: builder.query({
-      query: (id) => ({
+      query: ({ id, authToken }) => ({
         url: `${WAREHOUSE_URL}/${id}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
       }),
+      providesTags: ["Warehouse"],
       keepUnusedDataFor: 5,
     }),
     addWarehouse: builder.mutation({

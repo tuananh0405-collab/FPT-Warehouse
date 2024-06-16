@@ -44,6 +44,25 @@ export const SidebarData = [
     link: "/products",
   },
 ];
+
+export const StaffSidebarData = [
+  {
+    icon: UilEstate,
+    heading: "Dashboard",
+    link: "/staff/dashboard",
+  },
+  {
+    icon: UilChart,
+    heading: "Data",
+    link: "/staff/data",
+  },
+  {
+    icon: UilClipboardAlt,
+    heading: "Orders",
+    link: "/staff/orders",
+  },
+
+];
 // // Analytics Cards Data
 export const cardsData = [
   {

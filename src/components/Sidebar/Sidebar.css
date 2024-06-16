@@ -122,3 +122,21 @@
   text-decoration: none;
   color: inherit;
 }
+
+
+/* warehouse-id */
+.warehouse-id {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 18px; /* Increased font size */
+  font-weight: bold;
+  color: #ffffff; /* Text color */
+  background-color: #f19782; /* Background color */
+  padding: 0.5rem 1rem; /* Padding */
+  border-radius: 0.5rem; /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Box shadow for a subtle effect */
+}
+

@@ -23,9 +23,17 @@ import DataCategory from "./components/Data/Category/DataCategory.jsx";
 import Error404 from "./utils/Error404.jsx";
 import Loading from "./utils/Loading.jsx";
 import WarehouseZone from "./components/Data/Zone/WarehouseZone.jsx";
+import Staff from "./layouts/Staff.jsx";
+import StaffOrder from "./components/Orders/StaffOrder.jsx";
+import StaffData from "./components/Data/StaffData/StaffData.jsx";
+import StaffDashboard from "./components/MainDash/StaffDash/StaffDashboard.jsx";
+import StaffZone from "./components/Data/StaffData/StaffZone/StaffZone.jsx";
+import StaffProduct from "./components/Data/StaffData/StaffProduct/StaffProduct.jsx";
+import StaffCustomer from "./components/Data/StaffData/StaffCustomer/StaffCustomer.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
+      {/* ADMIN  */}
       <Route path="/" element={<App />}>
         <Route path="" element={<AdminRoute />}>
           <Route path="/" element={<Error404 />} />
@@ -39,14 +47,21 @@ const router = createBrowserRouter(
           <Route path="/data/zone/warehouseId/:id" element={<WarehouseZone />} />
           <Route path="/data/category" element={<DataCategory />} />
         </Route>
-
+      </Route>
+      {/* STAFF  */}
+      <Route path="/staff" element={<Staff />}>
         <Route path="" element={<StaffRoute />}>
-          <Route path="/loading" element={<Loading />} />
-          <Route path="/orders2" element={<Orders />} />
+        
+          <Route path="/staff/dashboard" element={<StaffDashboard />} />
+          <Route path="/staff/orders" element={<StaffOrder />} />
+          <Route path="/staff/data" element={<StaffData />} />
+          <Route path="/staff/data/zone" element={<StaffZone />} />
+          <Route path="/staff/data/products" element={<StaffProduct />} />
+          <Route path="/staff/data/customers" element={<StaffCustomer />} />
 
         </Route>
       </Route>
-
+      {/* AUTH  */}
       <Route path="/login" element={<Auth />}></Route>
     </>
   )
