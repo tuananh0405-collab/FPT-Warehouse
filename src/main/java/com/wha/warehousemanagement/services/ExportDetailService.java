@@ -10,6 +10,7 @@ import com.wha.warehousemanagement.mappers.ExportMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
 import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -68,19 +69,34 @@ public class ExportDetailService {
         }
     }
 
+    @Transactional
     public ResponseObject<?> createExportDetail(List<ExportDetailRequest> requests) {
         try {
             List<ExportDetail> exportDetails = new ArrayList<>();
-            requests.forEach(request -> {
+            for (ExportDetailRequest request : requests) {
+                // Create and save export detail
                 ExportDetail exportDetail = new ExportDetail();
-                exportDetails.add(update(exportDetail, request));
-            });
+                exportDetail = update(exportDetail, request);
+                exportDetails.add(exportDetail);
+
+                // Update inventory
+                Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                                request.getProductId(), request.getZoneId(), request.getExpiredAt())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+
+                // Update held quantity and available quantity
+                inventory.setHeldQuantity((inventory.getHeldQuantity() == null ? 0 : inventory.getHeldQuantity()) + request.getQuantity());
+                inventory.setQuantity(inventory.getQuantity() - request.getQuantity());
+
+                inventoryRepository.save(inventory);
+            }
+
             exportDetailRepository.saveAll(exportDetails);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Export details created successfully", null);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export details created and inventory updated successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to create export details", null);
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to create export details and update inventory", null);
         }
     }
 
@@ -96,6 +112,16 @@ public class ExportDetailService {
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export detail", null);
         }
+    }
+
+    private ExportDetail update(ExportDetail exportDetail, ExportDetailRequest request) {
+        exportDetail.setExport(exportRepository.findById(request.getExportId())
+                .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND)));
+        exportDetail.setProduct(productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+        exportDetail.setQuantity(request.getQuantity());
+        exportDetail.setExpiredAt(request.getExpiredAt());
+        return exportDetail;
     }
 
     public List<ExportDetailWithExportIdResponse> getExportDetailWithExportIdByExportId(Integer exportId) {
@@ -128,16 +154,6 @@ public class ExportDetailService {
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete export detail", null);
         }
-    }
-
-    private ExportDetail update(ExportDetail exportDetail, ExportDetailRequest request) {
-        exportDetail.setExport(exportRepository.findById(request.getExportId())
-                .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND)));
-        exportDetail.setProduct(productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
-        exportDetail.setQuantity(request.getQuantity());
-        exportDetail.setExpiredAt(request.getExpiredAt());
-        return exportDetail;
     }
 
     public ResponseObject<List<SuggestedExportProductsResponse>> suggestExportInventory(List<SuggestedExportProductsRequest> requests) {

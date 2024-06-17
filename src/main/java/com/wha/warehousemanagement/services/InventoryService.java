@@ -1,19 +1,19 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
+import com.wha.warehousemanagement.dtos.requests.checkAvailableProductRequest;
+import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
 import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.InventoryMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
 import com.wha.warehousemanagement.models.*;
-import com.wha.warehousemanagement.repositories.InventoryRepository;
-import com.wha.warehousemanagement.repositories.ProductRepository;
-import com.wha.warehousemanagement.repositories.SearchRepository;
-import com.wha.warehousemanagement.repositories.ZoneRepository;
+import com.wha.warehousemanagement.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +33,7 @@ public class InventoryService {
     private final ProductRepository productRepository;
     private final ZoneRepository zoneRepository;
     private final SearchRepository searchRepository;
+    private final ExportDetailRepository exportDetailRepository;
 
     public ResponseObject<?> getAllInventories() {
         try {
@@ -241,5 +243,54 @@ public class InventoryService {
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get inventories", null);
         }
+    }
+
+    public ResponseObject<Page<InventoriesByAdminViewResponse>> getInventoryByWarehouseIdWithFiltersForAdmin(
+            int pageNo, int limit, Integer warehouseId,
+            String sortBy, String direction, Integer categoryId, Integer zoneId,
+            String search
+    ) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
+
+        Page<Inventory> inventories = inventoryRepository.searchInventoriesForAdmin(pageable, warehouseId, categoryId, zoneId, search);
+
+        Page<InventoriesByAdminViewResponse> response = inventories.map(
+                inventory -> {
+                    Product product = inventory.getProduct();
+                    Category category = product.getCategory();
+                    Zone zone = inventory.getZone();
+                    int heldQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, product.getId());
+                    return InventoriesByAdminViewResponse.builder()
+                            .productName(product.getName())
+                            .productDescription(product.getDescription())
+                            .productCategory(category.getName())
+                            .productQuantity(inventory.getQuantity())
+                            .productHeldQuantity(heldQuantity)
+                            .productExpiryDate(inventory.getExpiredAt())
+                            .productZone(zone.getName())
+                            .build();
+                }
+        );
+
+        return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
+    }
+
+    // This function should be called to check when Admin input a product with quantiy for export
+    public Integer getAvailableQuantityOfProduct(Integer warehouseId, Integer productId) {
+
+        // Find total quantity of this product (by inventories) in this warehouse
+        int totalQuantity = inventoryRepository.findTotalQuantityByWarehouseAndProductId(warehouseId, productId);
+
+        // Find total quanity held by pending exports
+        int totalHeldQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, productId);
+
+        return totalQuantity - totalHeldQuantity;
+    }
+
+    public InventoryResponse searchInventoryByProductIdZoneIdAndExpiredAt(Integer productId, Integer zoneId, Date expiredAt) {
+        Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(productId, zoneId, expiredAt)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+        return inventoryMapper.toDto(inventory);
     }
 }

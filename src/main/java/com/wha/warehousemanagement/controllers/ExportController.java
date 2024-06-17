@@ -23,9 +23,20 @@ public class ExportController {
     }
 
     //
-    @GetMapping
-    public ResponseEntity<?> getAllExports() {
-        return ResponseEntity.ok(exportService.getAllExports());
+    @GetMapping("/by-warehouse/{warehouseId}")
+    public ResponseEntity<?> getAllExports(
+            @PathVariable("warehouseId") Integer warehouseId,
+            @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+            @RequestParam(value = "sortBy", defaultValue = "exportDate") String sortBy,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction,
+            @RequestParam(value = "status", required = false) String status
+
+    ) {
+        int limit = 20;
+        pageNo = pageNo - 1;
+        return ResponseEntity.ok(exportService.getAllExports(
+                warehouseId, pageNo, limit, sortBy, direction, status
+        ));
     }
 
     @GetMapping("/{id}")
@@ -73,8 +84,8 @@ public class ExportController {
         return ResponseEntity.ok(exportService.createTransferBetweenWarehouses(request));
     }
 
-    @PostMapping("/staff/process-export")
+    @PutMapping("/staff/process-export")
     public ResponseEntity<?> processExportByStaff(@RequestBody processExportByStaffRequest request) {
-        return ResponseEntity.ok(exportService.processExportRequest(request));
+        return ResponseEntity.ok(exportService.processExportRequestToTransfer(request));
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
@@ -97,4 +98,30 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
             @Param("includeNearExpired") boolean includeNearExpired,
             @Param("includeValid") boolean includeValid,
             Pageable pageable);
+
+    @Query("SELECT i FROM Inventory i " +
+            "JOIN i.product p " +
+            "JOIN p.category c " +
+            "JOIN i.zone z " +
+            "JOIN z.warehouse w " +
+            "WHERE w.id = :warehouseId " +
+            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+            "AND (:zoneId IS NULL OR z.id = :zoneId) " +
+            "AND (:search IS NULL OR :search = '' OR LOWER(p.name) LIKE %:search% OR LOWER(p.description) LIKE %:search%)")
+    Page<Inventory> searchInventoriesForAdmin(Pageable pageable,
+                                              @Param("warehouseId") Integer warehouseId,
+                                              @Param("categoryId") Integer categoryId,
+                                              @Param("zoneId") Integer zoneId,
+                                              @Param("search") String search);
+
+
+    @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.zone.warehouse.id = :warehouseId AND i.product.id = :productId")
+    int findTotalQuantityByWarehouseAndProductId(int warehouseId, int productId);
+
+    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.id = :zoneId AND i.expiredAt = :expiredAt")
+    Optional<Inventory> findByProductIdAndZoneIdAndExpiredAt(
+            @Param("productId") Integer productId,
+            @Param("zoneId") Integer zoneId,
+            @Param("expiredAt") Date expiredAt);
+
 }

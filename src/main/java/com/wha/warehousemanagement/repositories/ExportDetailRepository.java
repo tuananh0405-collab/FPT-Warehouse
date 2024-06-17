@@ -12,12 +12,19 @@ import java.util.List;
 public interface ExportDetailRepository extends JpaRepository<ExportDetail, Integer> {
 
 
-    @Query("SELECT SUM(ed.quantity) FROM ExportDetail ed " +
+    @Query("SELECT COALESCE(SUM(ed.quantity), 0) FROM ExportDetail ed " +
             "JOIN ed.export e " +
             "WHERE e.warehouseFrom.id = :warehouseId " +
             "AND ed.product.id = :productId " +
             "AND e.status = 'PENDING'")
     int findTotalPendingQuantityByWarehouseAndProduct(@Param("warehouseId") Integer warehouseId, @Param("productId") Integer productId);
+
+//    @Query("SELECT COALESCE(SUM(ed.quantity), 0) FROM ExportDetail ed " +
+//            "JOIN ed.export e " +
+//            "WHERE e.warehouseFrom.id = :warehouseId " +
+//            "AND ed.product.id = :productId " +
+//            "AND e.status = 'PENDING'")
+//    int findTotalPendingQuantityByWarehouseAndProduct(@Param("warehouseId") Integer warehouseId, @Param("productId") Integer productId);
 
     List<ExportDetail> findByExportId(Integer exportId);
 }
