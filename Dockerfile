@@ -1,15 +1,12 @@
-FROM maven:3-jdk-8-alpine as builder
+# Sử dụng hình ảnh Maven để build ứng dụng
+FROM maven:3.8.6-openjdk-17 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-WORKDIR /usr/src/app
-
-COPY . /usr/src/app
-RUN mvn package
-
-FROM openjdk:8-jre-alpine
-
-COPY --from=builder /usr/src/app/target/*.jar /app.jar
-
-EXPOSE 8080
-
-ENTRYPOINT ["java"]
-CMD ["-jar", "/app.jar"]
+# Sử dụng hình ảnh JDK để chạy ứng dụng
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/WareHouseManagementApplication-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+EXPOSE 6060
