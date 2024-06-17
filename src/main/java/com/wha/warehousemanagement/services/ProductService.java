@@ -2,6 +2,7 @@ package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ProductRequest;
 import com.wha.warehousemanagement.dtos.responses.CategoryResponse;
+import com.wha.warehousemanagement.dtos.responses.ProductListForExportResponse;
 import com.wha.warehousemanagement.dtos.responses.ProductResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
@@ -13,6 +14,10 @@ import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.repositories.CategoryRepository;
 import com.wha.warehousemanagement.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +33,7 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final InventoryService inventoryService;
 
     public ResponseObject<?> addProduct(ProductRequest request) {
         try {
@@ -134,6 +140,37 @@ public class ProductService {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete product", null);
+        }
+    }
+
+    // This function is for Admin choose products to export
+    // This func also has available quantity of each product in a warehouse then we can check if Admin choose more than available quantity in front end
+    public ResponseObject<List<ProductListForExportResponse>> getAllProductsByWarehouseId(
+            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Integer categoryId, String search
+    ) {
+        // Get all product by warehouseId
+        // Get available quanity of each product by (available quantity = total quantity - quantity in export)
+        try {
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
+
+            Page<Product> products = productRepository.getAllProductsByWarehouseIdWithFilters(pageable, warehouseId, categoryId, search);
+
+            List<ProductListForExportResponse> responses = products.stream().map(
+                    product -> {
+                        int totalAvailableQuantity = inventoryService.getAvailableQuantityOfProduct(warehouseId, product.getId());
+                        ProductListForExportResponse response = new ProductListForExportResponse();
+                        response.setId(product.getId());
+                        response.setName(product.getName());
+                        response.setDescription(product.getDescription());
+                        response.setCategory(categoryMapper.toDto(product.getCategory()));
+                        response.setAvailableQuantity(totalAvailableQuantity);
+                        return response;
+                    }
+            ).toList();
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get all products by warehouseId successfully", responses);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all products by warehouseId", null);
         }
     }
 }

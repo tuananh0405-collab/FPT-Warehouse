@@ -1,6 +1,7 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
+import com.wha.warehousemanagement.dtos.requests.checkAvailableProductRequest;
 import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
 import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -248,18 +250,10 @@ public class InventoryService {
             String sortBy, String direction, Integer categoryId, Integer zoneId,
             String search
     ) {
-        // Log các giá trị tham số
-        System.out.println("warehouseId: " + warehouseId);
-        System.out.println("categoryId: " + categoryId);
-        System.out.println("zoneId: " + zoneId);
-        System.out.println("search: " + search);
-
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
 
         Page<Inventory> inventories = inventoryRepository.searchInventoriesForAdmin(pageable, warehouseId, categoryId, zoneId, search);
-
-        System.out.println("Inventories found: " + inventories.getTotalElements());
 
         Page<InventoriesByAdminViewResponse> response = inventories.map(
                 inventory -> {
@@ -280,5 +274,17 @@ public class InventoryService {
         );
 
         return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
+    }
+
+    // This function should be called to check when Admin input a product with quantiy for export
+    public Integer getAvailableQuantityOfProduct(Integer warehouseId, Integer productId) {
+
+        // Find total quantity of this product (by inventories) in this warehouse
+        int totalQuantity = inventoryRepository.findTotalQuantityByWarehouseAndProductId(warehouseId, productId);
+
+        // Find total quanity held by pending exports
+        int totalHeldQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, productId);
+
+        return totalQuantity - totalHeldQuantity;
     }
 }

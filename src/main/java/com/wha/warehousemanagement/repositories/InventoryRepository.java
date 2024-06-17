@@ -112,4 +112,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
                                               @Param("categoryId") Integer categoryId,
                                               @Param("zoneId") Integer zoneId,
                                               @Param("search") String search);
+
+    @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.zone.warehouse.id = :warehouseId AND i.product.id = :productId")
+    int findTotalQuantityByWarehouseAndProductId(int warehouseId, int productId);
 }

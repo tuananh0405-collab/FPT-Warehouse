@@ -28,4 +28,15 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
 //                                     Pageable pageable);
 
     boolean existsByTransferKey(String transferKey);
+
+    @Query("SELECT e FROM Export e WHERE (e.warehouseFrom.id = :warehouseId) ORDER BY " +
+            "CASE " +
+            "WHEN e.status = 'REQUESTING' THEN 1 " +
+            "WHEN e.status = 'PENDING' THEN 2 " +
+            "WHEN e.status = 'SHIPPING' THEN 3 " +
+            "WHEN e.status = 'SUCCEED' THEN 4 " +
+            "WHEN e.status = 'CANCEL' THEN 5 " +
+            "ELSE 6 END, " +
+            "e.exportDate ASC")
+    Page<Export> findAllByWarehouseSorted(@Param("warehouseId") Integer warehouseId, Pageable pageable);
 }

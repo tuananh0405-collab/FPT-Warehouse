@@ -12,6 +12,10 @@ import com.wha.warehousemanagement.mappers.WarehouseMapper;
 import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,12 +79,16 @@ public class ExportService {
         }
     }
 
-    public ResponseObject<?> getAllExports() {
+    public ResponseObject<?> getAllExports(
+            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, String status
+    ) {
         try {
-            List<ExportResponse> responses = exportRepository.findAll()
-                    .stream().map(exportMapper::toDto
-                    )
-                    .toList();
+            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
+
+            Page<Export> exports = exportRepository.findAllByWarehouseSorted(warehouseId, pageable);
+
+            List<ExportResponse> responses = exportMapper.toDto(exports.getContent());
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all exports successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -183,9 +191,8 @@ public class ExportService {
 //        }
 //    }
 
-    //
     @Transactional
-    public ResponseObject<ExportByAdminReqResponse> createTransferBetweenWarehouses (ExportByAdminReqRequest request) {
+    public ResponseObject<ExportByAdminReqResponse> createTransferBetweenWarehouses(ExportByAdminReqRequest request) {
         Warehouse warehouseFrom = warehouseRepository.findById(request.getWarehouseFromId())
                 .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
         Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseToId())
@@ -196,7 +203,7 @@ public class ExportService {
 
         // Tạo Export
         Export export = new Export();
-        try{
+        try {
             export.setDescription(request.getDescription());
             export.setStatus(Status.PENDING);
             export.setExportDate(request.getExportDate());
@@ -208,7 +215,6 @@ public class ExportService {
             exportRepository.save(export);
             for (Map.Entry<Integer, Integer> entry : request.getProductsRequested().entrySet()) {
                 Product product = productRepository.findById(entry.getKey())
-                        // dang loi cho nay
                         .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
                 ExportDetail exportDetail = new ExportDetail();
@@ -269,29 +275,6 @@ public class ExportService {
         return transferKey;
     }
 
-//    private void checkAvailableProducts(Integer warehouseId, Map<Integer, Integer> productsRequested) {
-//        for (Map.Entry<Integer, Integer> entry : productsRequested.entrySet()) {
-//            Integer productId = entry.getKey();
-//            Integer quantityRequested = entry.getValue();
-//
-//            // Tính tổng số lượng hàng trong kho
-//            List<Inventory> inventories = inventoryRepository.findByProductIdAndWarehouseIdOrderByExpiredAtAsc(warehouseId, productId);
-//            int totalInventoryQuantity = inventories.stream().mapToInt(Inventory::getQuantity).sum();
-//
-//            // Tính tổng số lượng hàng đang PENDING trong các đơn xuất
-//            int totalPendingExportQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, productId);
-//
-//            // Số lượng khả dụng = tổng số lượng hàng trong kho - tổng số lượng hàng đang PENDING
-//            int availableQuantity = totalInventoryQuantity - totalPendingExportQuantity;
-//
-//            if (availableQuantity < quantityRequested) {
-//                CustomException e = new CustomException();
-//                e.setErrorCode(null);
-//                e.setMessage("Not enough quantity of product with id " + productId + " in warehouse with id " + warehouseId);
-//                throw e;
-//            }
-//        }
-//    }
 
 //    private void reserveProducts(Integer warehouseId, Map<Integer, Integer> productsRequested) {
 //        for (Map.Entry<Integer, Integer> entry : productsRequested.entrySet()) {
