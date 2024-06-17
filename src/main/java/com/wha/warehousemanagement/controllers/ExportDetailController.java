@@ -3,13 +3,16 @@ package com.wha.warehousemanagement.controllers;
 import com.wha.warehousemanagement.dtos.requests.ExportDetailRequest;
 import com.wha.warehousemanagement.dtos.requests.SuggestedExportProductsRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportDetailResponse;
+import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.dtos.responses.SuggestedExportProductsResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ExportDetailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController

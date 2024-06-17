@@ -2,13 +2,17 @@ package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
 import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
+import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
 
 @RestController
 @RequestMapping("/inventory")
@@ -159,5 +163,14 @@ public class InventoryController {
 
         return ResponseEntity.ok(inventoryService.getInventoryByWarehouseIdWithFiltersForAdmin(
                 pageNo, limit, warehouseId, sortBy, direction, categoryId, zoneId, search));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchInventory(
+            @RequestParam Integer productId,
+            @RequestParam Integer zoneId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date expiredAt) {
+        InventoryResponse response = inventoryService.searchInventoryByProductIdZoneIdAndExpiredAt(productId, zoneId, expiredAt);
+        return ResponseEntity.ok(new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", response));
     }
 }

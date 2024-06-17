@@ -287,4 +287,10 @@ public class InventoryService {
 
         return totalQuantity - totalHeldQuantity;
     }
+
+    public InventoryResponse searchInventoryByProductIdZoneIdAndExpiredAt(Integer productId, Integer zoneId, Date expiredAt) {
+        Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(productId, zoneId, expiredAt)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+        return inventoryMapper.toDto(inventory);
+    }
 }

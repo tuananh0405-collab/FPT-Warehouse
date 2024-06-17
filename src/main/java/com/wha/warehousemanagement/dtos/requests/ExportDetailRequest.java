@@ -18,4 +18,5 @@ public class ExportDetailRequest {
     private Integer exportId;
     private Integer quantity;
     private Date expiredAt;
+    private Integer zoneId;
 }
