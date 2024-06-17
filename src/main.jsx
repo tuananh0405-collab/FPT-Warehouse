@@ -33,6 +33,8 @@ import StaffCustomer from "./components/Data/StaffData/StaffCustomer/StaffCustom
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
+      {/* AUTH  */}
+      <Route path="/" element={<Auth />}></Route>
       {/* ADMIN  */}
       <Route path="/" element={<App />}>
         <Route path="" element={<AdminRoute />}>
@@ -51,18 +53,15 @@ const router = createBrowserRouter(
       {/* STAFF  */}
       <Route path="/staff" element={<Staff />}>
         <Route path="" element={<StaffRoute />}>
-        
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
           <Route path="/staff/orders" element={<StaffOrder />} />
           <Route path="/staff/data" element={<StaffData />} />
           <Route path="/staff/data/zone" element={<StaffZone />} />
           <Route path="/staff/data/products" element={<StaffProduct />} />
           <Route path="/staff/data/customers" element={<StaffCustomer />} />
-
         </Route>
       </Route>
-      {/* AUTH  */}
-      <Route path="/login" element={<Auth />}></Route>
+
     </>
   )
 );

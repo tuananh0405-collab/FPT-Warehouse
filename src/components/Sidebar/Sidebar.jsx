@@ -30,7 +30,7 @@ const Sidebar = () => {
   const handleLogout = async () => {
     try {
       dispatch(logout());
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       console.log(error);
     }
