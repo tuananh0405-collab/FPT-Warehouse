@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import "./Sidebar.css";
 import Logo from "../../imgs/warehouse-1073.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
@@ -17,10 +17,17 @@ const StaffSidebar = () => {
   const [warehouseId, setWarehouseId] = useState(null);
 
   const userInfo = useSelector((state) => state.auth)
-  const authToken = userInfo.userInfo.data.token;
+  if (!userInfo) {
+    return <Navigate to={'/'} replace />
+  }
+  let authToken
+  let wid
+  if (userInfo && userInfo.userInfo && userInfo.userInfo.data) {
 
-  console.log(userInfo.userInfo.data.warehouseId);
-  const wid = userInfo.userInfo.data.warehouseId
+    authToken = userInfo.userInfo.data.token;
+    wid = userInfo.userInfo.data.warehouseId
+  }
+
 
 
   const {

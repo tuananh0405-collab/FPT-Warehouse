@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../../redux/api/authApiSlice";
 import { setCredentials } from "../../redux/features/auth/authSlice";
 import { jwtDecode } from "jwt-decode";
+import { message } from "antd";
 const LoginComponent = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -35,9 +36,11 @@ const LoginComponent = () => {
         navigate('/staff')
       }
       // navigate("/dashboard");
+      message.success("Login successfully");
 
       console.log("Login successful");
     } catch (err) {
+      message.error("Login unsuccessfully");
       console.log("Login failed: ", err);
     }
   };

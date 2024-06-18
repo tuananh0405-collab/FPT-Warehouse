@@ -8,8 +8,8 @@ const AdminRoute = () => {
   return userInfo && (role.includes('ADMIN')) ? (
       <Outlet />
   ) : (
-    // <Navigate to="/login" replace />
-    <Error404/>
+    <Navigate to="*" replace />
+    // <Error404/>
   );
 };
 export default AdminRoute;
