@@ -16,7 +16,7 @@ import java.util.Map;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ExportByAdminReqRequest {
+public class ExportTransferRequest {
     private String description;
 
     private String status;
@@ -29,9 +29,7 @@ public class ExportByAdminReqRequest {
 
     private Integer warehouseToId;
 
-    // Map<productId, quantity>
-    private Map<Integer, Integer> productsRequested;
+    // Map<inventoryId, quantity>
+    private Map<Integer, Integer> inventoriesSelected;
 
-    // which admin requested this export
-    //private UserRequest requestedBy;
 }

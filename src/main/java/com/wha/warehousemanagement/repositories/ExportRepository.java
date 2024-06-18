@@ -1,6 +1,7 @@
 package com.wha.warehousemanagement.repositories;
 
 import com.wha.warehousemanagement.models.Export;
+import com.wha.warehousemanagement.models.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,4 +40,8 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
             "ELSE 6 END, " +
             "e.exportDate ASC")
     Page<Export> findAllByWarehouseSorted(@Param("warehouseId") Integer warehouseId, Pageable pageable);
+
+    @Query("SELECT COUNT(e) FROM Export e WHERE e.warehouseFrom.id = :warehouseId " +
+            "AND (:status IS NULL OR e.status = :status)")
+    int countByWarehouseIdAndStatus(int warehouseId, Status status);
 }

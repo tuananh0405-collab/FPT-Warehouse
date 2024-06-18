@@ -1,7 +1,7 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.requests.ExportByAdminReqRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
+import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
 import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.dtos.responses.ExportResponse;
@@ -20,10 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -191,8 +188,9 @@ public class ExportService {
 //        }
 //    }
 
+    // Dont need to check inventories by warehouseId because when the inventories on the monitor of a particular STAFF, it only shows the inventories of that warehouse
     @Transactional
-    public ResponseObject<ExportByAdminReqResponse> createTransferBetweenWarehouses(ExportByAdminReqRequest request) {
+    public ResponseObject<ExportByAdminReqResponse> createTransferBetweenWarehouses(ExportTransferRequest request) {
         Warehouse warehouseFrom = warehouseRepository.findById(request.getWarehouseFromId())
                 .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
         Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseToId())
@@ -203,6 +201,7 @@ public class ExportService {
 
         // Tạo Export
         Export export = new Export();
+
         try {
             export.setDescription(request.getDescription());
             export.setStatus(Status.PENDING);
@@ -213,14 +212,27 @@ public class ExportService {
             export.setWarehouseTo(warehouseTo);
 
             exportRepository.save(export);
-            for (Map.Entry<Integer, Integer> entry : request.getProductsRequested().entrySet()) {
-                Product product = productRepository.findById(entry.getKey())
+            for (Map.Entry<Integer, Integer> entry : request.getInventoriesSelected().entrySet()) {
+
+                Inventory inventory = inventoryRepository.findById(entry.getKey())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+
+                Product product = productRepository.findById(inventory.getProduct().getId())
                         .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
+                if (inventory.getQuantity() < entry.getValue()) {
+                    throw new CustomException(ErrorCode.OUT_OF_STOCK);
+                }
+
+                // Cập nhật số lượng trong kho
+                inventory.setQuantity(inventory.getQuantity() - entry.getValue());
+                inventoryRepository.save(inventory);
 
                 ExportDetail exportDetail = new ExportDetail();
                 exportDetail.setProduct(product);
                 exportDetail.setQuantity(entry.getValue());
                 exportDetail.setExport(export);
+                exportDetail.setExpiredAt(inventory.getExpiredAt());
                 exportDetailRepository.save(exportDetail);
             }
         } catch (Exception e) {
@@ -239,13 +251,19 @@ public class ExportService {
             anImport.setWarehouseTo(warehouseTo);
 
             importRepository.save(anImport);
-            for (Map.Entry<Integer, Integer> entry : request.getProductsRequested().entrySet()) {
-                Product product = productRepository.findById(entry.getKey())
+            for (Map.Entry<Integer, Integer> entry : request.getInventoriesSelected().entrySet()) {
+
+                Inventory inventory = inventoryRepository.findById(entry.getKey())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+
+                Product product = productRepository.findById(inventory.getProduct().getId())
                         .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
                 ImportDetail importDetail = new ImportDetail();
                 importDetail.setProduct(product);
                 importDetail.setQuantity(entry.getValue());
                 importDetail.setAnImport(anImport);
+                importDetail.setExpiredAt(inventory.getExpiredAt());
                 importDetailRepository.save(importDetail);
             }
         } catch (Exception e) {
@@ -266,6 +284,7 @@ public class ExportService {
 
         return new ResponseObject<>(HttpStatus.OK.value(), "Transfer from Warehouse " + warehouseFrom.getName() + " to Warehouse " + warehouseTo.getName() + " is created successfully", response);
     }
+
 
     private String generateUniqueTransferKey() {
         String transferKey;
@@ -311,52 +330,56 @@ public class ExportService {
     // Do not need to check by warehouseId because when the inventories on the monitor of a particular STAFF, it only shows the inventories of that warehouse
     // So, the staff can only choose the products to export from the warehouse that he/she is managing
     // So do the PENDING status because staff can only process the PENDING exports
-    @Transactional
-    public ResponseObject<?> processExportRequestToTransfer(processExportByStaffRequest request) {
-        Export export = exportRepository.findById(request.getExportId())
-                .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+//    @Transactional
+//    public ResponseObject<?> processExportRequestToTransfer(processExportByStaffRequest request) {
+//        Export export = exportRepository.findById(request.getExportId())
+//                .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+//
+//        if (export.getStatus() != Status.PENDING) {
+//            throw new CustomException(ErrorCode.INVALID_STATUS_TO_EXPORT);
+//        }
+//
+//        // Duyệt qua các sản phẩm và số lượng cần xuất
+//        for (Map.Entry<Integer, Integer> entry : request.getSelectedInventories().entrySet()) {
+//            Integer inventoryId = entry.getKey();
+//            Integer quantityToExport = entry.getValue();
+//
+//            Inventory inventory = inventoryRepository.findById(inventoryId)
+//                    .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+//
+//            if (inventory.getQuantity() < quantityToExport) {
+//                throw new CustomException(ErrorCode.OUT_OF_STOCK);
+//            }
+//
+//            // Trừ số lượng trong inventory
+//            inventory.setQuantity(inventory.getQuantity() - quantityToExport);
+//            try {
+//                inventoryRepository.save(inventory);
+//            } catch (Exception e) {
+//                return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update inventories", null);
+//            }
+//        }
+//
+//        // Cập nhật trạng thái của Export thành SHIPPING
+//        export.setStatus(Status.SHIPPING);
+//        try {
+//            exportRepository.save(export);
+//        } catch (Exception e) {
+//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export", null);
+//        }
+//
+//        try {
+//            Import relatedImport = importRepository.findByTransferKey(export.getTransferKey());
+//            relatedImport.setStatus(Status.SHIPPING);
+//            importRepository.save(relatedImport);
+//        } catch (Exception e) {
+//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update import", null);
+//        }
+//
+//        return new ResponseObject<>(HttpStatus.OK.value(), "Export processed successfully", null);
+//    }
 
-        if (export.getStatus() != Status.PENDING) {
-            throw new CustomException(ErrorCode.INVALID_STATUS_TO_EXPORT);
-        }
-
-        // Duyệt qua các sản phẩm và số lượng cần xuất
-        for (Map.Entry<Integer, Integer> entry : request.getSelectedInventories().entrySet()) {
-            Integer inventoryId = entry.getKey();
-            Integer quantityToExport = entry.getValue();
-
-            Inventory inventory = inventoryRepository.findById(inventoryId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
-
-            if (inventory.getQuantity() < quantityToExport) {
-                throw new CustomException(ErrorCode.OUT_OF_STOCK);
-            }
-
-            // Trừ số lượng trong inventory
-            inventory.setQuantity(inventory.getQuantity() - quantityToExport);
-            try {
-                inventoryRepository.save(inventory);
-            } catch (Exception e) {
-                return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update inventories", null);
-            }
-        }
-
-        // Cập nhật trạng thái của Export thành SHIPPING
-        export.setStatus(Status.SHIPPING);
-        try {
-            exportRepository.save(export);
-        } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export", null);
-        }
-
-        try {
-            Import relatedImport = importRepository.findByTransferKey(export.getTransferKey());
-            relatedImport.setStatus(Status.SHIPPING);
-            importRepository.save(relatedImport);
-        } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update import", null);
-        }
-
-        return new ResponseObject<>(HttpStatus.OK.value(), "Export processed successfully", null);
+    public int getTotalExportsByWarehouseIdAndFilterByStatus(int warehouseId, Status status) {
+        return exportRepository.countByWarehouseIdAndStatus(warehouseId, status);
     }
 }

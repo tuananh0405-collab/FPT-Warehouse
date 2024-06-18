@@ -1,10 +1,10 @@
 package com.wha.warehousemanagement.controllers;
 
-import com.wha.warehousemanagement.dtos.requests.ExportByAdminReqRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
-import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
+import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
+import com.wha.warehousemanagement.models.Status;
 import com.wha.warehousemanagement.services.ExportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +37,22 @@ public class ExportController {
         return ResponseEntity.ok(exportService.getAllExports(
                 warehouseId, pageNo, limit, sortBy, direction, status
         ));
+    }
+
+    @GetMapping("/by-warehouse/total/{warehouseId}")
+    public ResponseEntity<?> getTotalExportsByWarehouse(
+            @PathVariable("warehouseId") Integer warehouseId,
+            @RequestParam(value = "status", required = false) String status
+    ) {
+        Status exportStatus = null;
+        if (status != null && !status.isEmpty()) {
+            try {
+                exportStatus = Status.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body("Invalid status value");
+            }
+        }
+        return ResponseEntity.ok(exportService.getTotalExportsByWarehouseIdAndFilterByStatus(warehouseId, exportStatus));
     }
 
     @GetMapping("/{id}")
@@ -80,12 +96,12 @@ public class ExportController {
 
     // For Admin create export request in warehouse A and import request for warehouse B (only product and quantity)
     @PostMapping("/admin/req-transfer")
-    public ResponseEntity<ResponseObject<ExportByAdminReqResponse>> createExportRequest(@RequestBody ExportByAdminReqRequest request) {
+    public ResponseEntity<ResponseObject<ExportByAdminReqResponse>> createTransferBetweenWarehouses(@RequestBody ExportTransferRequest request) {
         return ResponseEntity.ok(exportService.createTransferBetweenWarehouses(request));
     }
 
-    @PutMapping("/staff/process-export")
-    public ResponseEntity<?> processExportByStaff(@RequestBody processExportByStaffRequest request) {
-        return ResponseEntity.ok(exportService.processExportRequestToTransfer(request));
-    }
+//    @PutMapping("/staff/process-export")
+//    public ResponseEntity<?> processExportByStaff(@RequestBody processExportByStaffRequest request) {
+//        return ResponseEntity.ok(exportService.processExportRequestToTransfer(request));
+//    }
 }
