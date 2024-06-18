@@ -34,11 +34,10 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       {/* AUTH  */}
-      <Route path="/" element={<Auth />}></Route>
+      <Route path="/" element={<Auth />}/>
       {/* ADMIN  */}
       <Route path="/" element={<App />}>
         <Route path="" element={<AdminRoute />}>
-          <Route path="/" element={<Error404 />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/data" element={<Data />} />
@@ -61,7 +60,8 @@ const router = createBrowserRouter(
           <Route path="/staff/data/customers" element={<StaffCustomer />} />
         </Route>
       </Route>
-
+      {/* Route 404 cho tất cả các route khác */}
+      <Route path="*" element={<Error404 />} />
     </>
   )
 );
