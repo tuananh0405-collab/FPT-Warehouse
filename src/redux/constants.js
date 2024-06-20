@@ -1,4 +1,6 @@
-export const BASE_URL = "http://34.234.201.29:6060";
+// export const BASE_URL = "http://34.234.201.29:6060";
+export const BASE_URL = "http://localhost:6060";
+
 export const AUTH_URL = "/auth";
 export const USER_URL = "/user";
 export const WAREHOUSE_URL = "/warehouse";
