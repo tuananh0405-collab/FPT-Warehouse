@@ -52,27 +52,29 @@ public class UserService {
             User user = userRepository.findById(id).orElseThrow(
                     () -> new CustomException(ErrorCode.USER_NOT_FOUND)
             );
-            if (user.getFullName() != null && !user.getFullName().trim().isEmpty()) {
+
+            if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
                 user.setFullName(request.getFullName());
             }
-            if (user.getUsername() != null && !user.getUsername().trim().isEmpty()) {
+            if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
                 user.setUsername(request.getUsername());
             }
-            if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
+            if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
                 user.setPassword(request.getPassword());
             }
-            if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
-                user.setFullName(request.getFullName());
+            if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+                user.setEmail(request.getEmail());
             }
-            if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+            if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
                 user.setPhone(request.getPhone());
             }
-            if (user.getAddress() != null && !user.getAddress().trim().isEmpty()) {
+            if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
                 user.setAddress(request.getAddress());
             }
-            if (user.getRole() != null && !user.getFullName().trim().isEmpty()) {
+            if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
                 user.setRole(Role.valueOf(request.getRole()));
             }
+
             userRepository.save(user);
             UserResponse response = userMapper.toDto(user);
             return new ResponseObject<>(HttpStatus.OK.value(), "Update user successfully", response);
@@ -82,6 +84,7 @@ public class UserService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed update user", null);
         }
     }
+
 
     public ResponseObject<?> deleteUserById(int id) {
         try {
