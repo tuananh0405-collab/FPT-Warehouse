@@ -30,6 +30,11 @@ import StaffDashboard from "./components/MainDash/StaffDash/StaffDashboard.jsx";
 import StaffZone from "./components/Data/StaffData/StaffZone/StaffZone.jsx";
 import StaffProduct from "./components/Data/StaffData/StaffProduct/StaffProduct.jsx";
 import StaffCustomer from "./components/Data/StaffData/StaffCustomer/StaffCustomer.jsx";
+import StaffExpport from "./components/Orders/StaffExport.jsx";
+import StaffImport from "./components/Orders/StaffImport.jsx";
+import StaffNewExport from "./components/Orders/StaffAddExport.jsx";
+
+import DataCustomers from "./components/Data/Customers/DataCustomers.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -47,6 +52,7 @@ const router = createBrowserRouter(
           <Route path="/data/zone" element={<DataZone />} />
           <Route path="/data/zone/warehouseId/:id" element={<WarehouseZone />} />
           <Route path="/data/category" element={<DataCategory />} />
+          <Route path="/data/customer" element={<DataCustomers />} />
         </Route>
       </Route>
       {/* STAFF  */}
@@ -58,6 +64,9 @@ const router = createBrowserRouter(
           <Route path="/staff/data/zone" element={<StaffZone />} />
           <Route path="/staff/data/products" element={<StaffProduct />} />
           <Route path="/staff/data/customers" element={<StaffCustomer />} />
+          <Route path="/staff/order/export" element={<StaffExpport />} />
+          <Route path="/staff/order/import" element={<StaffImport />} />
+          <Route path="/staff/export/new" element={<StaffNewExport />} />
         </Route>
       </Route>
       {/* Route 404 cho tất cả các route khác */}

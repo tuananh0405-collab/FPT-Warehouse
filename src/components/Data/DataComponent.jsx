@@ -38,7 +38,7 @@ const DataComponent = () => {
       title: "Customer",
       description: "Manage your customers.",
       icon: <PeopleIcon style={{ fontSize: 64 }} />,
-      link: "/staffs",
+      link: "/data/customer",
     },
   ];
 
