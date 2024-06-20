@@ -35,6 +35,7 @@ import StaffImport from "./components/Orders/StaffImport.jsx";
 import StaffNewExport from "./components/Orders/StaffAddExport.jsx";
 
 import DataCustomers from "./components/Data/Customers/DataCustomers.jsx";
+import StaffZoneInventory from "./components/Data/StaffData/StaffZone/StaffZoneInventory.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -62,6 +63,7 @@ const router = createBrowserRouter(
           <Route path="/staff/orders" element={<StaffOrder />} />
           <Route path="/staff/data" element={<StaffData />} />
           <Route path="/staff/data/zone" element={<StaffZone />} />
+          <Route path="/staff/data/zone/:zoneid/inventory" element={<StaffZoneInventory />} />
           <Route path="/staff/data/products" element={<StaffProduct />} />
           <Route path="/staff/data/customers" element={<StaffCustomer />} />
           <Route path="/staff/order/export" element={<StaffExpport />} />

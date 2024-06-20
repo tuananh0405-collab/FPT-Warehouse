@@ -1,70 +1,68 @@
 import { apiSlice } from "./apiSlice";
-import { ZONE_URL } from "../constants";
+import { INVENTORY_URL } from "../constants";
 
-export const userApiSlice = apiSlice.injectEndpoints({
+export const inventoryApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getAllZones: builder.query({
+    getAllInventories: builder.query({
       query: (authToken) => ({
-        url: `${ZONE_URL}/all`,
+        url: `${INVENTORY_URL}`,
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
       }),
-      providesTags: ["Zone"],
+      providesTags: ["Inventory"],
       keepUnusedDataFor: 5,
     }),
-    getZoneById: builder.query({
+    getInventoryById: builder.query({
       query: (id) => ({
-        url: `${ZONE_URL}/${id}`,
+        url: `${INVENTORY_URL}/${id}`,
       }),
       keepUnusedDataFor: 5,
     }),
-    addZone: builder.mutation({
+    addInventory: builder.mutation({
       query: ({ data, authToken }) => ({
-        url: `${ZONE_URL}/add`,
+        url: `${INVENTORY_URL}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Zone"],
+      invalidatesTags: ["Inventory"],
     }),
-    deleteZone: builder.mutation({
+    deleteInventory: builder.mutation({
       query: ({ id, authToken }) => ({
-        url: `${ZONE_URL}/${id}`,
+        url: `${INVENTORY_URL}/${id}`,
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
         method: "DELETE",
       }),
-      invalidatesTags: ["Zone"],
+      invalidatesTags: ["Inventory"],
     }),
-    updateZone: builder.mutation({
+    updateInventory: builder.mutation({
       query: ({ data, authToken }) => ({
-        url: `${ZONE_URL}/${data.trackingId}`,
+        url: `${INVENTORY_URL}/${data.trackingId}`,
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Zone"],
+      invalidatesTags: ["Inventory"],
     }),
-    getZoneByWarehouseId: builder.query({
+    getInventoriesByZoneId: builder.query({
       query: ({ id, authToken }) => ({
-        url: `${ZONE_URL}/warehouse/${id}`,
+        url: `${INVENTORY_URL}/zones/${id}/inventory`,
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
       }),
-      providesTags: ["Zone"],
+      providesTags: ["Inventory"],
       keepUnusedDataFor: 5,
     }),
-    
   }),
 });
 
-export const {
-  useGetAllZonesQuery, useGetZoneByIdQuery, useAddZoneMutation, useDeleteZoneMutation, useUpdateZoneMutation, useGetZoneByWarehouseIdQuery
-} = userApiSlice;
+export const { useGetAllInventoriesQuery, useGetInventoryByIdQuery, useAddInventoryMutation, useDeleteInventoryMutation, useUpdateInventoryMutation, useGetInventoriesByZoneIdQuery
+} = inventoryApiSlice;
