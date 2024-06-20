@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./MainDash.css";
+import "../../assets/styles/MainDash.css";
 import { Table } from "antd";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import { Modal, Button, Form, Input, Select } from "antd";

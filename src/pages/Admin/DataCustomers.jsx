@@ -1,56 +1,58 @@
-import Breadcrumbs from "../../../utils/Breadcumbs";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Breadcrumbs from "../../utils/Breadcumbs";
 import { useSelector } from "react-redux";
 import {
-  useGetAllWarehousesQuery,
-  useUpdateWarehouseMutation,
-  useDeleteWarehouseMutation,
-  useAddWarehouseMutation,
-} from "../../../redux/api/warehousesApiSlice";
-import WarehouseTable from "./WarehouseTable";
-import WarehouseModal from "./WarehouseModal";
-import AddWarehouseModal from "./AddWarehouseModal";
+  useGetAllCustomersQuery,
+  useUpdateCustomerMutation,
+  useDeleteCustomerByIdMutation,
+  useAddCustomerMutation,
+} from "../../redux/api/customersApiSlice";
+import CustomerTable from "../../components/Data/Customers/CustomerTable";
+import CustomerModal from "../../components/Data/Customers/CustomerModal";
+import AddCustomerModal from "../../components/Data/Customers/AddCustomerModal";
 import { Button, message, Form } from "antd";
-import Loading from "../../../utils/Loading";
-import Error500 from "../../../utils/Error500";
-import './MainDash.css'
-const DataWarehouse = () => {
+import Loading from "../../utils/Loading";
+import Error500 from "../../utils/Error500";
+import '../../assets/styles/MainDash.css';
+
+const DataCustomers = () => {
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
-  const { data: warehouses, isLoading, error } = useGetAllWarehousesQuery(authToken);
-  const [updateWarehouse] = useUpdateWarehouseMutation();
-  const [deleteWarehouse] = useDeleteWarehouseMutation();
-  const [addWarehouse] = useAddWarehouseMutation();
+  const { data: customers, isLoading, error } = useGetAllCustomersQuery(authToken);
+  const [updateCustomer] = useUpdateCustomerMutation();
+  const [deleteCustomer] = useDeleteCustomerByIdMutation();
+  const [addCustomer] = useAddCustomerMutation();
   const [page, setPage] = useState(1);
-  const rowsPerPage = 3;
+  const rowsPerPage = 5;
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [form] = Form.useForm();
   const [formAdd] = Form.useForm();
   const [addNewVisible, setAddNewVisible] = useState(false);
 
-  const showModal = (warehouseId) => {
-    const warehouse = warehouses.data.find((w) => w.id === warehouseId);
-    setSelectedWarehouse(warehouse);
+  const showModal = (customerId) => {
+    const customer = customers.data.find((c) => c.id === customerId);
+    setSelectedCustomer(customer);
     setIsModalVisible(true);
   };
 
   const handleOk = async () => {
     const values = await form.validateFields();
-    const data = { ...values, id: selectedWarehouse.id };
-    await updateWarehouse({ warehouseId: selectedWarehouse.id, formData: data, authToken });
+    const data = { ...values, id: selectedCustomer.id };
+    await updateCustomer({ customerId: selectedCustomer.id, formData: data, authToken });
     setIsModalVisible(false);
   };
 
   const handleCancel = () => {
+    setSelectedCustomer(null);
     setIsModalVisible(false);
   };
 
   const handleDelete = async () => {
     try {
-      await deleteWarehouse({ warehouseId: selectedWarehouse.id, authToken });
+      await deleteCustomer({ customerId: selectedCustomer.id, authToken });
       setIsModalVisible(false);
-      message.success("Warehouse deleted successfully");
+      message.success("Customer deleted successfully");
     } catch (error) {
       console.log(error.message);
     }
@@ -59,8 +61,8 @@ const DataWarehouse = () => {
   const handleOkAdd = async () => {
     const values = await formAdd.validateFields();
     const data = { ...values };
-    await addWarehouse({ warehouseData: data, authToken });
-    message.success("Warehouse added successfully");
+    await addCustomer({ customerData: data, authToken });
+    message.success("Customer added successfully");
     setAddNewVisible(false);
     formAdd.resetFields();
   };
@@ -83,38 +85,38 @@ const DataWarehouse = () => {
 
   return (
     <div className="">
-       <Breadcrumbs />
-      <h1>Warehouses</h1>
+      <Breadcrumbs />
+      <h1>Customers</h1>
       <Button
         type="primary"
         style={{ background: "#40A578" }}
         onClick={() => setAddNewVisible(true)}
       >
-        Add new warehouse
+        Add new customer
       </Button>
-      <AddWarehouseModal
+      <AddCustomerModal
         addNewVisible={addNewVisible}
         handleOkAdd={handleOkAdd}
         handleCancelAdd={handleCancelAdd}
         formAdd={formAdd}
       />
-      <WarehouseTable
-        warehouseList={warehouses.data}
+      <CustomerTable
+        customerList={customers.data}
         page={page}
         setPage={setPage}
         rowsPerPage={rowsPerPage}
         showModal={showModal}
       />
-      <WarehouseModal
+      <CustomerModal
         isModalVisible={isModalVisible}
         handleOk={handleOk}
         handleCancel={handleCancel}
         handleDelete={handleDelete}
-        selectedWarehouse={selectedWarehouse}
+        selectedCustomer={selectedCustomer}
         form={form}
       />
     </div>
   );
 };
 
-export default DataWarehouse;
+export default DataCustomers;

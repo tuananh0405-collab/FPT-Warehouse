@@ -1,10 +1,10 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { useGetAllWarehousesQuery } from "../../../redux/api/warehousesApiSlice";
+import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
 import { Card, Row, Col } from "antd";
 import { useNavigate } from "react-router-dom";
-import Breadcrumbs from "../../../utils/Breadcumbs";
-import Loading from '../../../utils/Loading'
+import Breadcrumbs from "../../utils/Breadcumbs";
+import Loading from '../../utils/Loading'
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 
 const { Meta } = Card;
