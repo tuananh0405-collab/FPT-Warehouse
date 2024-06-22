@@ -30,7 +30,9 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
 
     boolean existsByTransferKey(String transferKey);
 
-    @Query("SELECT e FROM Export e WHERE (e.warehouseFrom.id = :warehouseId) " +
+    @Query("SELECT e FROM Export e " +
+            "WHERE (e.warehouseFrom.id = :warehouseId) " +
+            "AND (:status IS NULL OR e.status = :status) " +
             "ORDER BY " +
             "CASE " +
             "WHEN e.status = 'REQUESTING' THEN 1 " +
@@ -40,10 +42,18 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
             "WHEN e.status = 'CANCEL' THEN 5 " +
             "ELSE 6 END, " +
             "e.exportDate ASC")
-    Page<Export> findAllByWarehouseSorted(@Param("warehouseId") Integer warehouseId, Pageable pageable);
+    Page<Export> findAllByWarehouseSorted(
+            @Param("warehouseId") Integer warehouseId,
+            @Param("status") Status status,
+            Pageable pageable
+    );
 
-    @Query("SELECT e FROM Export e WHERE e.warehouseFrom.id = :warehouseId")
-    Page<Export> findAllByWarehouseWithDefaultSort(@Param("warehouseId") Integer warehouseId, Pageable pageable);
+    @Query("SELECT e FROM Export e WHERE e.warehouseFrom.id = :warehouseId " +
+            "AND (:status IS NULL OR e.status = :status)")
+    Page<Export> findAllByWarehouseWithDefaultSort(
+            @Param("warehouseId") Integer warehouseId,
+            @Param("status") Status status,
+            Pageable pageable);
 
     @Query("SELECT COUNT(e) FROM Export e WHERE e.warehouseFrom.id = :warehouseId " +
             "AND (:status IS NULL OR e.status = :status)")

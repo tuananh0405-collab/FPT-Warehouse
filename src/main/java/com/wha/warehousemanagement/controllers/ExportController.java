@@ -29,10 +29,10 @@ public class ExportController {
             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "direction", required = false) String direction,
-            @RequestParam(value = "status", required = false) String status
+            @RequestParam(value = "status", required = false) Status status
 
     ) {
-        int limit = 10;
+        int limit = 5;
         pageNo = pageNo - 1;
         return ResponseEntity.ok(exportService.getAllExports(
                 warehouseId, pageNo, limit, sortBy, direction, status

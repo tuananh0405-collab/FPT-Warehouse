@@ -77,7 +77,7 @@ public class ExportService {
     }
 
     public ResponseObject<?> getAllExports(
-            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, String status
+            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status
     ) {
         try {
             Pageable pageable;
@@ -85,10 +85,10 @@ public class ExportService {
             if (sortBy != null && !sortBy.isEmpty() && direction != null && !direction.isEmpty()) {
                 Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
                 pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
-                exports = exportRepository.findAllByWarehouseWithDefaultSort(warehouseId, pageable);
+                exports = exportRepository.findAllByWarehouseWithDefaultSort(warehouseId, status, pageable);
             } else {
                 pageable = PageRequest.of(pageNo, limit);
-                exports = exportRepository.findAllByWarehouseSorted(warehouseId, pageable);
+                exports = exportRepository.findAllByWarehouseSorted(warehouseId, status, pageable);
             }
             List<ExportResponse> responses = exportMapper.toDto(exports.getContent());
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all exports successfully", responses);
