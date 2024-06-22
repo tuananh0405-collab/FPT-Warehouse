@@ -1,4 +1,4 @@
-import MainDash from "../../components/MainDash/MainDash";
+import MainDash from "./MainDash";
 import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const Dashboard = () => {
@@ -10,3 +10,4 @@ const Dashboard = () => {
   );
 };
 export default Dashboard;
+

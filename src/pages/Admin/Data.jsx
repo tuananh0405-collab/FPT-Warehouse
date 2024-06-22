@@ -1,4 +1,4 @@
-import DataComponent from "../../components/Data/DataComponent"
+import DataComponent from "./DataComponent"
 import useDocumentTitle from "../../utils/UseDocumentTitle"
 
 const Data = () => {

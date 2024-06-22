@@ -1,4 +1,4 @@
-import StaffsComponent from "../../components/Staffs/StaffsComponent";
+import StaffsComponent from "../Staff/StaffsComponent";
 import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const Staffs = () => {

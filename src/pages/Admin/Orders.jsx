@@ -1,4 +1,4 @@
-import OrdersComponent from "../../components/Orders/OrdersComponent"
+import OrdersComponent from "./OrdersComponent"
 import useDocumentTitle from "../../utils/UseDocumentTitle"
 
 const Orders = () => {

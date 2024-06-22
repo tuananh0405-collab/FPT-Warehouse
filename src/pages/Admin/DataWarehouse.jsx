@@ -1,49 +1,44 @@
+import Breadcrumbs from "../../utils/Breadcumbs";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import {
-  useGetAllUsersQuery,
-  useUpdateUserMutation,
-  useDeleteUserMutation,
-} from "../../redux/api/usersApiSlice";
-import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
-import { useAddStaffMutation } from "../../redux/api/authApiSlice";
-import StaffTable from "./StaffTable";
-import StaffModal from "./StaffModal";
-import AddStaffModal from "./AddStaffModal";
+  useGetAllWarehousesQuery,
+  useUpdateWarehouseMutation,
+  useDeleteWarehouseMutation,
+  useAddWarehouseMutation,
+} from "../../redux/api/warehousesApiSlice";
+import WarehouseTable from "../../components/Data/Warehouse/WarehouseTable";
+import WarehouseModal from "../../components/Data/Warehouse/WarehouseModal";
+import AddWarehouseModal from "../../components/Data/Warehouse/AddWarehouseModal";
 import { Button, message, Form } from "antd";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
-
-const StaffsComponent = () => {
+import '../../assets/styles/MainDash.css'
+const DataWarehouse = () => {
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
-  const { data: staffs, isLoading, error } = useGetAllUsersQuery(authToken);
-  const {
-    data: warehouses,
-    isLoading2,
-    error2,
-  } = useGetAllWarehousesQuery(authToken);
-  const [updateUser] = useUpdateUserMutation();
-  const [deleteUser] = useDeleteUserMutation();
-  const [addStaff] = useAddStaffMutation();
+  const { data: warehouses, isLoading, error } = useGetAllWarehousesQuery(authToken);
+  const [updateWarehouse] = useUpdateWarehouseMutation();
+  const [deleteWarehouse] = useDeleteWarehouseMutation();
+  const [addWarehouse] = useAddWarehouseMutation();
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const rowsPerPage = 3;
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [form] = Form.useForm();
   const [formAdd] = Form.useForm();
   const [addNewVisible, setAddNewVisible] = useState(false);
 
-  const showModal = (staffId) => {
-    const staff = staffs.data.find((s) => s.id === staffId);
-    setSelectedStaff(staff);
+  const showModal = (warehouseId) => {
+    const warehouse = warehouses.data.find((w) => w.id === warehouseId);
+    setSelectedWarehouse(warehouse);
     setIsModalVisible(true);
   };
 
   const handleOk = async () => {
     const values = await form.validateFields();
-    const data = { ...values, trackingId: selectedStaff.id };
-    await updateUser({ data, authToken });
+    const data = { ...values, id: selectedWarehouse.id };
+    await updateWarehouse({ warehouseId: selectedWarehouse.id, formData: data, authToken });
     setIsModalVisible(false);
   };
 
@@ -53,9 +48,9 @@ const StaffsComponent = () => {
 
   const handleDelete = async () => {
     try {
-      await deleteUser({ userId: selectedStaff.id, authToken });
+      await deleteWarehouse({ warehouseId: selectedWarehouse.id, authToken });
       setIsModalVisible(false);
-      message.success("User deleted successfully");
+      message.success("Warehouse deleted successfully");
     } catch (error) {
       console.log(error.message);
     }
@@ -64,8 +59,8 @@ const StaffsComponent = () => {
   const handleOkAdd = async () => {
     const values = await formAdd.validateFields();
     const data = { ...values };
-    await addStaff({ data, authToken });
-    message.success("User added successfully");
+    await addWarehouse({ warehouseData: data, authToken });
+    message.success("Warehouse added successfully");
     setAddNewVisible(false);
     formAdd.resetFields();
   };
@@ -74,7 +69,7 @@ const StaffsComponent = () => {
     setAddNewVisible(false);
   };
 
-  if (isLoading || isLoading2) {
+  if (isLoading) {
     return (
       <div className="">
         <Loading />
@@ -82,45 +77,44 @@ const StaffsComponent = () => {
     );
   }
 
-  if (error || error2) {
-    return <Error500/>;
+  if (error) {
+    return <Error500 />;
   }
 
   return (
-    <div className="MainDash">
-      <h1>Staffs</h1>
+    <div className="">
+       <Breadcrumbs />
+      <h1>Warehouses</h1>
       <Button
         type="primary"
         style={{ background: "#40A578" }}
         onClick={() => setAddNewVisible(true)}
       >
-        Add new staff
+        Add new warehouse
       </Button>
-      <AddStaffModal
+      <AddWarehouseModal
         addNewVisible={addNewVisible}
         handleOkAdd={handleOkAdd}
         handleCancelAdd={handleCancelAdd}
         formAdd={formAdd}
-        warehouses={warehouses}
       />
-      <StaffTable
-        staffList={staffs.data}
+      <WarehouseTable
+        warehouseList={warehouses.data}
         page={page}
         setPage={setPage}
         rowsPerPage={rowsPerPage}
         showModal={showModal}
       />
-      <StaffModal
+      <WarehouseModal
         isModalVisible={isModalVisible}
         handleOk={handleOk}
         handleCancel={handleCancel}
         handleDelete={handleDelete}
-        selectedStaff={selectedStaff}
+        selectedWarehouse={selectedWarehouse}
         form={form}
-        warehouses={warehouses}
       />
     </div>
   );
 };
 
-export default StaffsComponent;
+export default DataWarehouse;

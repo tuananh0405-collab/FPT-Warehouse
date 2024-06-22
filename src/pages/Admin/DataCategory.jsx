@@ -1,4 +1,4 @@
-import Breadcrumbs from "../../../utils/Breadcumbs";
+import Breadcrumbs from "../../utils/Breadcumbs";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -6,14 +6,14 @@ import {
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
   useAddCategoryMutation,
-} from "../../../redux/api/categoryApiSlice";
-import CategoryTable from "./CategoryTable";
-import CategoryModal from "./CategoryModal";
-import AddCategoryModal from "./AddCategoryModal";
+} from "../../redux/api/categoryApiSlice";
+import CategoryTable from "../../components/Data/Category/CategoryTable";
+import CategoryModal from "../../components/Data/Category/CategoryModal";
+import AddCategoryModal from "../../components/Data/Category/AddCategoryModal";
 import { Button, message, Form } from "antd";
-import Loading from "../../../utils/Loading";
-import Error500 from "../../../utils/Error500";
-import './MainDash.css';
+import Loading from "../../utils/Loading";
+import Error500 from "../../utils/Error500";
+import '../../assets/styles/MainDash.css';
 
 const DataCategory = () => {
   const userInfo = useSelector((state) => state.auth);

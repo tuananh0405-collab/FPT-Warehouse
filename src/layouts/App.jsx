@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import "./App.css";
+import '../assets/styles/MainDash.css';
 
 import Sidebar from "../components/Sidebar/Sidebar";
 import RightSide from "../components/RigtSide/RightSide";

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import StoreIcon from "@mui/icons-material/Store";
 import PeopleIcon from "@mui/icons-material/People";
-import Breadcrumbs from "../../../utils/Breadcumbs";
+import Breadcrumbs from "../../utils/Breadcumbs";
 const { Meta } = Card;
 
 const StaffData = () => {

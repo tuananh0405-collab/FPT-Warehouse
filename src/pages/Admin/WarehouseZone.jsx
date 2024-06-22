@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Breadcrumbs from '../../../utils/Breadcumbs';
-import { useGetZoneByWarehouseIdQuery, useAddZoneMutation, useUpdateZoneMutation, useDeleteZoneMutation } from '../../../redux/api/zoneApiSlice';
-import ZoneTable from './ZoneTable';
-import ZoneModal from './ZoneModal';
-import ZoneAddModal from './ZoneAddModal';
+import Breadcrumbs from '../../utils/Breadcumbs';
+import { useGetZoneByWarehouseIdQuery, useAddZoneMutation, useUpdateZoneMutation, useDeleteZoneMutation } from '../../redux/api/zoneApiSlice';
+import ZoneTable from '../../components/Data/Zone/ZoneTable';
+import ZoneModal from '../../components/Data/Zone/ZoneModal';
+import ZoneAddModal from '../../components/Data/Zone/ZoneAddModal';
 import { Button, message, Form } from 'antd';
 import { useSelector } from 'react-redux';
 

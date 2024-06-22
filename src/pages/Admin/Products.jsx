@@ -1,4 +1,4 @@
-import ProductsComponent from "../../components/Products/ProductsComponent"
+import ProductsComponent from "./ProductsComponent"
 import useDocumentTitle from "../../utils/UseDocumentTitle"
 
 const Products = () => {

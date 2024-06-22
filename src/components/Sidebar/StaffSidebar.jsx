@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
-import "./Sidebar.css";
-import Logo from "../../imgs/warehouse-1073.png";
+import '../../assets/styles/MainDash.css'
+import Logo from "../../assets/images/warehouse-1073.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
 import { StaffSidebarData } from "../../Data/Data";
 import { motion } from "framer-motion";
