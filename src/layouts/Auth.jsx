@@ -11,7 +11,7 @@ const Auth = () => {
     if(decoded && decoded.role.includes('ADMIN')){
       return <Navigate to="/dashboard" replace />
     }else if(decoded && decoded.role.includes('STAFF')){
-      return <Navigate to="/staff" replace />
+      return <Navigate to="/staff/dashboard" replace />
     }
   }
   if(!userInfo){

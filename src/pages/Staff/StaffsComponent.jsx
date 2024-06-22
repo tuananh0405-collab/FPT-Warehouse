@@ -1,48 +1,50 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import {
-  useGetAllProductsQuery,
-  useUpdateProductMutation,
-  useDeleteProductMutation,
-  useAddProductMutation,
-  
-} from "../../redux/api/productApiSlice";
-import {useGetCategoriesQuery} from '../../redux/api/categoryApiSlice'
-import ProductTable from "./ProductTable";
-import ProductModal from "./ProductModal";
-import AddProductModal from "./AddProductModal";
+  useGetAllUsersQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from "../../redux/api/usersApiSlice";
+import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
+import { useAddStaffMutation } from "../../redux/api/authApiSlice";
+import StaffTable from "../../components/Staffs/StaffTable";
+import StaffModal from "../../components/Staffs/StaffModal";
+import AddStaffModal from "../../components/Staffs/AddStaffModal";
 import { Button, message, Form } from "antd";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
 
-const ProductComponent = () => {
+const StaffsComponent = () => {
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
-  const { data: products, isLoading: productsLoading, error: productsError } = useGetAllProductsQuery(authToken);
-  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useGetCategoriesQuery(authToken);
-  const [updateProduct] = useUpdateProductMutation();
-  const [deleteProduct] = useDeleteProductMutation();
-  const [addProduct] = useAddProductMutation();
+  const { data: staffs, isLoading, error } = useGetAllUsersQuery(authToken);
+  const {
+    data: warehouses,
+    isLoading2,
+    error2,
+  } = useGetAllWarehousesQuery(authToken);
+  const [updateUser] = useUpdateUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
+  const [addStaff] = useAddStaffMutation();
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [form] = Form.useForm();
   const [formAdd] = Form.useForm();
   const [addNewVisible, setAddNewVisible] = useState(false);
 
-  const showModal = (productId) => {
-    const product = products.data.find((p) => p.id === productId);
-    setSelectedProduct(product);
+  const showModal = (staffId) => {
+    const staff = staffs.data.find((s) => s.id === staffId);
+    setSelectedStaff(staff);
     setIsModalVisible(true);
   };
 
   const handleOk = async () => {
     const values = await form.validateFields();
-    const data = { ...values, productId: selectedProduct.id };
-    await updateProduct({ productId: selectedProduct.id, formData: data, authToken });
+    const data = { ...values, trackingId: selectedStaff.id };
+    await updateUser({ data, authToken });
     setIsModalVisible(false);
-    message.success("Product updated successfully");
   };
 
   const handleCancel = () => {
@@ -51,9 +53,9 @@ const ProductComponent = () => {
 
   const handleDelete = async () => {
     try {
-      await deleteProduct({ productId: selectedProduct.id, authToken });
+      await deleteUser({ userId: selectedStaff.id, authToken });
       setIsModalVisible(false);
-      message.success("Product deleted successfully");
+      message.success("User deleted successfully");
     } catch (error) {
       console.log(error.message);
     }
@@ -62,9 +64,8 @@ const ProductComponent = () => {
   const handleOkAdd = async () => {
     const values = await formAdd.validateFields();
     const data = { ...values };
-    console.log(data);
-    await addProduct({ productData: data, authToken });
-    message.success("Product added successfully");
+    await addStaff({ data, authToken });
+    message.success("User added successfully");
     setAddNewVisible(false);
     formAdd.resetFields();
   };
@@ -73,7 +74,7 @@ const ProductComponent = () => {
     setAddNewVisible(false);
   };
 
-  if (productsLoading || categoriesLoading) {
+  if (isLoading || isLoading2) {
     return (
       <div className="">
         <Loading />
@@ -81,45 +82,45 @@ const ProductComponent = () => {
     );
   }
 
-  if (productsError || categoriesError) {
-    return <Error500 />;
+  if (error || error2) {
+    return <Error500/>;
   }
 
   return (
     <div className="MainDash">
-      <h1>Products</h1>
+      <h1>Staffs</h1>
       <Button
         type="primary"
         style={{ background: "#40A578" }}
         onClick={() => setAddNewVisible(true)}
       >
-        Add new product
+        Add new staff
       </Button>
-      <AddProductModal
+      <AddStaffModal
         addNewVisible={addNewVisible}
         handleOkAdd={handleOkAdd}
         handleCancelAdd={handleCancelAdd}
         formAdd={formAdd}
-        categories={categories.data}
+        warehouses={warehouses}
       />
-      <ProductTable
-        productList={products.data}
+      <StaffTable
+        staffList={staffs.data}
         page={page}
         setPage={setPage}
         rowsPerPage={rowsPerPage}
         showModal={showModal}
       />
-      <ProductModal
+      <StaffModal
         isModalVisible={isModalVisible}
         handleOk={handleOk}
         handleCancel={handleCancel}
         handleDelete={handleDelete}
-        selectedProduct={selectedProduct}
+        selectedStaff={selectedStaff}
         form={form}
-        categories={categories.data}
+        warehouses={warehouses}
       />
     </div>
   );
 };
 
-export default ProductComponent;
+export default StaffsComponent;

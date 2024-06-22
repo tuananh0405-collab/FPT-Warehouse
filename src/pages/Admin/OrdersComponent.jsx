@@ -1,11 +1,9 @@
 
-import "./MainDash.css";
-import Table from '../Table/Table'
+import "../../assets/styles/MainDash.css";
 const OrdersComponent = () => {
   return (
     <div className="MainDash">
       <h1>Orders</h1>
-      {/* <Table/> */}
     </div>
   );
 };

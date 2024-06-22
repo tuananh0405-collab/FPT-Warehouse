@@ -17,25 +17,29 @@ import { Provider } from "react-redux";
 import store from "./redux/store.js";
 import AdminRoute from "./components/Routes/AdminRoute.jsx";
 import StaffRoute from "./components/Routes/StaffRoute.jsx";
-import DataWarehouse from "./components/Data/Warehouse/DataWarehouse.jsx";
-import DataZone from "./components/Data/Zone/DataZone.jsx";
-import DataCategory from "./components/Data/Category/DataCategory.jsx";
+import DataWarehouse from "./pages/Admin/DataWarehouse.jsx";
+import DataZone from "./pages/Admin/DataZone.jsx";
+import DataCategory from "./pages/Admin/DataCategory.jsx";
 import Error404 from "./utils/Error404.jsx";
-import Loading from "./utils/Loading.jsx";
-import WarehouseZone from "./components/Data/Zone/WarehouseZone.jsx";
+import WarehouseZone from "./pages/Admin/WarehouseZone.jsx";
 import Staff from "./layouts/Staff.jsx";
-import StaffOrder from "./components/Orders/StaffOrder.jsx";
-import StaffData from "./components/Data/StaffData/StaffData.jsx";
-import StaffDashboard from "./components/MainDash/StaffDash/StaffDashboard.jsx";
-import StaffZone from "./components/Data/StaffData/StaffZone/StaffZone.jsx";
-import StaffProduct from "./components/Data/StaffData/StaffProduct/StaffProduct.jsx";
-import StaffCustomer from "./components/Data/StaffData/StaffCustomer/StaffCustomer.jsx";
-import StaffExpport from "./components/Orders/StaffExport.jsx";
-import StaffImport from "./components/Orders/StaffImport.jsx";
-import StaffNewExport from "./components/Orders/StaffAddExport.jsx";
+import StaffOrder from "./pages/Staff/StaffOrder.jsx";
+import StaffData from "./pages/Staff/StaffData.jsx";
+import StaffZone from "./pages/Staff/StaffZone.jsx";
+import StaffProduct from "./pages/Staff/StaffProduct.jsx";
+import StaffCustomer from "./pages/Staff/StaffCustomer.jsx";
+import StaffExpport from "./pages/Staff/StaffExport.jsx";
+import StaffImport from "./pages/Staff/StaffImport.jsx";
+import StaffNewExport from "./pages/Staff/StaffAddExport.jsx";
 
-import DataCustomers from "./components/Data/Customers/DataCustomers.jsx";
-import StaffZoneInventory from "./components/Data/StaffData/StaffZone/StaffZoneInventory.jsx";
+import DataCustomers from "./pages/Admin/DataCustomers.jsx";
+import StaffZoneInventory from "./pages/Staff/StaffZoneInventory.jsx";
+import StaffDashboard from "./pages/Staff/StaffDashboard.jsx";
+import MainDash from "./pages/Admin/MainDash.jsx";
+import OrdersComponent from "./pages/Admin/OrdersComponent.jsx";
+import DataComponent from "./pages/Admin/DataComponent.jsx";
+import StaffsComponent from "./pages/Staff/StaffsComponent.jsx";
+import ProductComponent from "./pages/Admin/ProductsComponent.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -44,11 +48,11 @@ const router = createBrowserRouter(
       {/* ADMIN  */}
       <Route path="/" element={<App />}>
         <Route path="" element={<AdminRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/data" element={<Data />} />
-          <Route path="/staffs" element={<Staffs />} />
-          <Route path="/products" element={<Products />} />
+          <Route path="/dashboard" element={<MainDash />} />
+          <Route path="/orders" element={<OrdersComponent />} />
+          <Route path="/data" element={<DataComponent />} />
+          <Route path="/staffs" element={<StaffsComponent />} />
+          <Route path="/products" element={<ProductComponent />} />
           <Route path="/data/warehouse" element={<DataWarehouse />} />
           <Route path="/data/zone" element={<DataZone />} />
           <Route path="/data/zone/warehouseId/:id" element={<WarehouseZone />} />

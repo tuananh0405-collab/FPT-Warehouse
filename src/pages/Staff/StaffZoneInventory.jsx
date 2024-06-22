@@ -2,10 +2,10 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Table, Typography } from 'antd';
 import { useSelector } from 'react-redux';
-import { useGetInventoriesByZoneIdQuery } from '../../../../redux/api/inventoryApiSlice';
-import Loading from '../../../../utils/Loading';
-import Error500 from '../../../../utils/Error500';
-import Breadcrumbs from '../../../../utils/Breadcumbs';
+import { useGetInventoriesByZoneIdQuery } from '../../redux/api/inventoryApiSlice';
+import Loading from '../../utils/Loading';
+import Error500 from '../../utils/Error500';
+import Breadcrumbs from '../../utils/Breadcumbs';
 
 const { Title } = Typography;
 

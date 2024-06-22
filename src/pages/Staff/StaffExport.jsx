@@ -1,9 +1,9 @@
-import "./MainDash.css";
+import "../../assets/styles/MainDash.css";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import { Button } from "antd";
 import AddIcon from '@mui/icons-material/Add';
 import { Link } from "react-router-dom";
-import ExportTable from "./ExportTable";
+import ExportTable from "../../components/Orders/ExportTable";
 
 function StaffExpport() {
     return (

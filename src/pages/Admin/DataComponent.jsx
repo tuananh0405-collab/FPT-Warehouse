@@ -64,7 +64,7 @@ const DataComponent = () => {
   };
 
   return (
-    <>
+    <div>
       <Breadcrumbs/>
       <div style={{ padding: "20px" }}>
         <Row gutter={[16, 16]} justify="space-around">
@@ -91,7 +91,7 @@ const DataComponent = () => {
           ))}
         </Row>
       </div>
-    </>
+    </div>
   );
 };
 

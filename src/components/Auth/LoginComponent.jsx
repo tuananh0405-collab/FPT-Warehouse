@@ -21,7 +21,6 @@ const LoginComponent = () => {
   const [login] = useLoginMutation();
 
   const handleSubmit = async (e) => {
-    // console.log(formData);
     e.preventDefault();
     try {
       const res = await login(formData).unwrap();
@@ -33,9 +32,8 @@ const LoginComponent = () => {
       if (decoded.role === 'ADMIN') {
         navigate("/dashboard");
       } else if (decoded.role === 'STAFF') {
-        navigate('/staff')
+        navigate('/staff/dashboard');
       }
-      // navigate("/dashboard");
       message.success("Login successfully");
 
       console.log("Login successful");
@@ -59,7 +57,7 @@ const LoginComponent = () => {
       onSubmit={handleSubmit}
       sx={{
         maxWidth: "500px",
-        margin: "50px auto", // Add margin for spacing above and below
+        margin: "50px auto", 
         padding: "20px",
         borderRadius: "8px",
         boxShadow: "0 4px 8px rgba(0,0,0,0.1)",

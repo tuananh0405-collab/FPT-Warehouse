@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Breadcrumbs from '../../../../utils/Breadcumbs';
-import { useGetZoneByWarehouseIdQuery, useUpdateZoneMutation, useDeleteZoneMutation } from '../../../../redux/api/zoneApiSlice';
-import ZoneTable from './StaffZoneTable';
-import ZoneModal from './StaffZoneModal';
+import Breadcrumbs from '../../utils/Breadcumbs';
+import { useGetZoneByWarehouseIdQuery, useUpdateZoneMutation, useDeleteZoneMutation } from '../../redux/api/zoneApiSlice';
+import ZoneTable from '../../components/Data/StaffData/StaffZone/StaffZoneTable';
+import ZoneModal from '../../components/Data/StaffData/StaffZone/StaffZoneModal';
 import { Button, message, Form } from 'antd';
 import { useSelector } from 'react-redux';
-import Loading from '../../../../utils/Loading';
-import Error500 from '../../../../utils/Error500';
+import Loading from '../../utils/Loading';
+import Error500 from '../../utils/Error500';
 
 const StaffZone = () => {
   const { id } = useParams();

@@ -1,7 +1,7 @@
 
 import CustomerReview from "../CustomerReview/CustomerReview";
 import Updates from "../Updates/Updates";
-import "./RightSide.css";
+import '../../assets/styles/MainDash.css'
 
 const RightSide = () => {
   return (
