@@ -56,4 +56,9 @@ public class ExportDetailController {
     public ResponseEntity<?> getExportDetailsByExportId(@PathVariable("exportId") Integer exportId) {
         return ResponseEntity.ok(exportDetailService.getExportDetailsByExportId(exportId));
     }
+
+    @GetMapping("/export-products/{exportId}")
+    public ResponseEntity<?> getProductsInExportByExportId(@PathVariable("exportId") Integer exportId) {
+        return ResponseEntity.ok(exportDetailService.getProductsInExportByExportId(exportId));
+    }
 }

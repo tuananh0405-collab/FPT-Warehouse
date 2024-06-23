@@ -269,4 +269,25 @@ public class ExportDetailService {
         }
     }
 
+    public ResponseObject<List<ProductsInExportResponse>> getProductsInExportByExportId(Integer exportId) {
+        try {
+            List<ExportDetail> exportDetails = exportDetailRepository.findByExportId(exportId);
+            List<ProductsInExportResponse> responses = exportDetails.stream()
+                    .map(imp -> {
+                        return ProductsInExportResponse.builder()
+                                .id(imp.getId())
+                                .product(productMapper.toDto(imp.getProduct()))
+                                .quantity(imp.getQuantity())
+                                .expiredAt(imp.getExpiredAt().toString())
+                                .build();
+                    })
+                    .toList();
+            return new ResponseObject<>(HttpStatus.OK.value(), "Products in export retrieved successfully", responses);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get export details", null);
+        }
+    }
+
 }
