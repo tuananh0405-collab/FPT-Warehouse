@@ -13,12 +13,22 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
       providesTags: ["ExportDetail"],
       keepUnusedDataFor: 5,
     }),
+    getExportDetailsByExportId: builder.query({
+      query: ({ exportId, authToken }) => ({
+        url: `${EXPORT_DETAIL_URL}/export/${exportId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }),
+      providesTags: ["ExportDetail"],
+      keepUnusedDataFor: 5,
+    }),
     createExportDetails: builder.mutation({
       query: ({ data, authToken }) => ({
         url: `${EXPORT_DETAIL_URL}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         method: "POST",
         body: data,
@@ -28,5 +38,8 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useGetAllExportDetailsQuery, useCreateExportDetailsMutation } =
-  exportDetailApiSlice;
+export const {
+  useGetAllExportDetailsQuery,
+  useGetExportDetailsByExportIdQuery,
+  useCreateExportDetailsMutation,
+} = exportDetailApiSlice;
