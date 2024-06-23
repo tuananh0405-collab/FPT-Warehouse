@@ -35,11 +35,21 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["ExportDetail"],
     }),
+    getAllExportDetailsByExportId: builder.query({
+      query: ({ authToken, exportId }) => ({
+        url: `${EXPORT_DETAIL_URL}/export-products/${exportId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }),
+      providesTags: ["ExportDetail"],
+      keepUnusedDataFor: 5,
+    }),
   }),
 });
 
 export const {
   useGetAllExportDetailsQuery,
-  useGetExportDetailsByExportIdQuery,
   useCreateExportDetailsMutation,
+  useGetAllExportDetailsByExportIdQuery,
 } = exportDetailApiSlice;

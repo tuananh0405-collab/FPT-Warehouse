@@ -6,6 +6,7 @@ import {
     useGetTotalExportsByWarehouseidAndFilterByStatusQuery
 } from '../../redux/api/exportApiSlice';
 import { FormatTime } from '../../utils/FormatTime';
+import { useNavigate } from 'react-router-dom';
 
 function ExportTable() {
     const userInfo = useSelector((state) => state.auth.userInfo);
@@ -15,6 +16,7 @@ function ExportTable() {
     const [pageNo, setPageNo] = useState(1);
     const [sortField, setSortField] = useState('');
     const [sortOrder, setSortOrder] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
 
     const { data: exportsData = {}, isLoading: exportsLoading, error: exportsError } = useGetAllExportsByWarehouseidQuery({
         warehouseId,
@@ -22,12 +24,13 @@ function ExportTable() {
         pageNo: pageNo,
         sortBy: sortField,
         direction: sortOrder,
+        status: filterStatus,
     });
-    const totalExportItemData = useGetTotalExportsByWarehouseidAndFilterByStatusQuery({ warehouseId, authToken, status: "" });
-
+    const totalExportItemData = useGetTotalExportsByWarehouseidAndFilterByStatusQuery({ warehouseId, authToken, status: filterStatus });
     const exports = exportsData.data || [];
-
     const totalExportItem = totalExportItemData.data || 0;
+
+    const navigate = useNavigate();
 
     const handleTableChange = (pagination, filters, sorter) => {
         setPageNo(pagination.current);
@@ -38,6 +41,11 @@ function ExportTable() {
             setSortField(sorter.field);
             const order = sorter.order === 'ascend' ? 'asc' : 'desc';
             setSortOrder(order);
+        }
+        if (filters.status && filters.status.length > 0) {
+            setFilterStatus(filters.status[0]);
+        } else {
+            setFilterStatus('');
         }
     };
 
@@ -91,14 +99,15 @@ function ExportTable() {
                 { text: 'Cancel', value: 'CANCEL' },
             ],
             width: 120,
-            onFilter: (value, record) => record.status.includes(value),
+            filterMultiple: false,
+            onFilter: (value, record) => record.status === value,
         },
         {
             title: 'Action',
             key: 'action',
             render: (_, record) => (
                 <span>
-                    <a>View</a>
+                    <a onClick={() => navigate(`/staff/export/detail/${record.id}`)}>View</a>
                 </span>
             ),
         },
@@ -113,7 +122,7 @@ function ExportTable() {
             columns={columns}
             dataSource={exports}
             rowKey="id"
-            pagination={{ current: pageNo, pageSize: 10, total: totalExportItem }}
+            pagination={{ current: pageNo, pageSize: 5, total: totalExportItem }}
             onChange={handleTableChange}
         />
     );

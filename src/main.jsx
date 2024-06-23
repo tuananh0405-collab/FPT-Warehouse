@@ -31,6 +31,7 @@ import StaffCustomer from "./pages/Staff/StaffCustomer.jsx";
 import StaffExpport from "./pages/Staff/StaffExport.jsx";
 import StaffImport from "./pages/Staff/StaffImport.jsx";
 import StaffNewExport from "./pages/Staff/StaffAddExport.jsx";
+import StaffExportDetail from "./pages/Staff/StaffExportDetail.jsx";
 
 import DataCustomers from "./pages/Admin/DataCustomers.jsx";
 import StaffZoneInventory from "./pages/Staff/StaffZoneInventory.jsx";
@@ -44,7 +45,7 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       {/* AUTH  */}
-      <Route path="/" element={<Auth />}/>
+      <Route path="/" element={<Auth />} />
       {/* ADMIN  */}
       <Route path="/" element={<App />}>
         <Route path="" element={<AdminRoute />}>
@@ -73,6 +74,7 @@ const router = createBrowserRouter(
           <Route path="/staff/order/export" element={<StaffExpport />} />
           <Route path="/staff/order/import" element={<StaffImport />} />
           <Route path="/staff/export/new" element={<StaffNewExport />} />
+          <Route path="/staff/export/detail/:id" element={<StaffExportDetail />} />
         </Route>
       </Route>
       {/* Route 404 cho tất cả các route khác */}
