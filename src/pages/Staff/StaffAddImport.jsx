@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Table, Button, Modal, Select, InputNumber, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import {
-  useGetAllExportsQuery,
-  useDeleteExportMutation,
-} from "../../redux/api/exportApiSlice";
+import { useGetAllExportsQuery } from "../../redux/api/exportApiSlice";
 import { useGetAllCustomersQuery } from "../../redux/api/customersApiSlice";
 import { useGetAllExportDetailsQuery } from "../../redux/api/exportDetailApiSlice";
 import { useGetZoneByWarehouseIdQuery } from "../../redux/api/zoneApiSlice";
@@ -33,7 +30,6 @@ const StaffImport = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedExportDetails, setSelectedExportDetails] = useState([]);
   const [zoneAllocations, setZoneAllocations] = useState([]);
-  const [currentExportId, setCurrentExportId] = useState(null);
   const [formData, setFormData] = useState({
     description: "",
     status: "PENDING",
@@ -44,23 +40,12 @@ const StaffImport = () => {
     customerId: null,
   });
 
-  const resetAndCloseAllModals = () => {
-    setIsModalOpen(false);
-    setIsImportModalOpen(false);
-    setSelectedExportDetails([]);
-    setZoneAllocations([]);
-    setCurrentExportId(null);
-  };
-
   // const [addImport, { isLoading: isAddingImport }] = useAddImportMutation();
   // const [createImportDetailsApi, { isLoading: isCreatingImportDetails }] =
   //   useCreateImportDetailsMutation();
   const [addImport, { isLoading: isImportCreating }] = useAddImportMutation();
   const [createImportDetails, { isLoading: isImportDetailsCreating }] =
     useCreateImportDetailsMutation();
-  const [deleteExport, { isLoading: isDeletingExport }] =
-    useDeleteExportMutation();
-
   const {
     data: exportsData,
     isFetching: isFetchingExports,
@@ -144,7 +129,6 @@ const StaffImport = () => {
     );
     const exportData = exportsData.data.find((exp) => exp.id === exportId);
     setSelectedExportDetails(exportDetails);
-    setCurrentExportId(exportId);
     setFormData({
       description: exportData.description || "Xuất hàng điện tử 2",
       status: exportData.status || "SUCCEED",
@@ -265,29 +249,10 @@ const StaffImport = () => {
       }).unwrap();
       console.log("Import details created:", detailsResponse);
       message.success("Import details created successfully!");
-      // await handleDeleteExport();
-
-      resetAndCloseAllModals();
       setSelectedExportDetails([]);
     } catch (error) {
       console.error("Error creating import details:", error);
       message.error("Failed to create import details. Please try again.");
-    }
-  };
-
-  const handleDeleteExport = async () => {
-    if (!currentExportId) {
-      message.error("Export ID is missing. Cannot proceed with deletion.");
-      return;
-    }
-    // chưa fix được xóa export phải xóa exportDetails
-    try {
-      await deleteExport({ exportId: currentExportId, authToken }).unwrap();
-      message.success("Export deleted successfully!");
-      setCurrentExportId(null);
-    } catch (error) {
-      console.error("Error deleting export:", error);
-      message.error("Failed to delete export. Please try again.");
     }
   };
 

@@ -190,17 +190,24 @@ const StaffAddExport = () => {
 
   const handleCreateCustomer = async () => {
     try {
-      const customerResponse = await addCustomer({
-        customerData: customerData,
-        authToken: authToken,
+      const customerDataPayload = {
+        name: customerData.name,
+        email: customerData.email,
+        phone: customerData.phone,
+        address: customerData.address,
+      };
+
+      const response = await addCustomer({
+        customerData: customerDataPayload,
+        authToken,
       }).unwrap();
       message.success("Customer created successfully!");
-      const customerId = customerResponse.data.id;
+      console.log("Customer data:", response.data);
+      const customerId = response.data.id;
       await handleCreateExport(customerId);
     } catch (error) {
       console.error("Error creating customer:", error);
       message.error("Failed to create customer. Please try again.");
-      throw error;
     }
   };
 
@@ -221,6 +228,7 @@ const StaffAddExport = () => {
         authToken,
       }).unwrap();
       message.success("Export created successfully!");
+      console.log("Export data:", response.data);
       const exportId = response.data.id;
       await handleCreateExportDetails(exportId);
     } catch (error) {

@@ -11,4 +11,5 @@ export const EXPORT_URL = "/export";
 export const EXPORT_DETAIL_URL = "/export-details";
 export const CUSTOMER_URL = "/customer";
 export const INVENTORY_URL = "/inventory";
-
+export const IMPORT_URL = "/import";
+export const IMPORT_DETAIL_URL = "/import-details";

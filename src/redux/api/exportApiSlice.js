@@ -48,6 +48,26 @@ export const exportApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Export"],
     }),
+    getAllExports: builder.query({
+      query: (authToken) => ({
+        url: `${EXPORT_URL}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }),
+      providesTags: ["Export"],
+      keepUnusedDataFor: 5,
+    }),
+    deleteExport: builder.mutation({
+      query: ({ exportId, authToken }) => ({
+        url: `${EXPORT_URL}/${exportId}`,
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }),
+      invalidatesTags: ["Export"],
+    }),
     getExportById: builder.query({
       query: ({ exportId, authToken }) => ({
         url: `${EXPORT_URL}/${exportId}`,
@@ -57,12 +77,14 @@ export const exportApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Export"],
     }),
-  })
+  }),
 });
 
 export const {
   useGetAllExportsByWarehouseidQuery,
   useGetTotalExportsByWarehouseidAndFilterByStatusQuery,
   useAddExportMutation,
+  useGetAllExportsQuery,
+  useDeleteExportMutation,
   useGetExportByIdQuery,
 } = exportApiSlice;
