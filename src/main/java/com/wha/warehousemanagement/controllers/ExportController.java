@@ -22,6 +22,11 @@ public class ExportController {
         return ResponseEntity.ok(exportService.addExport(request));
     }
 
+    @GetMapping
+    public ResponseEntity<?> getAllExports() {
+        return ResponseEntity.ok(exportService.getAllExports());
+    }
+
     //
     @GetMapping("/by-warehouse/{warehouseId}")
     public ResponseEntity<?> getAllExports(

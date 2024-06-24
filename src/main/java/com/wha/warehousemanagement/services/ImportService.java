@@ -43,10 +43,29 @@ public class ImportService {
             anImport.setDescription(request.getDescription());
             anImport.setStatus(Status.valueOf(request.getStatus()));
             anImport.setImportType(ImportExportType.valueOf(request.getImportType()));
-            anImport.setTransferKey(request.getTransferKey());
-            anImport.setWarehouseFrom(warehouseRepository.findById(request.getWarehouseIdFrom()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
-            anImport.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
-            anImport.setCustomer(customer);
+            anImport.setReceivedDate(new Date());
+
+            if (request.getTransferKey() != null && !request.getTransferKey().trim().isEmpty()) {
+                anImport.setTransferKey(request.getTransferKey());
+            }
+
+            // Handle warehouseFrom
+            if (request.getWarehouseIdFrom() != null) {
+                anImport.setWarehouseFrom(warehouseRepository.findById(request.getWarehouseIdFrom())
+                        .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            }
+
+            // Handle warehouseTo
+            if (request.getWarehouseIdTo() != null) {
+                anImport.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo())
+                        .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
+            }
+
+            // Handle customer
+            if (request.getCustomerId() != null) {
+                anImport.setCustomer(customerRepository.findById(request.getCustomerId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND)));
+            }
             importRepository.save(anImport);
             ImportResponse response = importMapper.toDto(anImport);
             return new ResponseObject<>(HttpStatus.OK.value(), "Import added successfully", response);

@@ -123,9 +123,27 @@ public class InventoryService {
         }
     }
 
-    public ResponseObject<?> addInventory(int id, InventoryRequest request) {
+    public ResponseObject<?> addInventory(InventoryRequest request) {
         try {
-            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory added successfully", null);
+            Inventory inventory = new Inventory();
+            if (request.getProductId() != null) {
+                inventory.setProduct(productRepository.findById(request.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+            }
+            if (request.getHeldQuantity() != null) {
+                inventory.setHeldQuantity(request.getHeldQuantity());
+            }
+            if (request.getQuantity() != null && request.getHeldQuantity() != null && request.getQuantity() >= request.getHeldQuantity()) {
+                inventory.setQuantity(request.getQuantity() - request.getHeldQuantity());
+            }
+            if (request.getExpiredAt() != null) {
+                inventory.setExpiredAt(request.getExpiredAt());
+            }
+            if (request.getZoneId() != null) {
+                inventory.setZone(zoneRepository.findById(request.getZoneId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+            }
+            inventoryRepository.save(inventory);
+            InventoryResponse response = inventoryMapper.toDto(inventory);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory added successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {

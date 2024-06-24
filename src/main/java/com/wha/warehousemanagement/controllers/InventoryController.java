@@ -36,8 +36,8 @@ public class InventoryController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<?> addInventory(@RequestBody InventoryRequest request, @PathVariable int id) {
-        return ResponseEntity.ok(inventoryService.addInventory(id, request));
+    public ResponseEntity<?> addInventory(@RequestBody InventoryRequest request) {
+        return ResponseEntity.ok(inventoryService.addInventory(request));
     }
 
     //localhost:6060/inventory/products/?page=1&sortBy=id&search=product:1

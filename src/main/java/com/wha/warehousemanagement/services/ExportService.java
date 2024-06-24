@@ -5,6 +5,7 @@ import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
 import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.dtos.responses.ExportResponse;
+import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ExportMapper;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -96,6 +98,22 @@ public class ExportService {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all exports", null);
+        }
+    }
+
+    public ResponseObject<?> getAllExports() {
+        try {
+            List<ExportResponse> response =
+                    exportRepository.findAll()
+                            .stream()
+                            .map(exportMapper::toDto
+                            )
+                            .collect(Collectors.toList());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all inventories", null);
         }
     }
 
