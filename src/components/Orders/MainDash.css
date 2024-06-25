@@ -1,23 +1,16 @@
-.MainDash{
-    /* padding-top: 1rem; */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-}
-
 @media screen and (max-width: 1200px) {
-    .MainDash{
-        justify-content:flex-start;
+    .MainDash {
+        justify-content: flex-start;
         margin-top: 2rem;
     }
 }
 
-@media screen and (max-width: 768px)
-{
-    .MainDash{
+@media screen and (max-width: 768px) {
+    .MainDash {
         align-items: center;
     }
 }
+
 .no-select .ant-table-thead th {
     user-select: none;
 }
@@ -26,20 +19,78 @@
     user-select: none;
 }
 
+.custom-modal .ant-modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100vh;
+}
+
+.action-buttons {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    margin-right: 10px;
+    margin-bottom: 50px;
+}
+
+.export-button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.no-select {
+    user-select: none;
+}
+
+input, .ant-select-selector, .ant-picker, textarea, p {
+    width: 100%;
+}
+
+.table-detail td {
+    padding: 8px;
+}
+
 .export-attribute-title {
     font-weight: 500;
-    margin-right: 4px;
+    width: 20%;
 }
 
 .export-attribute-container {
     display: flex;
     align-items: center;
-}
-.custom-modal .ant-modal-content {
-    max-height: 80vh; 
-    overflow-y: auto;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .custom-modal .ant-modal-body {
-    padding: 16px; /* Adjust padding as needed */
+    padding: 16px;
+}
+
+.action-buttons {
+    gap: 10px;
+}
+
+
+@media screen and (max-width: 768px) {
+    .export-attribute-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .export-button-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .edit-buttons, .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
 }
