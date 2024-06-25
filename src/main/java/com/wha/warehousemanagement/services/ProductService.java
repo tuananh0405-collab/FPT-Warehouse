@@ -70,7 +70,7 @@ public class ProductService {
                                 return response;
                             }
                     )
-                    .collect(Collectors.toList());
+                    .toList();
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all products successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -82,9 +82,7 @@ public class ProductService {
     public ResponseObject<ProductResponse> getProductById(int id) {
         try {
             Product product = productRepository.getProductById(id).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-            System.out.println(product);
             ProductResponse response = productMapper.toDto(product);
-            System.out.println(response);
             return new ResponseObject<>(HttpStatus.OK.value(), "Get product by id successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
