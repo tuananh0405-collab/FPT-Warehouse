@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final InventoryMapper inventoryMapper;
-    private final ProductMapper productMapper;
     private final ProductRepository productRepository;
     private final ZoneRepository zoneRepository;
     private final SearchRepository searchRepository;
@@ -304,6 +302,18 @@ public class InventoryService {
         int totalHeldQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, productId);
 
         return totalQuantity - totalHeldQuantity;
+    }
+
+    public ResponseObject<?> checkAvailableQuantity(checkAvailableProductRequest request) {
+        try {
+            int availableQuantity = getAvailableQuantityOfProduct(request.getWarehouseId(), request.getProductId());
+            if (availableQuantity < request.getQuantity()) {
+                return new ResponseObject<>(HttpStatus.OK.value(), "Not enough quantity in this warehouse", null);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Enough quantity", null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to check available quantity", null);
+        }
     }
 
     public InventoryResponse searchInventoryByProductIdZoneIdAndExpiredAt(Integer productId, Integer zoneId, Date expiredAt) {
