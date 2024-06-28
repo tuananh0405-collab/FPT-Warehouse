@@ -45,6 +45,41 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
       providesTags: ["ExportDetail"],
       keepUnusedDataFor: 5,
     }),
+    deleteExportDetails: builder.mutation({
+      query: ({ ids, authToken }) => ({
+        url: `${EXPORT_DETAIL_URL}/list-delete`,
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: ids,
+      }),
+      invalidatesTags: ["ExportDetail"],
+    }),
+    updateExportDetails: builder.mutation({
+      query: ({ data, authToken }) => ({
+        url: `${EXPORT_DETAIL_URL}/list-update`,
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: data,
+      }),
+      invalidatesTags: ["ExportDetail"],
+    }),
+    checkAvailableQuantity: builder.mutation({
+      query: ({ authToken, data }) => ({
+        url: `${EXPORT_DETAIL_URL}/check-available-quantity`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["ExportDetail"],
+    }),
   }),
 });
 
@@ -52,4 +87,7 @@ export const {
   useGetAllExportDetailsQuery,
   useCreateExportDetailsMutation,
   useGetAllExportDetailsByExportIdQuery,
+  useDeleteExportDetailsMutation,
+  useUpdateExportDetailsMutation,
+  useCheckAvailableQuantityMutation,
 } = exportDetailApiSlice;

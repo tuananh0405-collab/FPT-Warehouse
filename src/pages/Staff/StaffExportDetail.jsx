@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import Breadcrumbs from '../../utils/Breadcumbs';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useGetExportByIdQuery, useUpdateExportByIdMutation } from "../../redux/api/exportApiSlice";
-import { useGetAllExportDetailsByExportIdQuery } from "../../redux/api/exportDetailApiSlice";
+import {
+    useGetExportByIdQuery,
+    useUpdateExportByIdMutation
+} from "../../redux/api/exportApiSlice";
+import {
+    useGetAllExportDetailsByExportIdQuery,
+    useDeleteExportDetailsMutation,
+    useCheckAvailableQuantityMutation,
+    useUpdateExportDetailsMutation
+} from "../../redux/api/exportDetailApiSlice";
 import ExportStatus from "../../components/Orders/ExportStatus";
 import '../../components/Orders/MainDash.css';
-import { Table, Button, Modal, Input, Select, message } from 'antd';
+import { Table, Button, Modal, Input, Select, message, Checkbox } from 'antd';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
@@ -36,8 +44,16 @@ function StaffExportDetail() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [editableData, setEditableData] = useState(exportData);
     const [confirmationAction, setConfirmationAction] = useState(null);
+    const [selectedProductIds, setSelectedProductIds] = useState([]);
+    const [temporarilyHiddenProductIds, setTemporarilyHiddenProductIds] = useState([]);
+    const [editableRow, setEditableRow] = useState(null);
+    const [editableRowData, setEditableRowData] = useState({});
+    const [localUpdatedQuantities, setLocalUpdatedQuantities] = useState({});
 
     const [updateExportById, { isLoading: isUpdating }] = useUpdateExportByIdMutation();
+    const [deleteExportDetails, { isLoading: isDeleting }] = useDeleteExportDetailsMutation();
+    const [updateExportDetails] = useUpdateExportDetailsMutation();
+    const [checkAvailableQuantity] = useCheckAvailableQuantityMutation();
 
     useEffect(() => {
         setEditableData(exportData);
@@ -50,6 +66,7 @@ function StaffExportDetail() {
         setConfirmationAction(action);
         setIsConfirmationPopupVisible(true);
     };
+
     const handleCloseConfirmationPopup = () => setIsConfirmationPopupVisible(false);
 
     const handleOpenEditMode = () => {
@@ -62,29 +79,42 @@ function StaffExportDetail() {
         setIsConfirmationPopupVisible(true);
     };
 
-    const handleSaveEdit = () => {
-        setConfirmationAction({ type: 'updateExport' });
-        setIsConfirmationPopupVisible(true);
+    const handleSaveRowEdit = async (record) => {
+        const { product, quantity } = editableRowData;
+        const checkResponse = await checkAvailableQuantity({
+            authToken,
+            data: {
+                productId: product.id,
+                quantity,
+                warehouseId: exportData.warehouseFrom.id
+            }
+        }).unwrap();
+        if (checkResponse.status === 200 && checkResponse.message === 'Enough quantity') {
+            setLocalUpdatedQuantities({
+                ...localUpdatedQuantities,
+                [record.id]: { exportDetailId: record.id, quantity },
+            });
+            setEditableRow(null);
+            setEditableRowData({});
+            message.success('Quantity update is valid');
+        } else {
+            message.error('Not enough quantity in this warehouse');
+        }
     };
 
-    const handleChange = (field, value) => {
-        setEditableData({
-            ...editableData,
-            [field]: value,
-        });
-    };
+    const handleSaveEdit = async () => {
+        // Handle deletions export details
+        if (temporarilyHiddenProductIds.length > 0) {
+            try {
+                await deleteExportDetails({ authToken, ids: temporarilyHiddenProductIds }).unwrap();
+                setTemporarilyHiddenProductIds([]);
+            } catch (error) {
+                message.error('Failed to delete selected products');
+                console.error('Delete export details error:', error);
+            }
+        }
 
-    const handleDeleteExportDetail = async (record) => {
-        console.log('Deleting record:', record);
-        handleCloseConfirmationPopup();
-    };
-
-    const handleApproveExport = async () => {
-        console.log('Approving export:', id);
-        handleCloseConfirmationPopup();
-    };
-
-    const handleUpdateExport = async () => {
+        // Handle updates export
         try {
             await updateExportById({
                 exportId: id,
@@ -107,10 +137,44 @@ function StaffExportDetail() {
             message.error('Failed to update export');
             console.error('Update export error:', error);
         }
+
+        // Prepare and send updated export details
+        const updatedExportDetails = Object.values(localUpdatedQuantities).map(detail => ({
+            exportDetailId: detail.exportDetailId,
+            quantity: detail.quantity,
+            warehouseId: exportData.warehouseFrom.id
+        }));
+
+        console.log('updatedExportDetails:', updatedExportDetails);
+
+        console.log('localUpdatedQuantities:', localUpdatedQuantities);
+
+        if (updatedExportDetails.length > 0) {
+            try {
+                await updateExportDetails({
+                    data: updatedExportDetails,
+                    authToken,
+                }).unwrap();
+                message.success('Product quantities updated successfully');
+            } catch (error) {
+                message.error('Failed to update product quantities');
+                console.error('Update product quantities error:', error);
+            }
+        }
+
+        setLocalUpdatedQuantities({});
     };
 
-    const handleDelete = (record) => {
-        handleOpenConfirmationPopup({ type: 'deleteProduct', record });
+    const handleChange = (field, value) => {
+        setEditableData({
+            ...editableData,
+            [field]: value,
+        });
+    };
+
+    const handleDelete = () => {
+        setTemporarilyHiddenProductIds([...temporarilyHiddenProductIds, ...selectedProductIds]);
+        setSelectedProductIds([]);
     };
 
     const handleApprove = () => {
@@ -120,17 +184,19 @@ function StaffExportDetail() {
     const handleConfirmAction = async () => {
         switch (confirmationAction.type) {
             case 'deleteProduct':
-                await handleDeleteExportDetail(confirmationAction.record);
+                await handleDeleteExportDetail();
                 break;
             case 'approveExport':
                 await handleApproveExport();
                 break;
             case 'cancelEditMode':
                 setIsEditMode(false);
+                setSelectedProductIds([]);
+                setTemporarilyHiddenProductIds([]);
                 handleCloseConfirmationPopup();
                 break;
             case 'updateExport':
-                await handleUpdateExport();
+                await handleSaveEdit();
                 break;
             default:
                 break;
@@ -138,6 +204,23 @@ function StaffExportDetail() {
     };
 
     const columns = [
+        ...(isEditMode ? [{
+            title: 'Select',
+            dataIndex: 'select',
+            key: 'select',
+            render: (_, record) => (
+                <Checkbox
+                    checked={selectedProductIds.includes(record.id)}
+                    onChange={(e) => {
+                        if (e.target.checked) {
+                            setSelectedProductIds([...selectedProductIds, record.id]);
+                        } else {
+                            setSelectedProductIds(selectedProductIds.filter((id) => id !== record.id));
+                        }
+                    }}
+                />
+            )
+        }] : []),
         {
             title: 'Product Name',
             dataIndex: ['product', 'name'],
@@ -157,6 +240,20 @@ function StaffExportDetail() {
             title: 'Quantity',
             dataIndex: 'quantity',
             key: 'quantity',
+            render: (text, record) => (
+                editableRow === record.id ? (
+                    <Input
+                        type="number"
+                        value={editableRowData.quantity}
+                        onChange={(e) => setEditableRowData({
+                            ...editableRowData,
+                            quantity: e.target.value
+                        })}
+                    />
+                ) : (
+                    localUpdatedQuantities[record.id]?.quantity ?? text
+                )
+            ),
         },
         {
             title: 'Expired At',
@@ -164,26 +261,34 @@ function StaffExportDetail() {
             key: 'expiredAt',
             render: (text) => new Date(text).toLocaleDateString(),
         },
-    ];
-
-    if (isEditMode) {
-        columns.push({
+        ...(isEditMode ? [{
             title: 'Action',
             key: 'action',
             render: (_, record) => (
-                <Button
-                    icon={<DeleteRoundedIcon style={{ color: "#ef4444" }} />}
-                    onClick={() => handleDelete(record)}
-                />
+                editableRow === record.id ? (
+                    <span>
+                        <a className='no-select' onClick={() => handleSaveRowEdit(record)}>Save</a>
+                        <a className='no-select' onClick={() => {
+                            setEditableRow(null);
+                            setEditableRowData({});
+                        }}>Cancel</a>
+                    </span>
+                ) : (
+                    <a className='no-select' onClick={() => {
+                        setEditableRow(record.id);
+                        setEditableRowData(record);
+                    }}>Change</a>
+                )
             ),
-        });
-    }
+        }] : []),
+    ];
+
 
     if (exportsLoading) return <div>Loading...</div>;
     if (exportsError) return <div>Error loading export data</div>;
 
     const modalConfirmTitle = {
-        deleteProduct: 'Do you want to delete this product?',
+        deleteProduct: 'Do you want to delete the selected products?',
         approveExport: 'Do you want to approve this export?',
         cancelEditMode: 'Do you want to cancel editing?',
         updateExport: 'Do you want to save changes?'
@@ -270,7 +375,7 @@ function StaffExportDetail() {
                             </td>
                         </tr>
                         {exportData.exportType === 'CUSTOMER' && (
-                            <div>
+                            <>
                                 <tr>
                                     <td className="export-attribute-title">Customer:</td>
                                     <td>
@@ -313,11 +418,11 @@ function StaffExportDetail() {
                                         )}
                                     </td>
                                 </tr>
-                            </div>
+                            </>
                         )}
                     </tbody>
                 </table>
-                <div className="export-button-container">
+                <div>
                     <a className='no-select' href='#' onClick={handleOpenProductListPopup}>
                         View Export Details
                     </a>
@@ -383,13 +488,27 @@ function StaffExportDetail() {
                 visible={isProductListPopupVisible}
                 onCancel={handleCloseProductListPopup}
                 footer={[
-                    <Button key="close" onClick={handleCloseProductListPopup}>
-                        Close
-                    </Button>
+                    <div className='footer-modal-button'>
+                        <Button key="close" onClick={handleCloseProductListPopup}>
+                            Close
+                        </Button>
+                        {isEditMode && selectedProductIds.length != 0 ? (
+                            <Button
+                                style={{
+                                    background: '#d32f2f',
+                                    color: 'white',
+                                }}
+                                type="default"
+                                onClick={handleDelete}
+                            >
+                                <DeleteRoundedIcon /> Delete Selected
+                            </Button>
+                        ) : null}
+                    </div>
                 ]}
             >
                 <Table
-                    dataSource={exportProducts}
+                    dataSource={exportProducts.filter(product => !temporarilyHiddenProductIds.includes(product.id))}
                     columns={columns}
                     rowKey="id"
                     pagination={false}
