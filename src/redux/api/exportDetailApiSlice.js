@@ -90,4 +90,5 @@ export const {
   useDeleteExportDetailsMutation,
   useUpdateExportDetailsMutation,
   useCheckAvailableQuantityMutation,
+  useGetExportDetailsByExportIdQuery
 } = exportDetailApiSlice;

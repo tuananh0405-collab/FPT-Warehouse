@@ -43,6 +43,8 @@ import StaffsComponent from "./pages/Staff/StaffsComponent.jsx";
 import ProductComponent from "./pages/Admin/ProductsComponent.jsx";
 import OrderImport from "./pages/Admin/OrderImport.jsx";
 import OrderExport from "./pages/Admin/OrderExport.jsx";
+import ExportDetails from "./pages/Admin/ExportDetails.jsx";
+import ImportDetails from "./pages/Admin/ImportDetails.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -64,6 +66,8 @@ const router = createBrowserRouter(
           <Route path="/data/customer" element={<DataCustomers />} />
           <Route path="/order/import" element={<OrderImport/>}/>
           <Route path="/order/export" element={<OrderExport/>}/>
+          <Route path="/order/export/:id" element={<ExportDetails/>}/>
+          <Route path="/order/import/:id" element={<ImportDetails/>}/>
         </Route>
       </Route>
       {/* STAFF  */}

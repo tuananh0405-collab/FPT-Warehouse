@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Table, Button, Modal, Input, Select, message, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom'; 
 import { useGetAllExportsForAdminQuery, useGetExportByIdQuery } from '../../redux/api/exportApiSlice';
 import Loading from '../../utils/Loading';
 import Error500 from '../../utils/Error500';
@@ -113,7 +114,9 @@ const OrderExport = () => {
       title: 'Actions',
       key: 'actions',
       render: (text, record) => (
-        <Button onClick={() => handleRowClick(record)}>View Details</Button>
+        <Link to={`/order/export/${record.id}`}>
+          <Button type='link'>View Details</Button>
+        </Link>
       ),
     },
   ];
@@ -171,7 +174,7 @@ const OrderExport = () => {
           }
         }}
       />
-      <Modal
+      {/* <Modal
         title='Order Details'
         visible={isModalVisible}
         onCancel={handleCancel}
@@ -201,7 +204,7 @@ const OrderExport = () => {
             <p><strong>Customer Address:</strong> {exportDetailsData?.data.customer.address}</p>
           </div>
         )}
-      </Modal>
+      </Modal> */}
     </div>
   );
 };

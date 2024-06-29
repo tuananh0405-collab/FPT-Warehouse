@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Table, Button, Modal, Input, Select, message, Spin } from "antd";
+import { Link } from 'react-router-dom'; 
 import { SearchOutlined } from "@ant-design/icons";
 import { useGetAllImportsQuery, useGetImportByIdQuery } from "../../redux/api/importApiSlice";
 import Loading from "../../utils/Loading";
@@ -113,12 +114,14 @@ const OrderImport = () => {
       },
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      render: (text, record) => (
-        <Button onClick={() => handleRowClick(record)}>View Details</Button>
-      ),
-    },
+        title: 'Actions',
+        key: 'actions',
+        render: (text, record) => (
+          <Link to={`/order/import/${record.id}`}>
+            <Button type='link'>View Details</Button>
+          </Link>
+        ),
+      },
   ];
 
   const sortOptions = [
@@ -174,7 +177,7 @@ const OrderImport = () => {
           }
         }}
       />
-      <Modal
+      {/* <Modal
         title='Order Details'
         visible={isModalVisible}
         onCancel={handleCancel}
@@ -204,7 +207,7 @@ const OrderImport = () => {
             <p><strong>Customer Address:</strong> {importDetailsData?.data.customer.address}</p>
           </div>
         )}
-      </Modal>
+      </Modal> */}
     </div>
   );
 };
