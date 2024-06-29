@@ -1,10 +1,13 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ImportDetailRequest;
+import com.wha.warehousemanagement.dtos.responses.ExportDetailResponse;
 import com.wha.warehousemanagement.dtos.responses.ImportDetailResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
+import com.wha.warehousemanagement.mappers.ExportMapper;
 import com.wha.warehousemanagement.mappers.ImportDetailMapper;
+import com.wha.warehousemanagement.mappers.ImportMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
 import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.*;
@@ -21,6 +24,7 @@ import java.util.stream.Collectors;
 public class ImportDetailService {
     private final ImportDetailRepository importDetailRepository;
     private final ImportDetailMapper importDetailMapper;
+    private final ImportMapper importMapper;
     private final ImportRepository importRepository;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
@@ -134,4 +138,22 @@ public class ImportDetailService {
         }
     }
 
+    public ResponseObject<?> getImportDetailsByImportId(Integer importId) {
+        try {
+            List<ImportDetailResponse> responses = importDetailRepository.findByAnImport_Id(importId)
+                    .stream()
+                    .map(imp -> {
+                        ImportDetailResponse response = importDetailMapper.toDto(imp);
+                        response.setImportResponse(importMapper.toDto(imp.getAnImport()));
+                        response.setProduct(productMapper.toDto(imp.getProduct()));
+                        return response;
+                    })
+                    .toList();
+            return new ResponseObject<>(HttpStatus.OK.value(), "Import details retrieved successfully", responses);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get import details", null);
+        }
+    }
 }

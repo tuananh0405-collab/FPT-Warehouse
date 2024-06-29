@@ -39,4 +39,9 @@ public class ImportDetailController {
         return ResponseEntity.ok(importDetailService.deleteImportDetail(id));
     }
 
+    @GetMapping("/import/{importId}")
+    public ResponseEntity<?> getImportDetailsByImportId(@PathVariable("importId") Integer importId) {
+        return ResponseEntity.ok(importDetailService.getImportDetailsByImportId(importId));
+    }
+
 }
