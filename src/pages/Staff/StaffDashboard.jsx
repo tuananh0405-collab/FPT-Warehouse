@@ -1,8 +1,11 @@
 import React from 'react'
+import MainDash from '../Admin/MainDash'
 
 const StaffDashboard = () => {
   return (
-    <div>StaffDashboard</div>
+    <div>
+       <MainDash />
+    </div>
   )
 }
 

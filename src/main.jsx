@@ -41,6 +41,9 @@ import OrdersComponent from "./pages/Admin/OrdersComponent.jsx";
 import DataComponent from "./pages/Admin/DataComponent.jsx";
 import StaffsComponent from "./pages/Staff/StaffsComponent.jsx";
 import ProductComponent from "./pages/Admin/ProductsComponent.jsx";
+import OrderImport from "./pages/Admin/OrderImport.jsx";
+import OrderExport from "./pages/Admin/OrderExport.jsx";
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -59,6 +62,8 @@ const router = createBrowserRouter(
           <Route path="/data/zone/warehouseId/:id" element={<WarehouseZone />} />
           <Route path="/data/category" element={<DataCategory />} />
           <Route path="/data/customer" element={<DataCustomers />} />
+          <Route path="/order/import" element={<OrderImport/>}/>
+          <Route path="/order/export" element={<OrderExport/>}/>
         </Route>
       </Route>
       {/* STAFF  */}

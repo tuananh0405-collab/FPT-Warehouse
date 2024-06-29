@@ -180,7 +180,7 @@ function ExpandedCard({ param, setExpanded }) {
 const MainDash = () => {
   return (
     <div className="MainDash">
-      <h1>Dashboard</h1>
+      <h1>Dashboard FOR ADMIN</h1>
       <div className="cardsContainer">
         {cardsData.map((card, index) => (
           <Card key={index} {...card} />
