@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final InventoryMapper inventoryMapper;
-    private final ProductMapper productMapper;
     private final ProductRepository productRepository;
     private final ZoneRepository zoneRepository;
     private final SearchRepository searchRepository;
@@ -123,9 +121,27 @@ public class InventoryService {
         }
     }
 
-    public ResponseObject<?> addInventory(int id, InventoryRequest request) {
+    public ResponseObject<?> addInventory(InventoryRequest request) {
         try {
-            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory added successfully", null);
+            Inventory inventory = new Inventory();
+            if (request.getProductId() != null) {
+                inventory.setProduct(productRepository.findById(request.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+            }
+            if (request.getHeldQuantity() != null) {
+                inventory.setHeldQuantity(request.getHeldQuantity());
+            }
+            if (request.getQuantity() != null && request.getHeldQuantity() != null && request.getQuantity() >= request.getHeldQuantity()) {
+                inventory.setQuantity(request.getQuantity() - request.getHeldQuantity());
+            }
+            if (request.getExpiredAt() != null) {
+                inventory.setExpiredAt(request.getExpiredAt());
+            }
+            if (request.getZoneId() != null) {
+                inventory.setZone(zoneRepository.findById(request.getZoneId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+            }
+            inventoryRepository.save(inventory);
+            InventoryResponse response = inventoryMapper.toDto(inventory);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory added successfully", response);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -286,6 +302,18 @@ public class InventoryService {
         int totalHeldQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, productId);
 
         return totalQuantity - totalHeldQuantity;
+    }
+
+    public ResponseObject<?> checkAvailableQuantity(checkAvailableProductRequest request) {
+        try {
+            int availableQuantity = getAvailableQuantityOfProduct(request.getWarehouseId(), request.getProductId());
+            if (availableQuantity < request.getQuantity()) {
+                return new ResponseObject<>(HttpStatus.OK.value(), "Not enough quantity in this warehouse", null);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Enough quantity", null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to check available quantity", null);
+        }
     }
 
     public InventoryResponse searchInventoryByProductIdZoneIdAndExpiredAt(Integer productId, Integer zoneId, Date expiredAt) {

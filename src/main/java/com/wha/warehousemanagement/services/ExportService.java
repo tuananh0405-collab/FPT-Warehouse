@@ -2,9 +2,11 @@ package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
+import com.wha.warehousemanagement.dtos.requests.ExportUpdateRequest;
 import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.dtos.responses.ExportResponse;
+import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ExportMapper;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -99,6 +102,22 @@ public class ExportService {
         }
     }
 
+    public ResponseObject<?> getAllExports() {
+        try {
+            List<ExportResponse> response =
+                    exportRepository.findAll()
+                            .stream()
+                            .map(exportMapper::toDto
+                            )
+                            .collect(Collectors.toList());
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all inventories", null);
+        }
+    }
+
     public ResponseObject<?> getExportById(int id) {
         try {
             Export export = exportRepository.findById(id)
@@ -112,34 +131,27 @@ public class ExportService {
         }
     }
 
-    public ResponseObject<?> updateExport(int id, ExportRequest request) {
+    @Transactional
+    public ResponseObject<?> updateExport(int id, ExportUpdateRequest request) {
         try {
             Export export = exportRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
-            if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {
-                export.setDescription(request.getDescription());
-            }
-            if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
-                export.setStatus(Status.valueOf(request.getStatus()));
-            }
-            if (request.getExportType() != null && !request.getExportType().trim().isEmpty()) {
-                export.setExportType(ImportExportType.valueOf(request.getExportType()));
-            }
-            if (request.getTransferKey() != null && !request.getTransferKey().trim().isEmpty()) {
-                export.setTransferKey(request.getTransferKey());
-            }
-            if (request.getWarehouseIdFrom() != null) {
-                export.setWarehouseFrom(warehouseRepository.findById(request.getWarehouseIdFrom()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
-            }
-            if (request.getWarehouseIdTo() != null) {
-                export.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
-            }
-            if (request.getCustomerId() != null) {
-                export.setCustomer(customerRepository.findById(request.getCustomerId()).orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND)));
-            }
+
+            export.setDescription(request.getDescription());
+            export.setStatus(Status.valueOf(request.getStatus()));
+            export.setExportDate(new Date());
             exportRepository.save(export);
-            ExportResponse response = exportMapper.toDto(export);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Updated export successfully", response);
+
+            Customer customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.CUSTOMER_NOT_FOUND));
+
+            customer.setName(request.getCustomerName());
+            customer.setAddress(request.getCustomerAddress());
+            customer.setPhone(request.getCustomerPhone());
+            customer.setEmail(request.getCustomerEmail());
+            customerRepository.save(customer);
+
+            return new ResponseObject<>(HttpStatus.OK.value(), "Updated export successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {

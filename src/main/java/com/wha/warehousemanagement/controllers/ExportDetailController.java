@@ -1,14 +1,14 @@
 package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.ExportDetailRequest;
+import com.wha.warehousemanagement.dtos.requests.ExportDetailUpdateRequest;
 import com.wha.warehousemanagement.dtos.requests.SuggestedExportProductsRequest;
-import com.wha.warehousemanagement.dtos.responses.ExportDetailResponse;
-import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
+import com.wha.warehousemanagement.dtos.requests.checkAvailableProductRequest;
 import com.wha.warehousemanagement.dtos.responses.SuggestedExportProductsResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.ExportDetailService;
+import com.wha.warehousemanagement.services.InventoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExportDetailController {
     private final ExportDetailService exportDetailService;
+    private final InventoryService inventoryService;
 
     @GetMapping
     public ResponseEntity<?> getAllExportDetails() {
@@ -36,15 +37,15 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.createExportDetail(requests));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateExportDetail(@PathVariable("id") Integer id, @RequestBody ExportDetailRequest request) {
-        return ResponseEntity.ok(exportDetailService.updateExportDetail(id, request));
+    @PutMapping("/list-update")
+    public ResponseEntity<?> updateExportDetail(@RequestBody List<ExportDetailUpdateRequest> request) {
+        return ResponseEntity.ok(exportDetailService.updateExportDetail(request));
     }
 
     //localhost:6060/export-details/1
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteExportDetail(@PathVariable("id") Integer id) {
-        return ResponseEntity.ok(exportDetailService.deleteExportDetail(id));
+    @DeleteMapping("/list-delete")
+    public ResponseEntity<?> deleteExportDetail(@RequestBody List<Integer> ids) {
+        return ResponseEntity.ok(exportDetailService.deleteExportDetail(ids));
     }
 
     @GetMapping("/suggest")
@@ -52,8 +53,18 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
     }
 
+    @PostMapping("/check-available-quantity")
+    public ResponseEntity<?> checkAvailableQuantity(@RequestBody checkAvailableProductRequest request) {
+        return ResponseEntity.ok(inventoryService.checkAvailableQuantity(request));
+    }
+
     @GetMapping("/export/{exportId}")
     public ResponseEntity<?> getExportDetailsByExportId(@PathVariable("exportId") Integer exportId) {
         return ResponseEntity.ok(exportDetailService.getExportDetailsByExportId(exportId));
+    }
+
+    @GetMapping("/export-products/{exportId}")
+    public ResponseEntity<?> getProductsInExportByExportId(@PathVariable("exportId") Integer exportId) {
+        return ResponseEntity.ok(exportDetailService.getProductsInExportByExportId(exportId));
     }
 }

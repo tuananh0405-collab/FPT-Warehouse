@@ -1,6 +1,7 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ExportDetailRequest;
+import com.wha.warehousemanagement.dtos.requests.ExportDetailUpdateRequest;
 import com.wha.warehousemanagement.dtos.requests.SuggestedExportProductsRequest;
 import com.wha.warehousemanagement.dtos.responses.*;
 import com.wha.warehousemanagement.exceptions.CustomException;
@@ -31,6 +32,7 @@ public class ExportDetailService {
     private final ExportRepository exportRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+    private final InventoryService inventoryService;
 
     public ResponseObject<?> getAllExportDetails() {
         try {
@@ -100,12 +102,15 @@ public class ExportDetailService {
         }
     }
 
-    public ResponseObject<?> updateExportDetail(Integer id, ExportDetailRequest request) {
+    @Transactional
+    public ResponseObject<?> updateExportDetail(List<ExportDetailUpdateRequest> request) {
         try {
-            ExportDetail exportDetail = exportDetailRepository.findById(id)
-                    .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
-            update(exportDetail, request);
-            exportDetailRepository.save(exportDetail);
+            for (ExportDetailUpdateRequest req : request) {
+                ExportDetail exportDetail = exportDetailRepository.findById(req.getExportDetailId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
+                exportDetail.setQuantity(req.getQuantity());
+                exportDetailRepository.save(exportDetail);
+            }
             return new ResponseObject<>(HttpStatus.OK.value(), "Export detail updated successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -143,11 +148,12 @@ public class ExportDetailService {
         }
     }
 
-    public ResponseObject<?> deleteExportDetail(Integer id) {
+    @Transactional
+    public ResponseObject<?> deleteExportDetail(List<Integer> ids) {
         try {
-            ExportDetail exportDetail = exportDetailRepository.findById(id)
-                    .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
-            exportDetailRepository.delete(exportDetail);
+            for (Integer id : ids) {
+                exportDetailRepository.deleteById(id);
+            }
             return new ResponseObject<>(HttpStatus.OK.value(), "Export detail deleted successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -262,6 +268,27 @@ public class ExportDetailService {
                     })
                     .toList();
             return new ResponseObject<>(HttpStatus.OK.value(), "Export details retrieved successfully", responses);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get export details", null);
+        }
+    }
+
+    public ResponseObject<List<ProductsInExportResponse>> getProductsInExportByExportId(Integer exportId) {
+        try {
+            List<ExportDetail> exportDetails = exportDetailRepository.findByExportId(exportId);
+            List<ProductsInExportResponse> responses = exportDetails.stream()
+                    .map(imp -> {
+                        return ProductsInExportResponse.builder()
+                                .id(imp.getId())
+                                .product(productMapper.toDto(imp.getProduct()))
+                                .quantity(imp.getQuantity())
+                                .expiredAt(imp.getExpiredAt().toString())
+                                .build();
+                    })
+                    .toList();
+            return new ResponseObject<>(HttpStatus.OK.value(), "Products in export retrieved successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {

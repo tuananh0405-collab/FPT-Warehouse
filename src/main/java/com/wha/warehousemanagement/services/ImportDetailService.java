@@ -6,13 +6,8 @@ import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ImportDetailMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
-import com.wha.warehousemanagement.models.ImportDetail;
-import com.wha.warehousemanagement.models.Import;
-import com.wha.warehousemanagement.models.Product;
-import com.wha.warehousemanagement.models.ResponseObject;
-import com.wha.warehousemanagement.repositories.ImportDetailRepository;
-import com.wha.warehousemanagement.repositories.ImportRepository;
-import com.wha.warehousemanagement.repositories.ProductRepository;
+import com.wha.warehousemanagement.models.*;
+import com.wha.warehousemanagement.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,6 +24,8 @@ public class ImportDetailService {
     private final ImportRepository importRepository;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final ZoneRepository zoneRepository;
+    private final InventoryRepository inventoryRepository;
 
     public ResponseObject<?> getAllImportDetails() {
         try {
@@ -70,7 +67,24 @@ public class ImportDetailService {
             List<ImportDetail> importDetails = new ArrayList<>();
             for (ImportDetailRequest request : requests) {
                 ImportDetail importDetail = new ImportDetail();
-                importDetails.add(update(importDetail, request));
+                importDetail = update(importDetail, request);
+                importDetails.add(importDetail);
+
+                // Update or create inventory
+                Product product = productRepository.findById(request.getProductId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+                Zone zone = zoneRepository.findById(request.getZoneId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.ZONE_NOT_FOUND));
+
+                Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                                request.getProductId(), request.getZoneId(), request.getExpiredAt())
+                        .orElse(new Inventory(null, product, zone, 0, 0, request.getExpiredAt()));
+
+                // Update quantity
+                inventory.setQuantity(inventory.getQuantity() + request.getQuantity());
+                inventory.setHeldQuantity((inventory.getHeldQuantity() == null ? 0 : inventory.getHeldQuantity()));
+
+                inventoryRepository.save(inventory);
             }
             importDetailRepository.saveAll(importDetails);
             return new ResponseObject<>(HttpStatus.OK.value(), "Import details created successfully", null);
@@ -79,6 +93,18 @@ public class ImportDetailService {
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to create import details", null);
         }
+    }
+
+    private ImportDetail update(ImportDetail importDetail, ImportDetailRequest request) {
+        Import anImport = importRepository.findById(request.getImportId())
+                .orElseThrow(() -> new CustomException(ErrorCode.IMPORT_NOT_FOUND));
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+        importDetail.setAnImport(anImport);
+        importDetail.setProduct(product);
+        importDetail.setQuantity(request.getQuantity());
+        importDetail.setExpiredAt(request.getExpiredAt());
+        return importDetail;
     }
 
     public ResponseObject<?> updateImportDetail(int id, ImportDetailRequest request) {
@@ -108,15 +134,4 @@ public class ImportDetailService {
         }
     }
 
-    private ImportDetail update(ImportDetail importDetail, ImportDetailRequest request) {
-        Import anImport = importRepository.findById(request.getImportId())
-                .orElseThrow(() -> new CustomException(ErrorCode.IMPORT_NOT_FOUND));
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-        importDetail.setAnImport(anImport);
-        importDetail.setProduct(product);
-        importDetail.setQuantity(request.getQuantity());
-        importDetail.setExpiredAt(request.getExpiredAt());
-        return importDetail;
-    }
 }

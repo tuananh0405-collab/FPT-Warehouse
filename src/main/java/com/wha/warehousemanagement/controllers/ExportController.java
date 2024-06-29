@@ -2,6 +2,7 @@ package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
+import com.wha.warehousemanagement.dtos.requests.ExportUpdateRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.Status;
@@ -22,6 +23,11 @@ public class ExportController {
         return ResponseEntity.ok(exportService.addExport(request));
     }
 
+    @GetMapping
+    public ResponseEntity<?> getAllExports() {
+        return ResponseEntity.ok(exportService.getAllExports());
+    }
+
     //
     @GetMapping("/by-warehouse/{warehouseId}")
     public ResponseEntity<?> getAllExports(
@@ -30,7 +36,6 @@ public class ExportController {
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "status", required = false) Status status
-
     ) {
         int limit = 5;
         pageNo = pageNo - 1;
@@ -61,7 +66,7 @@ public class ExportController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateExport(@PathVariable("id") int id, @RequestBody ExportRequest request) {
+    public ResponseEntity<?> updateExport(@PathVariable("id") int id, @RequestBody ExportUpdateRequest request) {
         return ResponseEntity.ok(exportService.updateExport(id, request));
     }
 

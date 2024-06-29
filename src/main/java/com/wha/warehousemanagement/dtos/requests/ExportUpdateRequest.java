@@ -6,17 +6,28 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ImportDetailRequest {
-    private Integer productId;
-    private Integer importId;
-    private Integer quantity;
-    private Date expiredAt;
-    private Integer zoneId;
+public class ExportUpdateRequest {
+
+        private String description;
+
+        private String status;
+
+        private String exportDate;
+
+        private Integer warehouseIdTo;
+
+        private Integer customerId;
+
+        private String customerName;
+
+        private String customerAddress;
+
+        private String customerPhone;
+
+        private String customerEmail;
 }
