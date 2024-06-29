@@ -58,4 +58,23 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
     @Query("SELECT COUNT(e) FROM Export e WHERE e.warehouseFrom.id = :warehouseId " +
             "AND (:status IS NULL OR e.status = :status)")
     int countByWarehouseIdAndStatus(int warehouseId, Status status);
+
+    @Query("SELECT e FROM Export e " +
+            "WHERE (:status IS NULL OR e.status = :status) " +
+            "ORDER BY " +
+            "CASE " +
+            "WHEN e.status = 'REQUESTING' THEN 1 " +
+            "WHEN e.status = 'PENDING' THEN 2 " +
+            "WHEN e.status = 'SHIPPING' THEN 3 " +
+            "WHEN e.status = 'SUCCEED' THEN 4 " +
+            "WHEN e.status = 'CANCEL' THEN 5 " +
+            "ELSE 6 END, " +
+            "e.exportDate ASC")
+    Page<Export> findAllExportsForAdmin(
+            @Param("status") Status status,
+            Pageable pageable
+    );
+
+
+
 }

@@ -387,4 +387,12 @@ public class ExportService {
     public int getTotalExportsByWarehouseIdAndFilterByStatus(int warehouseId, Status status) {
         return exportRepository.countByWarehouseIdAndStatus(warehouseId, status);
     }
+
+    public Page<Export> getAllExportsForAdmin(int pageNo, int limit, String sortBy, String direction, Status status) {
+        Pageable pageable = PageRequest.of(pageNo, limit, Sort.by(Sort.Direction.fromString(direction), sortBy));
+        return exportRepository.findAllExportsForAdmin(status, pageable);
+    }
+
+
+
 }

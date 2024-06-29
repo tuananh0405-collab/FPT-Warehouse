@@ -104,4 +104,16 @@ public class ExportController {
 //    public ResponseEntity<?> processExportByStaff(@RequestBody processExportByStaffRequest request) {
 //        return ResponseEntity.ok(exportService.processExportRequestToTransfer(request));
 //    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<?> getAllExportsForAdmin(
+            @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "status", required = false) Status status
+    ) {
+        int limit = 5;
+        pageNo = pageNo - 1;
+        return ResponseEntity.ok(exportService.getAllExportsForAdmin(pageNo, limit, sortBy, direction, status));
+    }
 }
