@@ -36,7 +36,50 @@ export const importApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Import"],
     }),
+    getAllImportsByWarehouseId: builder.query({
+      query: ({
+        warehouseId,
+        authToken,
+        pageNo,
+        sortBy,
+        direction,
+        status,
+        search
+      }) => ({
+        url: `${IMPORT_URL}/by-warehouse/${warehouseId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        params: {
+          pageNo,
+          sortBy,
+          direction,
+          status,
+          search
+        },
+      }),
+      providesTags: ["Import"],
+      keepUnusedDataFor: 5,
+    }),
+    getTotalImportsByWarehouseId: builder.query({
+      query: ({ warehouseId, authToken, status, search }) => ({
+        url: `${IMPORT_URL}/by-warehouse/total/${warehouseId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        params: {
+          status,
+          search
+        },
+      }),
+    }),
   }),
 });
 
-export const {useGetAllImportsQuery, useGetImportByIdQuery, useAddImportMutation } = importApiSlice;
+export const {
+  useGetAllImportsQuery,
+  useGetImportByIdQuery,
+  useAddImportMutation,
+  useGetAllImportsByWarehouseIdQuery,
+  useGetTotalImportsByWarehouseIdQuery,
+} = importApiSlice;
