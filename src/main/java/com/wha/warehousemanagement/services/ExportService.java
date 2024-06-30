@@ -79,7 +79,7 @@ public class ExportService {
         }
     }
 
-    public ResponseObject<?> getAllExports(
+    public ResponseObject<List<ExportResponse>> getAllExports(
             Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status, String search
     ) {
         try {

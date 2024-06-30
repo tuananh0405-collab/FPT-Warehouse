@@ -4,12 +4,15 @@ import com.wha.warehousemanagement.dtos.requests.ExportRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportUpdateRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
+import com.wha.warehousemanagement.dtos.responses.ExportResponse;
 import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.models.Status;
 import com.wha.warehousemanagement.services.ExportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/export")
@@ -30,7 +33,7 @@ public class ExportController {
 
     //
     @GetMapping("/by-warehouse/{warehouseId}")
-    public ResponseEntity<?> getAllExports(
+    public ResponseEntity<ResponseObject<List<ExportResponse>>> getAllExports(
             @PathVariable("warehouseId") Integer warehouseId,
             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
             @RequestParam(value = "sortBy", required = false) String sortBy,
@@ -40,6 +43,7 @@ public class ExportController {
     ) {
         int limit = 5;
         pageNo = pageNo - 1;
+        search = search.isBlank() ? null : search;
         return ResponseEntity.ok(exportService.getAllExports(
                 warehouseId, pageNo, limit, sortBy, direction, status, search
         ));

@@ -2,6 +2,7 @@ package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.ImportRequest;
 import com.wha.warehousemanagement.dtos.responses.CustomerResponse;
+import com.wha.warehousemanagement.dtos.responses.ExportResponse;
 import com.wha.warehousemanagement.dtos.responses.ImportDetailResponse;
 import com.wha.warehousemanagement.dtos.responses.ImportResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
@@ -15,7 +16,10 @@ import com.wha.warehousemanagement.repositories.ImportDetailRepository;
 import com.wha.warehousemanagement.repositories.ImportRepository;
 import com.wha.warehousemanagement.repositories.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -77,28 +81,32 @@ public class ImportService {
         }
     }
 
-    public ResponseObject<?> getAllImports() {
+    public ResponseObject<List<ImportResponse>> getAllImports(
+            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status, String search
+    ) {
         try {
-            List<ImportResponse> responses = importRepository.findAll()
-                    .stream().map(anImport -> {
-                                ImportResponse response = importMapper.toDto(anImport);
-
-                                List<ImportDetailResponse> importDetailResponses = importDetailRepository
-                                        .findAllByAnImport_Id(anImport.getId())
-                                        .stream().map(importDetailMapper::toDto).toList();
-
-                                CustomerResponse customerResponse = customerMapper.toDto(anImport.getCustomer());
-                                response.setCustomer(customerResponse);
-                                return response;
-                            }
-                    )
-                    .collect(Collectors.toList());
+            Pageable pageable;
+            Page<Import> imports;
+            if (sortBy != null && !sortBy.isEmpty() && direction != null && !direction.isEmpty()) {
+                Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+                pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
+                imports = importRepository.findAllImportsByWarehouseWithDefaultSort(warehouseId, status, search, pageable);
+            } else {
+                pageable = PageRequest.of(pageNo, limit);
+                imports = importRepository.findAllImportsByWarehouseSorted(warehouseId, status, search, pageable);
+            }
+            List<ImportResponse> responses = importMapper.toDto(imports.getContent());
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all imports successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all imports", null);
         }
+    }
+
+    public int getTotalImportsByWarehouse(Integer warehouseId, Status status, String search) {
+        System.out.println("warehouseId: " + warehouseId + " status: " + status + " search: " + search);
+            return importRepository.countImportsByWarehouseIdAndStatus(warehouseId, status, search);
     }
 
     public ResponseObject<?> getImportById(int id) {
