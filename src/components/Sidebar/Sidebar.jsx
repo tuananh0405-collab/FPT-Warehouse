@@ -1,7 +1,7 @@
 import  { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import '../../assets/styles/MainDash.css'
-import Logo from "../../assets/images/warehouse-1073.png";
+import Logo from "../../assets/images/FPT_logo_2010.svg.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
 import { SidebarData } from "../../Data/Data";
 import { motion } from "framer-motion";
@@ -54,7 +54,7 @@ const Sidebar = () => {
         <div className="logo">
           <img src={Logo} alt="logo" />
           <span>
-            FPT<span>-</span>W
+            <span>WHA</span>
           </span>
         </div>
 

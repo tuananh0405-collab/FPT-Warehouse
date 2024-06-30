@@ -13,3 +13,4 @@ export const CUSTOMER_URL = "/customer";
 export const INVENTORY_URL = "/inventory";
 export const IMPORT_URL = "/import";
 export const IMPORT_DETAIL_URL = "/import-details";
+export const INVENTORY_SNAPSHOT_URL = "/inventory-snapshot"

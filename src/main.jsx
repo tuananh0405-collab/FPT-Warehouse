@@ -45,6 +45,7 @@ import OrderImport from "./pages/Admin/OrderImport.jsx";
 import OrderExport from "./pages/Admin/OrderExport.jsx";
 import ExportDetails from "./pages/Admin/ExportDetails.jsx";
 import ImportDetails from "./pages/Admin/ImportDetails.jsx";
+import ReportComponent from "./pages/Admin/ReportComponent.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -68,6 +69,7 @@ const router = createBrowserRouter(
           <Route path="/order/export" element={<OrderExport/>}/>
           <Route path="/order/export/:id" element={<ExportDetails/>}/>
           <Route path="/order/import/:id" element={<ImportDetails/>}/>
+          <Route path="/report" element ={<ReportComponent/>}/>
         </Route>
       </Route>
       {/* STAFF  */}

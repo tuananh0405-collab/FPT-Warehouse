@@ -6,6 +6,7 @@ import {
   UilPackage,
   UilChart,
   UilSignOutAlt,
+  UilFile
 } from "@iconscout/react-unicons";
 
 // Analytics Cards imports
@@ -42,6 +43,11 @@ export const SidebarData = [
     icon: UilPackage,
     heading: "Products",
     link: "/products",
+  },
+  {
+    icon: UilFile, 
+    heading: "Reports", 
+    link: "/report", 
   },
 ];
 
