@@ -35,21 +35,24 @@ public class ExportController {
             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "direction", required = false) String direction,
-            @RequestParam(value = "status", required = false) Status status
+            @RequestParam(value = "status", required = false) Status status,
+            @RequestParam(value = "search", required = false) String search
     ) {
         int limit = 5;
         pageNo = pageNo - 1;
         return ResponseEntity.ok(exportService.getAllExports(
-                warehouseId, pageNo, limit, sortBy, direction, status
+                warehouseId, pageNo, limit, sortBy, direction, status, search
         ));
     }
 
     @GetMapping("/by-warehouse/total/{warehouseId}")
     public ResponseEntity<?> getTotalExportsByWarehouse(
             @PathVariable("warehouseId") Integer warehouseId,
-            @RequestParam(value = "status", required = false) String status
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "search", required = false) String search
     ) {
         Status exportStatus = null;
+        search = search.isBlank() ? null : search;
         if (status != null && !status.isEmpty()) {
             try {
                 exportStatus = Status.valueOf(status.toUpperCase());
@@ -57,7 +60,11 @@ public class ExportController {
                 return ResponseEntity.badRequest().body("Invalid status value");
             }
         }
-        return ResponseEntity.ok(exportService.getTotalExportsByWarehouseIdAndFilterByStatus(warehouseId, exportStatus));
+        return ResponseEntity.ok(exportService.getTotalExportsByWarehouseIdAndFilterByStatus(
+                warehouseId,
+                exportStatus,
+                search
+        ));
     }
 
     @GetMapping("/{id}")
@@ -79,25 +86,6 @@ public class ExportController {
     public ResponseEntity<?> deleteAllExports() {
         return ResponseEntity.ok(exportService.deleteAllExports());
     }
-
-    //localhost:6060/export/search?page=1&sortBy=id&exportDate=2021-09-01&customerName=customer&customerAddress=address&status=COMPLETED
-//    @GetMapping("/exportDetails/search")
-//    public ResponseEntity<?> searchExportDetails(
-//            @RequestParam(value = "page", defaultValue = "1") int page,
-//            @RequestParam("warehouseId") int warehouseId,
-//            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-//            @RequestParam(value = "direction", defaultValue = "asc") String direction,
-//            @RequestParam(value = "exportDate", required = false) String exportDate,
-//            @RequestParam(value = "customerName", required = false) String customerName,
-//            @RequestParam(value = "customerAddress", required = false) String customerAddress,
-//            @RequestParam(value = "status", required = false) String status
-//    ) {
-//        int limit = 20;
-//        page = page - 1;
-//        return ResponseEntity.ok(exportService.searchExportDetails(
-//                page, limit, sortBy,direction,warehouseId, exportDate, customerName, customerAddress, status
-//        ));
-//    }
 
     // For Admin create export request in warehouse A and import request for warehouse B (only product and quantity)
     @PostMapping("/admin/req-transfer")

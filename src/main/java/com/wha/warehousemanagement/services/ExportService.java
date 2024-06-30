@@ -80,7 +80,7 @@ public class ExportService {
     }
 
     public ResponseObject<?> getAllExports(
-            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status
+            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status, String search
     ) {
         try {
             Pageable pageable;
@@ -88,10 +88,10 @@ public class ExportService {
             if (sortBy != null && !sortBy.isEmpty() && direction != null && !direction.isEmpty()) {
                 Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
                 pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
-                exports = exportRepository.findAllByWarehouseWithDefaultSort(warehouseId, status, pageable);
+                exports = exportRepository.findAllByWarehouseWithDefaultSort(warehouseId, status, search, pageable);
             } else {
                 pageable = PageRequest.of(pageNo, limit);
-                exports = exportRepository.findAllByWarehouseSorted(warehouseId, status, pageable);
+                exports = exportRepository.findAllByWarehouseSorted(warehouseId, status, search, pageable);
             }
             List<ExportResponse> responses = exportMapper.toDto(exports.getContent());
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all exports successfully", responses);
@@ -142,15 +142,21 @@ public class ExportService {
             export.setExportDate(new Date());
             exportRepository.save(export);
 
-            Customer customer = customerRepository.findById(request.getCustomerId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.CUSTOMER_NOT_FOUND));
+            if (export.getExportType() == ImportExportType.CUSTOMER) {
+                Customer customer = customerRepository.findById(request.getCustomerId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.CUSTOMER_NOT_FOUND));
 
-            customer.setName(request.getCustomerName());
-            customer.setAddress(request.getCustomerAddress());
-            customer.setPhone(request.getCustomerPhone());
-            customer.setEmail(request.getCustomerEmail());
-            customerRepository.save(customer);
-
+                customer.setName(request.getCustomerName());
+                customer.setAddress(request.getCustomerAddress());
+                customer.setPhone(request.getCustomerPhone());
+                customer.setEmail(request.getCustomerEmail());
+                customerRepository.save(customer);
+            } else if (export.getExportType() == ImportExportType.WAREHOUSE) {
+                Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseIdTo())
+                        .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+                export.setWarehouseTo(warehouseTo);
+            }
+            exportRepository.save(export);
             return new ResponseObject<>(HttpStatus.OK.value(), "Updated export successfully", null);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -396,15 +402,14 @@ public class ExportService {
 //        return new ResponseObject<>(HttpStatus.OK.value(), "Export processed successfully", null);
 //    }
 
-    public int getTotalExportsByWarehouseIdAndFilterByStatus(int warehouseId, Status status) {
-        return exportRepository.countByWarehouseIdAndStatus(warehouseId, status);
+    public int getTotalExportsByWarehouseIdAndFilterByStatus(Integer warehouseId, Status status, String search) {
+        return exportRepository.countByWarehouseIdAndStatus(warehouseId, status, search);
     }
 
     public Page<Export> getAllExportsForAdmin(int pageNo, int limit, String sortBy, String direction, Status status) {
         Pageable pageable = PageRequest.of(pageNo, limit, Sort.by(Sort.Direction.fromString(direction), sortBy));
         return exportRepository.findAllExportsForAdmin(status, pageable);
     }
-
 
 
 }

@@ -11,28 +11,18 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ExportRepository extends JpaRepository<Export, Integer> {
-//    @Query(value = "SELECT e FROM Export e " +
-//            "JOIN e.exportDetails ed " +
-//            "JOIN ed.zone z " +
-//            "JOIN z.warehouse w " +
-//            "WHERE w.id = :warehouseId " +
-//            "AND (:exportDate IS NULL OR e.exportDate = :exportDate) " +
-//            "AND (:customerName IS NULL OR e.customerName LIKE %:customerName%) " +
-//            "AND (:customerAddress IS NULL OR e.customerAddress LIKE %:customerAddress%) " +
-//            "AND (:status IS NULL OR e.status = :status)"
-//    )
-//    Page<Export> searchExportDetails(@Param("warehouseId") int warehouseId,
-//                                     @Param("exportDate") String exportDate,
-//                                     @Param("customerName") String customerName,
-//                                     @Param("customerAddress") String customerAddress,
-//                                     @Param("status") String status,
-//                                     Pageable pageable);
-
     boolean existsByTransferKey(String transferKey);
 
     @Query("SELECT e FROM Export e " +
+            "LEFT JOIN e.customer c " +
+            "LEFT JOIN e.warehouseTo w " +
             "WHERE (e.warehouseFrom.id = :warehouseId) " +
             "AND (:status IS NULL OR e.status = :status) " +
+            "AND (" +
+            ":search IS NULL OR LOWER(e.description) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.address) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(w.address) LIKE LOWER(CONCAT('%', :search, '%')))" +
             "ORDER BY " +
             "CASE " +
             "WHEN e.status = 'REQUESTING' THEN 1 " +
@@ -45,19 +35,41 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
     Page<Export> findAllByWarehouseSorted(
             @Param("warehouseId") Integer warehouseId,
             @Param("status") Status status,
+            @Param("search") String search,
             Pageable pageable
     );
 
-    @Query("SELECT e FROM Export e WHERE e.warehouseFrom.id = :warehouseId " +
-            "AND (:status IS NULL OR e.status = :status)")
+    @Query("SELECT e FROM Export e " +
+            "LEFT JOIN e.customer c " +
+            "LEFT JOIN e.warehouseTo w " +
+            "WHERE e.warehouseFrom.id = :warehouseId " +
+            "AND (:status IS NULL OR e.status = :status) " +
+            "AND (" +
+            ":search IS NULL OR LOWER(e.description) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.address) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(w.address) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Export> findAllByWarehouseWithDefaultSort(
             @Param("warehouseId") Integer warehouseId,
             @Param("status") Status status,
+            @Param("search") String search,
             Pageable pageable);
 
-    @Query("SELECT COUNT(e) FROM Export e WHERE e.warehouseFrom.id = :warehouseId " +
-            "AND (:status IS NULL OR e.status = :status)")
-    int countByWarehouseIdAndStatus(int warehouseId, Status status);
+    @Query("SELECT COUNT(e) FROM Export e " +
+            "LEFT JOIN e.customer c " +
+            "LEFT JOIN e.warehouseTo w " +
+            "WHERE e.warehouseFrom.id = :warehouseId " +
+            "AND (:status IS NULL OR e.status = :status) " +
+            "AND (" +
+            ":search IS NULL OR LOWER(e.description) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.address) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(w.address) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Integer countByWarehouseIdAndStatus(
+            @Param("warehouseId") Integer warehouseId,
+            @Param("status") Status status,
+            @Param("search") String search
+    );
 
     @Query("SELECT e FROM Export e " +
             "WHERE (:status IS NULL OR e.status = :status) " +
@@ -74,7 +86,4 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
             @Param("status") Status status,
             Pageable pageable
     );
-
-
-
 }
