@@ -38,6 +38,10 @@
 }
 
 .custom-modal .ant-modal-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-height: 80vh;
     padding: 16px;
 }
 
@@ -116,4 +120,16 @@ button {
 
 button:hover {
     background-color: #3b82f6; /* Add hover effect for better UX */
+}
+
+/* StaffExportTable */
+.staff-button-flex{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.search-input {
+    width: 30%;
 }

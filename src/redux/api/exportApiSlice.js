@@ -32,6 +32,7 @@ export const exportApiSlice = apiSlice.injectEndpoints({
         sortBy,
         direction,
         status,
+        search
       }) => ({
         url: `${EXPORT_URL}/by-warehouse/${warehouseId}`,
         headers: {
@@ -42,19 +43,21 @@ export const exportApiSlice = apiSlice.injectEndpoints({
           sortBy,
           direction,
           status,
+          search
         },
       }),
       providesTags: ["Export"],
       keepUnusedDataFor: 5,
     }),
     getTotalExportsByWarehouseidAndFilterByStatus: builder.query({
-      query: ({ warehouseId, authToken, status }) => ({
+      query: ({ warehouseId, authToken, status, search }) => ({
         url: `${EXPORT_URL}/by-warehouse/total/${warehouseId}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
         params: {
           status,
+          search
         },
       }),
     }),
@@ -113,14 +116,14 @@ export const exportApiSlice = apiSlice.injectEndpoints({
 });
 
 export const {
+  useGetAllExportsForAdminQuery,
   useGetAllExportsByWarehouseidQuery,
   useGetTotalExportsByWarehouseidAndFilterByStatusQuery,
   useAddExportMutation,
   useGetAllExportsQuery,
   useDeleteExportMutation,
   useGetExportByIdQuery,
-  useUpdateExportByIdMutation,
-  useGetAllExportsForAdminQuery
+  useUpdateExportByIdMutation
 } = exportApiSlice;
 
 

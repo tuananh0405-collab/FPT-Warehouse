@@ -18,6 +18,7 @@ import { Table, Button, Modal, Input, Select, message, Checkbox } from 'antd';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -35,14 +36,25 @@ function StaffExportDetail() {
         authToken,
         exportId: id,
     });
+    const {
+        data: warehouses,
+        isFetching: isWarehouseLoading,
+        error: warehouseError,
+    } = useGetAllWarehousesQuery(authToken);
 
     const exportData = exportsDataRes.data || {};
     const exportProducts = exportProductsData.data || [];
+    const warehousesData = warehouses?.data || [];
+
+    console.log('exportData', exportData);
 
     const [isProductListPopupVisible, setIsProductListPopupVisible] = useState(false);
     const [isConfirmationPopupVisible, setIsConfirmationPopupVisible] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
-    const [editableData, setEditableData] = useState(exportData);
+    const [editableData, setEditableData] = useState({
+        ...exportData,
+        warehouseIdTo: exportData.warehouseTo ? exportData.warehouseTo.id : null
+    });
     const [confirmationAction, setConfirmationAction] = useState(null);
     const [selectedProductIds, setSelectedProductIds] = useState([]);
     const [temporarilyHiddenProductIds, setTemporarilyHiddenProductIds] = useState([]);
@@ -114,21 +126,37 @@ function StaffExportDetail() {
             }
         }
 
+        const updateData = {
+            description: editableData.description,
+            status: editableData.status,
+            exportDate: new Date(editableData.exportDate).toISOString(),
+            warehouseIdTo: editableData.warehouseIdTo,
+            customerId: editableData.customerId,
+            customerName: editableData.customerName,
+            customerAddress: editableData.customerAddress,
+            customerPhone: editableData.customerPhone,
+            customerEmail: editableData.customerEmail,
+        };
+
+        if (exportData.exportType === 'CUSTOMER') {
+            updateData.warehouseIdTo = null;
+        } else if (exportData.exportType === 'WAREHOUSE') {
+            updateData.customerId = null;
+            updateData.customerName = null;
+            updateData.customerAddress = null;
+            updateData.customerPhone = null;
+            updateData.customerEmail = null;
+        }
+
+
+        console.log('updateData', updateData);
+
         // Handle updates export
         try {
             await updateExportById({
                 exportId: id,
                 authToken,
-                data: {
-                    description: editableData.description,
-                    status: editableData.status,
-                    exportDate: new Date(editableData.exportDate).toISOString(),
-                    customerId: exportData.customer.id,
-                    customerName: editableData.customer.name,
-                    customerAddress: editableData.customer.address,
-                    customerPhone: editableData.customer.phone,
-                    customerEmail: editableData.customer.email
-                }
+                data: updateData
             }).unwrap();
             setIsEditMode(false);
             handleCloseConfirmationPopup();
@@ -144,10 +172,6 @@ function StaffExportDetail() {
             quantity: detail.quantity,
             warehouseId: exportData.warehouseFrom.id
         }));
-
-        console.log('updatedExportDetails:', updatedExportDetails);
-
-        console.log('localUpdatedQuantities:', localUpdatedQuantities);
 
         if (updatedExportDetails.length > 0) {
             try {
@@ -166,10 +190,10 @@ function StaffExportDetail() {
     };
 
     const handleChange = (field, value) => {
-        setEditableData({
-            ...editableData,
-            [field]: value,
-        });
+        setEditableData((prevData) => ({
+            ...prevData,
+            [field]: value
+        }));
     };
 
     const handleDelete = () => {
@@ -355,15 +379,38 @@ function StaffExportDetail() {
                             <td className="export-attribute-title">Export Type:</td>
                             <td><p>{exportData.exportType}</p></td>
                         </tr>
+                        {exportData.exportType === 'WAREHOUSE' && <tr>
+                            <td className="export-attribute-title">Warehouse: </td>
+                            <td><p>{exportData.warehouseTo.name}</p></td>
+                        </tr>}
                         <tr>
                             <td className="export-attribute-title">To:</td>
                             <td>
-                                {isEditMode && exportData.exportType === 'CUSTOMER' ? (
-                                    <Input
-                                        style={{ width: '100%' }}
-                                        value={exportData.customer.address}
-                                        onChange={(e) => handleChange('customerAddress', e.target.value)}
-                                    />
+                                {isEditMode ? (
+                                    <div>
+                                        {exportData.exportType === 'CUSTOMER' ? (
+                                            <Input
+                                                style={{ width: '100%' }}
+                                                value={exportData.customer.address}
+                                                onChange={(e) => handleChange('customerAddress', e.target.value)}
+                                            />
+                                        ) : (
+                                            <Select
+                                                style={{ width: '100%' }}
+                                                showSearch
+                                                placeholder="Select a warehouse"
+                                                value={editableData.warehouseIdTo}
+                                                onChange={(value) => handleChange('warehouseIdTo', value)}
+                                                loading={isWarehouseLoading}
+                                            >
+                                                {warehousesData.map((warehouse) => (
+                                                    <Option key={warehouse.id} value={warehouse.id}>
+                                                        {warehouse.name}
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        )}
+                                    </div>
                                 ) : (
                                     <p>
                                         {exportData.exportType === 'CUSTOMER' ?
@@ -482,6 +529,7 @@ function StaffExportDetail() {
                 </div>
             </div>
             <Modal
+                transitionName=""
                 title="Export Details"
                 width={800}
                 className="custom-modal"
@@ -515,6 +563,7 @@ function StaffExportDetail() {
                 />
             </Modal>
             <Modal
+                transitionName=""
                 title={modalConfirmTitle}
                 width={400}
                 className="custom-modal"

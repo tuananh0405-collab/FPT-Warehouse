@@ -8,7 +8,7 @@ import {
 import { FormatTime } from '../../utils/FormatTime';
 import { useNavigate } from 'react-router-dom';
 
-function ExportTable() {
+function StaffExportTable({ searchValue }) {
     const userInfo = useSelector((state) => state.auth.userInfo);
     const authToken = userInfo?.data?.token;
     const warehouseId = userInfo?.data?.warehouseId;
@@ -17,6 +17,7 @@ function ExportTable() {
     const [sortField, setSortField] = useState('');
     const [sortOrder, setSortOrder] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
+    const [search, setSearch] = useState(searchValue);
 
     const { data: exportsData = {}, isLoading: exportsLoading, error: exportsError } = useGetAllExportsByWarehouseidQuery({
         warehouseId,
@@ -25,10 +26,19 @@ function ExportTable() {
         sortBy: sortField,
         direction: sortOrder,
         status: filterStatus,
+        search: search,
     });
-    const totalExportItemData = useGetTotalExportsByWarehouseidAndFilterByStatusQuery({ warehouseId, authToken, status: filterStatus });
+    const totalExportItemData = useGetTotalExportsByWarehouseidAndFilterByStatusQuery({
+        warehouseId, authToken,
+        status: filterStatus,
+        search: search
+    });
     const exports = exportsData.data || [];
     const totalExportItem = totalExportItemData.data || 0;
+
+    useEffect(() => {
+        setSearch(searchValue);
+    }, [searchValue]);
 
     const navigate = useNavigate();
 
@@ -128,4 +138,4 @@ function ExportTable() {
     );
 }
 
-export default ExportTable;
+export default StaffExportTable;
