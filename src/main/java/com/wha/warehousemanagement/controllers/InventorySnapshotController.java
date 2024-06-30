@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inventory/snapshot")
+@RequestMapping("/inventory-snapshot")
 @RequiredArgsConstructor
 public class InventorySnapshotController {
     private final InventorySnapshotService inventorySnapshotService;
