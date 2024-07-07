@@ -45,7 +45,7 @@ public class Export {
     private Warehouse warehouseTo;
 
     @ManyToOne
-    @JoinColumn(name = "customer", nullable = true)
+    @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
 
     @OneToMany(mappedBy = "export", fetch = FetchType.LAZY)

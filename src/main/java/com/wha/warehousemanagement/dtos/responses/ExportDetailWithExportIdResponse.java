@@ -19,4 +19,5 @@ public class ExportDetailWithExportIdResponse {
     private ProductResponse product;
     private Integer quantity;
     private Date expiredAt;
+    private ZoneResponse zone;
 }

@@ -20,4 +20,5 @@ public class ProductsInExportResponse {
     ProductResponse product;
     int quantity;
     String expiredAt;
+    ZoneResponse zone;
 }

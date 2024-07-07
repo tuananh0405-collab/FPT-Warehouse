@@ -17,7 +17,6 @@ public class InventoryResponse {
     private Integer id;
     private ProductResponse product;
     private Integer quantity;
-    private Integer heldQuantity;
     private Date expiredAt;
     private ZoneResponse zone;
 }

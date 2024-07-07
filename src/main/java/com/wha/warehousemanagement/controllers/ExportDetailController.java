@@ -67,4 +67,11 @@ public class ExportDetailController {
     public ResponseEntity<?> getProductsInExportByExportId(@PathVariable("exportId") Integer exportId) {
         return ResponseEntity.ok(exportDetailService.getProductsInExportByExportId(exportId));
     }
+
+    @PostMapping("/update-and-add")
+    public ResponseEntity<?> updateAndAddExportDetails(
+            @RequestBody List<ExportDetailRequest> requests,
+            @RequestParam Integer exportId) {
+        return ResponseEntity.ok(exportDetailService.updateAndAddExportDetails(requests, exportId));
+    }
 }

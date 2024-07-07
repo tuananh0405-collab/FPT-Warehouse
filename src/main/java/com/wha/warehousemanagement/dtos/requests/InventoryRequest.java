@@ -16,7 +16,6 @@ import java.util.Date;
 public class InventoryRequest {
     private Integer productId;
     private Integer quantity;
-    private Integer heldQuantity;
     private Date expiredAt;
     private Integer zoneId;
 }

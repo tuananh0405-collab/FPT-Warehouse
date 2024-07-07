@@ -29,9 +29,6 @@ public class Inventory {
     @Column(name = "inventory_quantity")
     private Integer quantity;
 
-    @Column(name = "inventory_held_quantity")
-    private Integer heldQuantity;
-
     @Column(name = "inventory_expired_at")
     private Date expiredAt;
 }

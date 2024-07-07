@@ -99,11 +99,8 @@ public class InventoryService {
             if (request.getProductId() != null) {
                 inventory.setProduct(productRepository.findById(request.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
             }
-            if (request.getHeldQuantity() != null) {
-                inventory.setHeldQuantity(request.getHeldQuantity());
-            }
-            if (request.getQuantity() != null && request.getHeldQuantity() != null && request.getQuantity() >= request.getHeldQuantity()) {
-                inventory.setQuantity(request.getQuantity() - request.getHeldQuantity());
+            if (request.getQuantity() != null) {
+                inventory.setQuantity(request.getQuantity());
             }
             if (request.getExpiredAt() != null) {
                 inventory.setExpiredAt(request.getExpiredAt());
@@ -127,11 +124,8 @@ public class InventoryService {
             if (request.getProductId() != null) {
                 inventory.setProduct(productRepository.findById(request.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
             }
-            if (request.getHeldQuantity() != null) {
-                inventory.setHeldQuantity(request.getHeldQuantity());
-            }
-            if (request.getQuantity() != null && request.getHeldQuantity() != null && request.getQuantity() >= request.getHeldQuantity()) {
-                inventory.setQuantity(request.getQuantity() - request.getHeldQuantity());
+            if (request.getQuantity() != null) {
+                inventory.setQuantity(request.getQuantity());
             }
             if (request.getExpiredAt() != null) {
                 inventory.setExpiredAt(request.getExpiredAt());
@@ -282,7 +276,6 @@ public class InventoryService {
                             .productDescription(product.getDescription())
                             .productCategory(category.getName())
                             .productQuantity(inventory.getQuantity())
-                            .productHeldQuantity(heldQuantity)
                             .productExpiryDate(inventory.getExpiredAt())
                             .productZone(zone.getName())
                             .build();
