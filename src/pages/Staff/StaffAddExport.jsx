@@ -242,18 +242,19 @@ const StaffAddExport = () => {
       const selectedProductDetails = selectedProducts.map((product) => {
         const item = inventoriesData.find((inv) => inv.id === product.id);
         return {
-          productId: product.id,
+          productId: item.product.id,
           exportId: exportId,
           quantity: product.quantity,
           expiredAt: item.expiredAt,
           zoneId: item.zone.id,
         };
       });
-
-      await createExportDetails({
+      console.log("Selected Product Details:", selectedProductDetails); // Debugging line
+      const response = await createExportDetails({
         data: selectedProductDetails,
         authToken,
       }).unwrap();
+      console.log("Export Details Creation Response:", response); // Debugging line
       message.success("Export details created successfully!");
       setSelectedProducts([]);
     } catch (error) {

@@ -28,7 +28,6 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
         url: `${EXPORT_DETAIL_URL}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
-          "Content-Type": "application/json",
         },
         method: "POST",
         body: data,
@@ -51,7 +50,7 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: ids,
       }),
@@ -63,7 +62,19 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
         method: "PUT",
         headers: {
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+        },
+        body: data,
+      }),
+      invalidatesTags: ["ExportDetail"],
+    }),
+    updateAndAddExportDetails: builder.mutation({
+      query: ({ data, exportId, authToken }) => ({
+        url: `${EXPORT_DETAIL_URL}/update-and-add?exportId=${exportId}`,
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
         },
         body: data,
       }),
@@ -89,6 +100,7 @@ export const {
   useGetAllExportDetailsByExportIdQuery,
   useDeleteExportDetailsMutation,
   useUpdateExportDetailsMutation,
+  useUpdateAndAddExportDetailsMutation,
   useCheckAvailableQuantityMutation,
-  useGetExportDetailsByExportIdQuery
+  useGetExportDetailsByExportIdQuery,
 } = exportDetailApiSlice;

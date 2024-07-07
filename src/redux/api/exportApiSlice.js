@@ -63,7 +63,7 @@ export const exportApiSlice = apiSlice.injectEndpoints({
     }),
     addExport: builder.mutation({
       query: ({ data, authToken }) => ({
-        url: `${EXPORT_URL}/add`,
+        url: `${EXPORT_URL}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
