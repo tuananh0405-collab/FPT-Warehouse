@@ -18,4 +18,5 @@ public class ZoneResponse {
     private String description;
     private ZoneStatus zoneStatus;
     private WarehouseResponse warehouse;
+    private Integer warehouseId;
 }

@@ -17,6 +17,8 @@ public class InventorySnapshotResponse {
     private Integer id;
     private ProductResponse product;
     private ZoneResponse zone;
+    private String zoneName;
     private Date snapshotDate;
     private Integer quantity;
+    private String warehouseName;
 }
