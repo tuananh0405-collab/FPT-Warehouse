@@ -16,6 +16,17 @@ export const importApiSlice = apiSlice.injectEndpoints({
       providesTags: ["Import"],
       keepUnusedDataFor: 5,
     }),
+    getAllImports2: builder.query({
+      query: ({ authToken}) => ({
+        url: `${IMPORT_URL}/import`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        
+      }),
+      providesTags: ["Import"],
+      keepUnusedDataFor: 5,
+    }),
     getImportById: builder.query({
       query: ({ importId, authToken }) => ({
         url: `${IMPORT_URL}/${importId}`,
@@ -78,6 +89,7 @@ export const importApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetAllImportsQuery,
+  useGetAllImports2Query,
   useGetImportByIdQuery,
   useAddImportMutation,
   useGetAllImportsByWarehouseIdQuery,

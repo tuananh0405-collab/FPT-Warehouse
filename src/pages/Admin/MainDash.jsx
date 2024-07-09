@@ -1,110 +1,43 @@
-import  { useState } from "react";
+import { useState } from "react";
 import "../../assets/styles/MainDash.css";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { UilTimes, UilUsdSquare, UilMoneyWithdrawal, UilClipboardAlt } from "@iconscout/react-unicons";
+import {
+  UilTimes,
+  UilUsdSquare,
+  UilMoneyWithdrawal,
+  UilClipboardAlt,
+} from "@iconscout/react-unicons";
 import Chart from "react-apexcharts";
+import { useSelector } from "react-redux";
+import { useGetAllExportsQuery } from "../../redux/api/exportApiSlice";
+import DonutChart from "../../components/CustomerReview/DonutChart";
+import {
+  useGetAllImports2Query,
+  useGetAllImportsQuery,
+} from "../../redux/api/importApiSlice";
+import BarChart from "../../components/CustomerReview/BarChart";
+import LineChart from "../../components/CustomerReview/LineChart";
 
 // Card data
-const cardsData = [
-  {
-    title: "Warehouses",
-    color: {
-      backGround: "linear-gradient(180deg, #bb67ff 0%, #c484f3 100%)",
-      boxShadow: "0px 10px 20px 0px #e0c6f5",
-    },
-    barValue: 70,
-    value: "25,970",
-    png: UilUsdSquare,
-    series: [
-      {
-        name: "Warehouses",
-        data: [31, 40, 28, 51, 42, 109, 100],
-      },
-    ],
+const cardsData = {
+  title: "Warehouses",
+  color: {
+    // backGround: "linear-gradient(180deg, #bb67ff 0%, #c484f3 100%)",
+    backGround: "linear-gradient(180deg, #77E4C8 0%, #36C2CE 100%)",
+    boxShadow: "0px 5px 5px 0px #088395",
   },
-  {
-    title: "Products",
-    color: {
-      backGround: "linear-gradient(180deg, #FF919D 0%, #FC929D 100%)",
-      boxShadow: "0px 10px 20px 0px #FDC0C7",
+  series: [
+    {
+      name: "Warehouses",
+      data: [31, 40, 28, 51, 42, 109, 100],
     },
-    barValue: 80,
-    value: "14,270",
-    png: UilMoneyWithdrawal,
-    series: [
-      {
-        name: "Products",
-        data: [10, 100, 50, 70, 80, 30, 40],
-      },
-    ],
-  },
-  {
-    title: "Staffs",
-    color: {
-      backGround: "linear-gradient(rgb(248, 212, 154) -146.42%, rgb(255 202 113) -46.42%)",
-      boxShadow: "0px 10px 20px 0px #F9D59B",
-    },
-    barValue: 60,
-    value: "4,270",
-    png: UilClipboardAlt,
-    series: [
-      {
-        name: "Staffs",
-        data: [10, 25, 15, 30, 12, 15, 20],
-      },
-    ],
-  },
-];
-
-// Parent Card component
-const Card = (props) => {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <LayoutGroup>
-      <AnimatePresence>
-        {expanded ? (
-          <ExpandedCard key="expanded" param={props} setExpanded={() => setExpanded(false)} />
-        ) : (
-          <CompactCard key="compact" param={props} setExpanded={() => setExpanded(true)} />
-        )}
-      </AnimatePresence>
-    </LayoutGroup>
-  );
+  ],
 };
 
-// Compact Card
-function CompactCard({ param, setExpanded }) {
-  const Png = param.png;
-  return (
-    <motion.div
-      className="CompactCard"
-      style={{
-        background: param.color.backGround,
-        boxShadow: param.color.boxShadow,
-      }}
-      layout
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={setExpanded}
-    >
-      <div className="radialBar">
-        <CircularProgressbar value={param.barValue} text={`${param.barValue}%`} />
-        <span>{param.title}</span>
-      </div>
-      <div className="detail">
-        <Png />
-        <span>${param.value}</span>
-        <span>Last 24 hours</span>
-      </div>
-    </motion.div>
-  );
-}
-
 // Expanded Card
-function ExpandedCard({ param, setExpanded }) {
+function ExpandedCard({ param }) {
   const data = {
     options: {
       chart: {
@@ -165,26 +98,47 @@ function ExpandedCard({ param, setExpanded }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div style={{ alignSelf: "flex-end", cursor: "pointer", color: "white" }}>
-        <UilTimes onClick={setExpanded} />
-      </div>
       <span>{param.title}</span>
       <div className="chartContainer">
         <Chart options={data.options} series={param.series} type="area" />
       </div>
-      <span>Last 24 hours</span>
     </motion.div>
   );
 }
 
 const MainDash = () => {
+  const userInfo = useSelector((state) => state.auth);
+  const authToken = userInfo.userInfo.data.token;
+  const {
+    data: allExports,
+    error: isError,
+    isLoading: isLoading,
+  } = useGetAllExportsQuery(authToken);
+  const {
+    data: allImports,
+    error: isError2,
+    isLoading: isLoading2,
+  } = useGetAllImports2Query({ authToken });
+  console.log(allImports);
   return (
     <div className="MainDash">
-      <h1>Dashboard FOR ADMIN</h1>
-      <div className="cardsContainer">
-        {cardsData.map((card, index) => (
-          <Card key={index} {...card} />
-        ))}
+      <div class="container mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 ">
+          <div class="flex  text-6xl  rounded-xl">
+            <LineChart />
+          </div>
+          <div class="flex justify-center text-6xl  rounded-xl">
+            <BarChart />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 ">
+          <div class="flex justify-center text-6xl  rounded-xl">
+            <DonutChart data={allExports} title={"Export"} />
+          </div>
+          <div class="flex justify-center text-6xl  rounded-xl">
+            <DonutChart data={allImports} title={"Import"} />
+          </div>
+        </div>
       </div>
     </div>
   );

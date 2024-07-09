@@ -86,8 +86,8 @@ const ProductComponent = () => {
   }
 
   return (
-    <div className="MainDash">
-      <h1>Products</h1>
+    <div className="">
+      <h1 class="mb-2 text-2xl font-semibold text-dark">Products</h1>
       <Button
         type="primary"
         style={{ background: "#40A578" }}

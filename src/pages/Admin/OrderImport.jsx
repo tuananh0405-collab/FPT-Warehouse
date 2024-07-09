@@ -135,7 +135,7 @@ const OrderImport = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Admin Import</h2>
+      <h2 class="mb-2 text-2xl font-semibold text-dark">Admin Import</h2>
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
         <Input
           placeholder='Search by Status'

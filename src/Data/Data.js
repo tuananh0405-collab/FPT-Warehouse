@@ -6,7 +6,7 @@ import {
   UilPackage,
   UilChart,
   UilSignOutAlt,
-  UilFile
+  UilFile,
 } from "@iconscout/react-unicons";
 
 // Analytics Cards imports
@@ -45,9 +45,9 @@ export const SidebarData = [
     link: "/products",
   },
   {
-    icon: UilFile, 
-    heading: "Reports", 
-    link: "/report", 
+    icon: UilFile,
+    heading: "Reports",
+    link: "/report",
   },
 ];
 
@@ -67,7 +67,6 @@ export const StaffSidebarData = [
     heading: "Orders",
     link: "/staff/orders",
   },
-
 ];
 // // Analytics Cards Data
 export const cardsData = [
@@ -126,20 +125,32 @@ export const cardsData = [
 export const UpdatesData = [
   {
     img: img1,
-    name: "Andrew Thomas",
-    noti: "has ordered Apple smart watch 2500mh battery.",
-    time: "25 seconds ago",
+    name: "Ngu Duc Tai",
+    noti: "all in Spain",
+    time: "Leader",
   },
   {
-    img: img2,
-    name: "James Bond",
-    noti: "has received Samsung gadget for charging battery.",
-    time: "30 minutes ago",
+    img: img1,
+    name: "Vu Tuan Anh",
+    noti: "England is King",
+    time: "Frontend developer",
   },
   {
-    img: img3,
-    name: "Iron Man",
-    noti: "has ordered Apple smart watch, samsung Gear 2500mh battery.",
-    time: "2 hours ago",
+    img: img1,
+    name: "Phung Duc Hieu",
+    noti: "master all programming languages",
+    time: "Backend developer",
+  },
+  {
+    img: img1,
+    name: "Truong Manh Thang",
+    noti: "is rich",
+    time: "Backend developer",
+  },
+  {
+    img: img1,
+    name: "Tran Duy Anh",
+    noti: "the artist of this Era",
+    time: "Business analysis",
   },
 ];

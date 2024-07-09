@@ -86,7 +86,7 @@ const DataCustomers = () => {
   return (
     <div className="">
       <Breadcrumbs />
-      <h1>Customers</h1>
+      <h1 class="mb-2 text-2xl font-semibold text-dark">Customers</h1>
       <Button
         type="primary"
         style={{ background: "#40A578" }}
