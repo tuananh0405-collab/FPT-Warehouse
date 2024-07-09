@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface InventorySnapshotRepository extends JpaRepository<InventorySnapshot, Integer> {
     List<InventorySnapshot> findBySnapshotDateBetween(Date startDate, Date endDate);
+    List<InventorySnapshot> findBySnapshotDateBetweenAndZoneIdIn(Date startDate, Date endDate, List<Integer> zoneIds);
 }
+
