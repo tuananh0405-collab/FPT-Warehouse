@@ -63,7 +63,7 @@ const ExportDetails = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Export Details</h2>
+      <h2 class="mb-2 text-2xl font-semibold text-dark">Export Details</h2>
       <p><strong>Order ID:</strong> {exportData.id}</p>
       <p><strong>Description:</strong> {exportData.description}</p>
       <p><strong>Status:</strong> {exportData.status}</p>

@@ -73,7 +73,7 @@ const WarehouseZone = () => {
     return (
         <div>
             <Breadcrumbs />
-            <h1>Warehouse Zones</h1>
+            <h1 class="mb-2 text-2xl font-semibold text-dark">Warehouse Zones</h1>
             <Button type="primary" style={{ background: "#40A578" }} onClick={() => setIsAddModalVisible(true)}>
                 Add new zone
             </Button>

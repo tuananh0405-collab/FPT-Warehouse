@@ -61,7 +61,7 @@ const ImportDetails = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Import Details</h2>
+      <h2 class="mb-2 text-2xl font-semibold text-dark">Import Details</h2>
       <p><strong>Description:</strong> {importData.description}</p>
       <p><strong>Status:</strong> {importData.status}</p>
       <p><strong>Received Date:</strong> {new Date(importData.receivedDate).toLocaleString()}</p>

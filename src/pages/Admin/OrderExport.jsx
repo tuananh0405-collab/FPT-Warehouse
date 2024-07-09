@@ -132,7 +132,7 @@ const OrderExport = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Admin Export</h2>
+      <h2 class="mb-2 text-2xl font-semibold text-dark">Admin Export</h2>
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
         <Input
           placeholder='Search by Status'

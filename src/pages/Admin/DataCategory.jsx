@@ -86,7 +86,7 @@ const DataCategory = () => {
   return (
     <div className="">
       <Breadcrumbs />
-      <h1>Categories</h1>
+      <h1 class="mb-2 text-2xl font-semibold text-dark">Categories</h1>
         <Button
           type="primary"
           style={{ background: "#40A578" }}

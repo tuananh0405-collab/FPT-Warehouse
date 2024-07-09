@@ -84,7 +84,7 @@ const DataWarehouse = () => {
   return (
     <div className="">
        <Breadcrumbs />
-      <h1>Warehouses</h1>
+      <h1 class="mb-2 text-2xl font-semibold text-dark">Warehouses</h1>
       <Button
         type="primary"
         style={{ background: "#40A578" }}

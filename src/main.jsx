@@ -39,7 +39,7 @@ import StaffDashboard from "./pages/Staff/StaffDashboard.jsx";
 import MainDash from "./pages/Admin/MainDash.jsx";
 import OrdersComponent from "./pages/Admin/OrdersComponent.jsx";
 import DataComponent from "./pages/Admin/DataComponent.jsx";
-import StaffsComponent from "./pages/Staff/StaffsComponent.jsx";
+import StaffsComponent from "./pages/Admin/StaffsComponent.jsx";
 import ProductComponent from "./pages/Admin/ProductsComponent.jsx";
 import OrderImport from "./pages/Admin/OrderImport.jsx";
 import OrderExport from "./pages/Admin/OrderExport.jsx";
@@ -55,8 +55,8 @@ const router = createBrowserRouter(
       {/* ADMIN  */}
       <Route path="/" element={<App />}>
         <Route path="" element={<AdminRoute />}>
-          <Route path="/dashboard" element={<MainDash />} />
-          <Route path="/orders" element={<OrdersComponent />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/data" element={<DataComponent />} />
           <Route path="/staffs" element={<StaffsComponent />} />
           <Route path="/products" element={<ProductComponent />} />

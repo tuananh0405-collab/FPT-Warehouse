@@ -5,15 +5,15 @@ import '../../assets/styles/MainDash.css'
 
 const RightSide = () => {
   return (
-    <div className="RightSide">
+    <div className="RightSide mt-2">
       <div>
-        <h3>Updates</h3>
+        <h3 class="mb-2 text-md font-semibold text-dark">Team members</h3>
         <Updates />
       </div>
-      <div>
-        <h3>Customer Review</h3>
+      {/* <div>
+        <h3 class="mb-2 text-md font-semibold text-dark">Reports</h3>
         <CustomerReview />
-      </div>
+      </div> */}
     </div>
   );
 };
