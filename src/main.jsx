@@ -32,6 +32,7 @@ import StaffExpport from "./pages/Staff/StaffExport.jsx";
 import StaffImport from "./pages/Staff/StaffImport.jsx";
 import StaffNewExport from "./pages/Staff/StaffAddExport.jsx";
 import StaffExportDetail from "./pages/Staff/StaffExportDetail.jsx";
+import StaffAddImport from "./pages/Staff/StaffAddImport.jsx";
 
 import DataCustomers from "./pages/Admin/DataCustomers.jsx";
 import StaffZoneInventory from "./pages/Staff/StaffZoneInventory.jsx";
@@ -66,11 +67,11 @@ const router = createBrowserRouter(
           <Route path="/data/zone/warehouseId/:id" element={<WarehouseZone />} />
           <Route path="/data/category" element={<DataCategory />} />
           <Route path="/data/customer" element={<DataCustomers />} />
-          <Route path="/order/import" element={<OrderImport/>}/>
-          <Route path="/order/export" element={<OrderExport/>}/>
-          <Route path="/order/export/:id" element={<ExportDetails/>}/>
-          <Route path="/order/import/:id" element={<ImportDetails/>}/>
-          <Route path="/report" element ={<ReportComponent/>}/>
+          <Route path="/order/import" element={<OrderImport />} />
+          <Route path="/order/export" element={<OrderExport />} />
+          <Route path="/order/export/:id" element={<ExportDetails />} />
+          <Route path="/order/import/:id" element={<ImportDetails />} />
+          <Route path="/report" element={<ReportComponent />} />
         </Route>
       </Route>
       {/* STAFF  */}
@@ -86,6 +87,7 @@ const router = createBrowserRouter(
           <Route path="/staff/order/export" element={<StaffExpport />} />
           <Route path="/staff/order/import" element={<StaffImport />} />
           <Route path="/staff/export/new" element={<StaffNewExport />} />
+          <Route path="/staff/import/new" element={<StaffAddImport />} />
           <Route path="/staff/export/detail/:id" element={<StaffExportDetail />} />
           <Route path="/staff/transfer" element={<StaffTransfer />} />
         </Route>

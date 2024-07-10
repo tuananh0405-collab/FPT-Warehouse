@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Table } from 'antd';
+import { Button, Table } from 'antd';
 import {
     useGetAllImportsByWarehouseIdQuery,
     useGetTotalImportsByWarehouseIdQuery
@@ -36,7 +36,7 @@ function StaffImportTable({ searchValue }) {
     const imports = importsData.data || [];
     const totalImportItem = totalImportItemData.data || 0;
 
-    console.log(totalImportItem)
+    console.log(imports)
 
     useEffect(() => {
         setSearch(searchValue);
@@ -118,9 +118,9 @@ function StaffImportTable({ searchValue }) {
             title: 'Action',
             key: 'action',
             render: (_, record) => (
-                <span>
+                <Button>
                     <a onClick={() => navigate(`/staff/import/detail/${record.id}`)}>View</a>
-                </span>
+                </Button>
             ),
         },
     ];

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from 'react';
+import Breadcrumbs from '../../utils/Breadcumbs';
+import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   useGetExportByIdQuery,
-  useUpdateExportByIdMutation,
+  useUpdateExportByIdMutation
 } from "../../redux/api/exportApiSlice";
 import {
   useGetAllExportDetailsByExportIdQuery,
@@ -11,79 +12,69 @@ import {
   useCheckAvailableQuantityMutation,
   useUpdateExportDetailsMutation,
   useCreateExportDetailsMutation,
-  useUpdateAndAddExportDetailsMutation, // Import hook mới
+  useUpdateAndAddExportDetailsMutation
 } from "../../redux/api/exportDetailApiSlice";
 import { useGetAllInventoriesQuery } from "../../redux/api/inventoryApiSlice";
-import Breadcrumbs from "../../utils/Breadcumbs";
-import "../../components/Orders/MainDash.css";
-import {
-  Table,
-  Button,
-  Modal,
-  Input,
-  message,
-  Checkbox,
-  Pagination,
-  Radio,
-} from "antd";
-import EditNoteIcon from "@mui/icons-material/EditNote";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import ExportStatus from "../../components/Orders/ExportStatus";
+import '../../components/Orders/MainDash.css';
+import { Table, Button, Modal, Input, Select, message, Checkbox, Pagination, Radio } from 'antd';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
 
 const { TextArea } = Input;
+const { Option } = Select;
 
 function StaffExportDetail() {
   const { id } = useParams();
   const userInfo = useSelector((state) => state.auth.userInfo);
   const authToken = userInfo?.data?.token;
 
-  const {
-    data: exportsDataRes = {},
-    isLoading: exportsLoading,
-    error: exportsError,
-  } = useGetExportByIdQuery({
+  const { data: exportsDataRes = {}, isLoading: exportsLoading, error: exportsError } = useGetExportByIdQuery({
     authToken,
     exportId: id,
   });
-
-  const {
-    data: exportProductsData = {},
-    isLoading: exportProductsLoading,
-    error: exportProductsError,
-  } = useGetAllExportDetailsByExportIdQuery({
+  const { data: exportProductsData = {}, isLoading: exportProductsLoading, error: exportProductsError } = useGetAllExportDetailsByExportIdQuery({
     authToken,
     exportId: id,
   });
-
   const {
     data: inventoriesData,
     isFetching: isInventoryLoading,
     error: inventoryError,
   } = useGetAllInventoriesQuery(authToken);
 
+  const {
+    data: warehouses,
+    isFetching: isWarehouseLoading,
+    error: warehouseError,
+  } = useGetAllWarehousesQuery(authToken);
+
   const exportData = exportsDataRes.data || {};
   const exportProducts = exportProductsData.data || [];
   const inventories = inventoriesData?.data || [];
+  const warehousesData = warehouses?.data || [];
 
-  const [isProductListPopupVisible, setIsProductListPopupVisible] =
-    useState(false);
-  const [isConfirmationPopupVisible, setIsConfirmationPopupVisible] =
-    useState(false);
+  console.log('exportData:', exportData);
+
+  const [isProductListPopupVisible, setIsProductListPopupVisible] = useState(false);
+  const [isConfirmationPopupVisible, setIsConfirmationPopupVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editableData, setEditableData] = useState({});
   const [confirmationAction, setConfirmationAction] = useState(null);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
-  const [temporarilyHiddenProductIds, setTemporarilyHiddenProductIds] =
-    useState([]);
+  const [temporarilyHiddenProductIds, setTemporarilyHiddenProductIds] = useState([]);
+  const [editableRow, setEditableRow] = useState(null);
+  const [editableRowData, setEditableRowData] = useState({});
   const [localUpdatedQuantities, setLocalUpdatedQuantities] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  const [updateExportById, { isLoading: isUpdating }] =
-    useUpdateExportByIdMutation();
-  const [deleteExportDetails, { isLoading: isDeleting }] =
-    useDeleteExportDetailsMutation();
+  const [updateExportById, { isLoading: isUpdating }] = useUpdateExportByIdMutation();
+  const [deleteExportDetails, { isLoading: isDeleting }] = useDeleteExportDetailsMutation();
   const [updateExportDetails] = useUpdateExportDetailsMutation();
   const [addExportDetails] = useCreateExportDetailsMutation();
-  const [updateAndAddExportDetails] = useUpdateAndAddExportDetailsMutation(); // Sử dụng mutation mới
+  const [updateAndAddExportDetails] = useUpdateAndAddExportDetailsMutation();
   const [checkAvailableQuantity] = useCheckAvailableQuantityMutation();
 
   const [isProductModalVisible, setIsProductModalVisible] = useState(false);
@@ -92,7 +83,16 @@ function StaffExportDetail() {
   const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
-    setEditableData(exportData);
+    if (exportData) {
+      setEditableData({
+        ...exportData,
+        customerName: exportData.customer?.name || '',
+        customerEmail: exportData.customer?.email || '',
+        customerPhone: exportData.customer?.phone || '',
+        customerAddress: exportData.customer?.address || '',
+        warehouseIdTo: exportData.warehouseTo ? exportData.warehouseTo.id : null,
+      });
+    }
   }, [exportData]);
 
   useEffect(() => {
@@ -111,53 +111,101 @@ function StaffExportDetail() {
     setIsConfirmationPopupVisible(true);
   };
 
-  const handleCloseConfirmationPopup = () =>
-    setIsConfirmationPopupVisible(false);
+  const handleCloseConfirmationPopup = () => setIsConfirmationPopupVisible(false);
 
   const handleOpenEditMode = () => {
     setIsEditMode(true);
-    setEditableData(exportData);
+    setEditableData({
+      ...exportData,
+      customerName: exportData.customer?.name || '',
+      customerEmail: exportData.customer?.email || '',
+      customerPhone: exportData.customer?.phone || '',
+      customerAddress: exportData.customer?.address || '',
+      warehouseIdTo: exportData.warehouseTo ? exportData.warehouseTo.id : null,
+    });
   };
 
   const handleCancelEdit = () => {
-    setConfirmationAction({ type: "cancelEditMode" });
+    setConfirmationAction({ type: 'cancelEditMode' });
     setIsConfirmationPopupVisible(true);
   };
 
-  const calculateCurrentInventory = (item) => {
-    const existingExportDetail = exportProducts.find(
-      (product) =>
-        product.product.id === item.product.id &&
-        product.zone.id === item.zone.id &&
-        new Date(product.expiredAt).getTime() ===
-          new Date(item.expiredAt).getTime()
-    );
-    return (
-      item.quantity + (existingExportDetail ? existingExportDetail.quantity : 0)
-    );
+  const handleSaveRowEdit = async (record) => {
+    const { product, quantity } = editableRowData;
+    const checkResponse = await checkAvailableQuantity({
+      authToken,
+      data: {
+        productId: product.id,
+        quantity,
+        warehouseId: exportData.warehouseFrom.id
+      }
+    }).unwrap();
+    if (checkResponse.status === 200 && checkResponse.message === 'Enough quantity') {
+      setLocalUpdatedQuantities({
+        ...localUpdatedQuantities,
+        [record.id]: { exportDetailId: record.id, quantity },
+      });
+      setEditableRow(null);
+      setEditableRowData({});
+      message.success('Quantity update is valid');
+    } else {
+      message.error('Not enough quantity in this warehouse');
+    }
   };
 
   const handleSaveEdit = async () => {
     if (temporarilyHiddenProductIds.length > 0) {
       try {
-        await deleteExportDetails({
-          authToken,
-          ids: temporarilyHiddenProductIds,
-        }).unwrap();
+        await deleteExportDetails({ authToken, ids: temporarilyHiddenProductIds }).unwrap();
         setTemporarilyHiddenProductIds([]);
       } catch (error) {
-        message.error("Failed to delete selected products");
-        console.error("Delete export details error:", error);
+        message.error('Failed to delete selected products');
+        console.error('Delete export details error:', error);
       }
     }
 
-    const updatedExportDetails = Object.values(localUpdatedQuantities).map(
-      (detail) => ({
-        exportDetailId: detail.exportDetailId,
-        quantity: detail.quantity,
-        warehouseId: exportData.warehouseFrom.id,
-      })
+    const updateData = {
+      description: editableData.description || '',
+      exportDate: editableData.exportDate ? new Date(editableData.exportDate).toISOString() : null,
+      warehouseIdTo: editableData.warehouseIdTo || null,
+      customerName: editableData.customerName || null,
+      customerAddress: editableData.customerAddress || null,
+      customerPhone: editableData.customerPhone || null,
+      customerEmail: editableData.customerEmail || null,
+    };
+
+    const customerChanged = (
+      editableData.customerName !== exportData.customer?.name ||
+      editableData.customerAddress !== exportData.customer?.address ||
+      editableData.customerPhone !== exportData.customer?.phone ||
+      editableData.customerEmail !== exportData.customer?.email
     );
+
+    if (customerChanged && exportData.customer?.id) {
+      updateData.customerId = exportData.customer.id;
+    }
+
+    console.log('updateData:', updateData);
+
+    try {
+      await updateExportById({
+        exportId: id,
+        authToken,
+        data: updateData
+      }).unwrap();
+      setIsEditMode(false);
+      handleCloseConfirmationPopup();
+      message.success('Export updated successfully');
+    } catch (error) {
+      message.error('Failed to update export');
+      console.error('Update export error:', error);
+    }
+
+    const updatedExportDetails = Object.values(localUpdatedQuantities).map(detail => ({
+      exportDetailId: detail.exportDetailId,
+      quantity: detail.quantity,
+      warehouseId: exportData.warehouseFrom.id
+    }));
 
     if (updatedExportDetails.length > 0) {
       try {
@@ -165,10 +213,10 @@ function StaffExportDetail() {
           data: updatedExportDetails,
           authToken,
         }).unwrap();
-        message.success("Product quantities updated successfully");
+        message.success('Product quantities updated successfully');
       } catch (error) {
-        message.error("Failed to update product quantities");
-        console.error("Update product quantities error:", error);
+        message.error('Failed to update product quantities');
+        console.error('Update product quantities error:', error);
       }
     }
 
@@ -179,7 +227,7 @@ function StaffExportDetail() {
           productId: item.product.id,
           exportId: id,
           quantity: product.quantity,
-          expiredAt: new Date(item.expiredAt).toISOString(), // Chuyển đổi expiredAt sang định dạng ISO
+          expiredAt: new Date(item.expiredAt).toISOString(),
           zoneId: item.zone.id,
         };
       });
@@ -189,45 +237,41 @@ function StaffExportDetail() {
           data: newExportDetails,
           authToken,
         }).unwrap();
-        message.success("New products added successfully");
+        message.success('New products added successfully');
       } catch (error) {
-        message.error("Failed to add new products");
-        console.error("Add new products error:", error);
+        message.error('Failed to add new products');
+        console.error('Add new products error:', error);
       }
     }
 
     setLocalUpdatedQuantities({});
     setSelectedProducts([]);
-    setIsEditMode(false);
   };
 
   const handleChange = (field, value) => {
     setEditableData((prevData) => ({
       ...prevData,
-      [field]: value,
+      [field]: value
     }));
   };
 
   const handleDelete = () => {
-    setTemporarilyHiddenProductIds([
-      ...temporarilyHiddenProductIds,
-      ...selectedProductIds,
-    ]);
+    setTemporarilyHiddenProductIds([...temporarilyHiddenProductIds, ...selectedProductIds]);
     setSelectedProductIds([]);
   };
 
   const handleConfirmAction = async () => {
     switch (confirmationAction.type) {
-      case "deleteProduct":
+      case 'deleteProduct':
         await handleDelete();
         break;
-      case "cancelEditMode":
+      case 'cancelEditMode':
         setIsEditMode(false);
         setSelectedProductIds([]);
         setTemporarilyHiddenProductIds([]);
         handleCloseConfirmationPopup();
         break;
-      case "updateExport":
+      case 'updateExport':
         await handleSaveEdit();
         break;
       default:
@@ -259,12 +303,10 @@ function StaffExportDetail() {
       };
     });
 
-    console.log(newExportDetails);
-
     try {
       await updateAndAddExportDetails({
         data: newExportDetails,
-        exportId: id, // Thêm exportId vào request
+        exportId: id,
         authToken,
       }).unwrap();
       message.success("Export details updated successfully");
@@ -277,6 +319,19 @@ function StaffExportDetail() {
     setSelectedProducts([]);
     setIsEditMode(false);
     setIsProductModalVisible(false);
+  };
+
+  const calculateCurrentInventory = (item) => {
+    const existingExportDetail = exportProducts.find(
+      (product) =>
+        product.product.id === item.product.id &&
+        product.zone.id === item.zone.id &&
+        new Date(product.expiredAt).getTime() ===
+        new Date(item.expiredAt).getTime()
+    );
+    return (
+      item.quantity + (existingExportDetail ? existingExportDetail.quantity : 0)
+    );
   };
 
   const handleSelectAllChange = (e) => {
@@ -309,12 +364,12 @@ function StaffExportDetail() {
       prevSelectedProducts.map((product) =>
         product.id === id
           ? {
-              ...product,
-              quantity: Math.min(
-                value,
-                inventories.find((item) => item.id === id).quantity
-              ),
-            }
+            ...product,
+            quantity: Math.min(
+              value,
+              inventories.find((item) => item.id === id).quantity
+            ),
+          }
           : product
       )
     );
@@ -352,88 +407,257 @@ function StaffExportDetail() {
   );
 
   const columns = [
-    {
-      title: (
+    ...(isEditMode ? [{
+      title: 'Select',
+      dataIndex: 'select',
+      key: 'select',
+      render: (_, record) => (
         <Checkbox
-          indeterminate={
-            selectedProducts.length > 0 &&
-            selectedProducts.length < filteredData.length
-          }
-          onChange={(e) => handleSelectAllChange(e)}
-          checked={
-            selectedProducts.length > 0 &&
-            selectedProducts.length === filteredData.length
-          }
+          checked={selectedProductIds.includes(record.id)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedProductIds([...selectedProductIds, record.id]);
+            } else {
+              setSelectedProductIds(selectedProductIds.filter((id) => id !== record.id));
+            }
+          }}
         />
-      ),
-      dataIndex: "select",
-      key: "select",
+      )
+    }] : []),
+    {
+      title: 'Product Name',
+      dataIndex: ['product', 'name'],
+      key: 'productName',
+    },
+    {
+      title: 'Product Description',
+      dataIndex: ['product', 'description'],
+      key: 'productDescription',
+    },
+    {
+      title: 'Product Category',
+      dataIndex: ['product', 'category', 'name'],
+      key: 'productCategory',
+    },
+    {
+      title: 'Quantity',
+      dataIndex: 'quantity',
+      key: 'quantity',
       render: (text, record) => (
-        <Checkbox
-          checked={selectedProducts.some((product) => product.id === record.id)}
-          onChange={(e) => handleProductSelectChange(e, record.id)}
-        />
+        editableRow === record.id ? (
+          <Input
+            type="number"
+            value={editableRowData.quantity}
+            onChange={(e) => setEditableRowData({
+              ...editableRowData,
+              quantity: e.target.value
+            })}
+          />
+        ) : (
+          localUpdatedQuantities[record.id]?.quantity ?? text
+        )
       ),
     },
     {
-      title: "Product Name",
-      dataIndex: ["product", "name"],
-      key: "productName",
-      sorter: (a, b) => a.product.name.localeCompare(b.product.name),
-      render: (text, record) => record.product.name,
-    },
-    {
-      title: "Zone Name",
-      dataIndex: ["zone", "name"],
-      key: "zoneName",
-      sorter: (a, b) => a.zone.name.localeCompare(b.zone.name),
-      render: (text, record) => record.zone.name,
-    },
-    {
-      title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
-      sorter: (a, b) => a.quantity - b.quantity,
-    },
-    {
-      title: "Expired At",
-      dataIndex: "expiredAt",
-      key: "expiredAt",
-      sorter: (a, b) => new Date(a.expiredAt) - new Date(b.expiredAt),
+      title: 'Expired At',
+      dataIndex: 'expiredAt',
+      key: 'expiredAt',
       render: (text) => new Date(text).toLocaleDateString(),
     },
+    ...(isEditMode ? [{
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        editableRow === record.id ? (
+          <span>
+            <a className='no-select' onClick={() => handleSaveRowEdit(record)}>Save</a>
+            <a className='no-select' onClick={() => {
+              setEditableRow(null);
+              setEditableRowData({});
+            }}>Cancel</a>
+          </span>
+        ) : (
+          <a className='no-select' onClick={() => {
+            setEditableRow(record.id);
+            setEditableRowData(record);
+          }}>Change</a>
+        )
+      ),
+    }] : []),
   ];
 
   if (exportsLoading || isInventoryLoading) return <div>Loading...</div>;
   if (exportsError) return <div>Error loading export data</div>;
 
-  const modalConfirmTitle =
-    {
-      deleteProduct: "Do you want to delete the selected products?",
-      cancelEditMode: "Do you want to cancel editing?",
-      updateExport: "Do you want to save changes?",
-    }[confirmationAction?.type] || "Confirm Action";
+  const modalConfirmTitle = {
+    deleteProduct: 'Do you want to delete the selected products?',
+    approveExport: 'Do you want to approve this export?',
+    cancelEditMode: 'Do you want to cancel editing?',
+    updateExport: 'Do you want to save changes?'
+  }[confirmationAction?.type] || 'Confirm Action';
 
   return (
     <div>
-      <div className="container">
+      <div className='container'>
         <Breadcrumbs />
-        <h1>Export {id}</h1>
+        <h1 className="font-bold text-3xl py-4">Export {id}</h1>
+        <table className="table-detail">
+          <tbody>
+            <tr>
+              <td className="export-attribute-title">Description:</td>
+              <td>
+                {isEditMode ? (
+                  <TextArea
+                    rows={4}
+                    style={{ width: '100%' }}
+                    value={editableData.description}
+                    onChange={(e) => handleChange('description', e.target.value)}
+                  />
+                ) : (
+                  <p>{exportData.description}</p>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <td className="export-attribute-title">Status:</td>
+              <td>
+                {isEditMode ? (
+                  <Select
+                    placeholder="Select a status"
+                    defaultValue={exportData.status}
+                    onChange={(value) => handleChange('status', value)}
+                    style={{ width: '100%' }}
+                  >
+                    <Option value="PENDING">PENDING</Option>
+                    <Option value="SHIPPING">SHIPPING</Option>
+                    <Option value="SUCCEED">SUCCEED</Option>
+                    <Option value="CANCEL">CANCEL</Option>
+                  </Select>
+                ) : (
+                  <p><ExportStatus status={exportData.status} /></p>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <td className="export-attribute-title">Export Date:</td>
+              <td>
+                {isEditMode ? (
+                  <Input
+                    type="date"
+                    style={{ width: '100%' }}
+                    value={new Date(editableData.exportDate).toISOString().split('T')[0]}
+                    onChange={(e) => handleChange('exportDate', e.target.value)}
+                  />
+                ) : (
+                  <p>{new Date(exportData.exportDate).toLocaleDateString()}</p>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <td className="export-attribute-title">Export Type:</td>
+              <td><p>{exportData.exportType}</p></td>
+            </tr>
+            {exportData.exportType === 'WAREHOUSE' && <tr>
+              <td className="export-attribute-title">Warehouse: </td>
+              <td><p>{exportData.warehouseTo.name}</p></td>
+            </tr>}
+            <tr>
+              <td className="export-attribute-title">To:</td>
+              <td>
+                {isEditMode ? (
+                  <div>
+                    {exportData.exportType === 'CUSTOMER' ? (
+                      <Input
+                        style={{ width: '100%' }}
+                        value={editableData.customerAddress}
+                        onChange={(e) => handleChange('customerAddress', e.target.value)}
+                      />
+                    ) : (
+                      <Select
+                        style={{ width: '100%' }}
+                        showSearch
+                        placeholder="Select a warehouse"
+                        value={editableData.warehouseIdTo}
+                        onChange={(value) => handleChange('warehouseIdTo', value)}
+                        loading={isWarehouseLoading}
+                      >
+                        {warehousesData.map((warehouse) => (
+                          <Option key={warehouse.id} value={warehouse.id}>
+                            {warehouse.name}
+                          </Option>
+                        ))}
+                      </Select>
+                    )}
+                  </div>
+                ) : (
+                  <p>
+                    {exportData.exportType === 'CUSTOMER' ?
+                      exportData.customer.address :
+                      exportData.warehouseTo.address
+                    }
+                  </p>
+                )}
+              </td>
+            </tr>
+            {exportData.exportType === 'CUSTOMER' && (
+              <>
+                <tr>
+                  <td className="export-attribute-title">Customer:</td>
+                  <td>
+                    {isEditMode ? (
+                      <Input
+                        style={{ width: '100%' }}
+                        value={editableData.customerName}
+                        onChange={(e) => handleChange('customerName', e.target.value)}
+                      />
+                    ) : (
+                      <p>{exportData.customer.name}</p>
+                    )}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="export-attribute-title">Customer Email:</td>
+                  <td>
+                    {isEditMode ? (
+                      <Input
+                        style={{ width: '100%' }}
+                        value={editableData.customerEmail}
+                        onChange={(e) => handleChange('customerEmail', e.target.value)}
+                      />
+                    ) : (
+                      <p>{exportData.customer.email}</p>
+                    )}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="export-attribute-title">Customer Phone:</td>
+                  <td>
+                    {isEditMode ? (
+                      <Input
+                        style={{ width: '100%' }}
+                        value={editableData.customerPhone}
+                        onChange={(e) => handleChange('customerPhone', e.target.value)}
+                      />
+                    ) : (
+                      <p>{exportData.customer.phone}</p>
+                    )}
+                  </td>
+                </tr>
+              </>
+            )}
+          </tbody>
+        </table>
         <div>
-          <a
-            className="no-select"
-            href="#"
-            onClick={handleOpenProductListPopup}
-          >
+          <Button className='no-select' href='#' onClick={handleOpenProductListPopup}>
             View Export Details
-          </a>
+          </Button>
           <div>
             {isEditMode ? (
               <div className="action-buttons">
                 <Button
                   style={{
-                    background: "#ef4444",
-                    color: "white",
+                    background: '#ef4444',
+                    color: 'white',
                   }}
                   type="default"
                   onClick={handleCancelEdit}
@@ -442,8 +666,8 @@ function StaffExportDetail() {
                 </Button>
                 <Button
                   style={{
-                    background: "#16a34a",
-                    color: "white",
+                    background: '#16a34a',
+                    color: 'white',
                   }}
                   type="default"
                   onClick={() =>
@@ -454,17 +678,21 @@ function StaffExportDetail() {
                 </Button>
               </div>
             ) : (
-              <div className="action-buttons">
-                <Button
-                  style={{
-                    background: "#0284c7",
-                    color: "white",
-                  }}
-                  type="default"
-                  onClick={handleOpenEditMode}
-                >
-                  <EditNoteIcon /> Edit
-                </Button>
+              <div>
+                {exportData.status === "PENDING" && (
+                  <div className="action-buttons">
+                    <Button
+                      style={{
+                        background: '#0284c7',
+                        color: 'white',
+                      }}
+                      type="default"
+                      onClick={handleOpenEditMode}
+                    >
+                      <EditNoteIcon /> Edit
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -473,20 +701,20 @@ function StaffExportDetail() {
       <Modal
         transitionName=""
         title="Export Details"
-        width={1200}
+        width={800}
         className="custom-modal"
         visible={isProductListPopupVisible}
         onCancel={handleCloseProductListPopup}
         footer={[
-          <div className="footer-modal-button" key="footer">
+          <div className='footer-modal-button'>
             <Button key="close" onClick={handleCloseProductListPopup}>
               Close
             </Button>
-            {isEditMode && selectedProductIds.length !== 0 && (
+            {isEditMode && selectedProductIds.length != 0 ? (
               <Button
                 style={{
-                  background: "#d32f2f",
-                  color: "white",
+                  background: '#d32f2f',
+                  color: 'white',
                 }}
                 type="default"
                 onClick={() =>
@@ -495,7 +723,7 @@ function StaffExportDetail() {
               >
                 <DeleteRoundedIcon /> Delete Selected
               </Button>
-            )}
+            ) : null}
             <Button
               key="update"
               style={{
@@ -507,13 +735,11 @@ function StaffExportDetail() {
             >
               Update
             </Button>
-          </div>,
+          </div>
         ]}
       >
         <Table
-          dataSource={exportProducts.filter(
-            (product) => !temporarilyHiddenProductIds.includes(product.id)
-          )}
+          dataSource={exportProducts.filter(product => !temporarilyHiddenProductIds.includes(product.id))}
           columns={columns}
           rowKey="id"
           pagination={false}
@@ -637,9 +863,10 @@ function StaffExportDetail() {
             >
               Confirm
             </Button>
-          </div>,
+          </div>
         ]}
-      ></Modal>
+      >
+      </Modal>
     </div>
   );
 }

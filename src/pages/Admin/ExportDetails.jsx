@@ -63,19 +63,19 @@ const ExportDetails = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2 class="mb-2 text-2xl font-semibold text-dark">Export Details</h2>
-      <p><strong>Order ID:</strong> {exportData.id}</p>
-      <p><strong>Description:</strong> {exportData.description}</p>
-      <p><strong>Status:</strong> {exportData.status}</p>
-      <p><strong>Export Date:</strong> {new Date(exportData.exportDate).toLocaleString()}</p>
-      <p><strong>Export Type:</strong> {exportData.exportType}</p>
-      <p><strong>Transfer Key:</strong> {exportData.transferKey}</p>
-      <p><strong>Warehouse From:</strong> {exportData.warehouseFrom?.name}</p>
-      <p><strong>Warehouse Address:</strong> {exportData.warehouseFrom?.address}</p>
-      <p><strong>Customer Name:</strong> {exportData.customer.name}</p>
-      <p><strong>Customer Email:</strong> {exportData.customer.email}</p>
-      <p><strong>Customer Phone:</strong> {exportData.customer.phone}</p>
-      <p><strong>Customer Address:</strong> {exportData.customer.address}</p>
+      <h2 className="mb-2 text-2xl font-semibold text-dark">Export Details</h2>
+      <p><strong>Order ID:</strong> {exportData?.id || 'N/A'}</p>
+      <p><strong>Description:</strong> {exportData?.description || 'N/A'}</p>
+      <p><strong>Status:</strong> {exportData?.status || 'N/A'}</p>
+      <p><strong>Export Date:</strong> {new Date(exportData?.exportDate).toLocaleString() || 'N/A'}</p>
+      <p><strong>Export Type:</strong> {exportData?.exportType || 'N/A'}</p>
+      <p><strong>Transfer Key:</strong> {exportData?.transferKey || 'N/A'}</p>
+      <p><strong>Warehouse From:</strong> {exportData?.warehouseFrom?.name || 'N/A'}</p>
+      <p><strong>Warehouse Address:</strong> {exportData?.warehouseFrom?.address || 'N/A'}</p>
+      <p><strong>Customer Name:</strong> {exportData?.customer?.name || 'N/A'}</p>
+      <p><strong>Customer Email:</strong> {exportData?.customer?.email || 'N/A'}</p>
+      <p><strong>Customer Phone:</strong> {exportData?.customer?.phone || 'N/A'}</p>
+      <p><strong>Customer Address:</strong> {exportData?.customer?.address || 'N/A'}</p>
       <Table
         columns={columns}
         dataSource={exportDetails}

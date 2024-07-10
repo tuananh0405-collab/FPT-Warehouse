@@ -15,10 +15,10 @@ function StaffExpport() {
     const debouncedSearchTerm = useDebounce(searchValue, 500);
 
     return (
-        <>
-            <div className="MainDash">  
-            <Breadcrumbs />
-                <h1>Export</h1>
+        <div>
+            <div className="MainDash">
+                <Breadcrumbs />
+                <h1 className="font-bold text-3xl py-4">Export</h1>
                 <div className="staff-button-flex">
                     <Button
                         style={{ width: "12%", background: "#000000", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -38,7 +38,7 @@ function StaffExpport() {
                 </div>
                 <StaffExportTable searchValue={debouncedSearchTerm} />
             </div>
-        </>
+        </div>
     );
 }
 
