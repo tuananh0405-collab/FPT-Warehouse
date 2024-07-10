@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Table } from 'antd';
+import { Button, Table } from 'antd';
 import {
     useGetAllExportsByWarehouseidQuery,
     useGetTotalExportsByWarehouseidAndFilterByStatusQuery
@@ -35,6 +35,8 @@ function StaffExportTable({ searchValue }) {
     });
     const exports = exportsData.data || [];
     const totalExportItem = totalExportItemData.data || 0;
+
+    console.log(exports);
 
     useEffect(() => {
         setSearch(searchValue);
@@ -78,6 +80,19 @@ function StaffExportTable({ searchValue }) {
             render: (text) => FormatTime(text),
         },
         {
+            title: 'Type',
+            dataIndex: 'exportType',
+            key: 'exportType',
+            filters: [
+                { text: 'Customer', value: 'CUSTOMER' },
+                { text: 'Warehouse', value: 'WAREHOUSE' },
+                { text: 'Waste', value: 'WASTE' },
+            ],
+            width: 120,
+            filterMultiple: false,
+            onFilter: (value, record) => record.exportType === value,
+        },
+        {
             title: 'Customer Name',
             dataIndex: ['customer', 'name'],
             key: 'customerName',
@@ -116,9 +131,9 @@ function StaffExportTable({ searchValue }) {
             title: 'Action',
             key: 'action',
             render: (_, record) => (
-                <span>
-                    <a onClick={() => navigate(`/staff/export/detail/${record.id}`)}>View</a>
-                </span>
+                <Button>
+                    <a onClick={() => navigate(`/staff/export/detail/${record.id}`)}>View detail</a>
+                </Button>
             ),
         },
     ];

@@ -54,11 +54,11 @@ const StaffAddExport = () => {
     isFetching: isProductLoading,
     error: productError,
   } = useGetAllProductsQuery(authToken);
-  const {
-    data: inventories,
-    isFetching: isInventoryLoading,
-    error: inventoryError,
-  } = useGetAllInventoriesQuery(authToken);
+  // const {
+  //   data: inventories,
+  //   isFetching: isInventoryLoading,
+  //   error: inventoryError,
+  // } = useGetAllInventoriesQuery(authToken);
   const {
     data: customers,
     isFetching: isCustomerLoading,
@@ -81,7 +81,7 @@ const StaffAddExport = () => {
   const warehousesData = warehouses?.data || [];
   const zonesData = zones?.data || [];
   const productsData = products?.data || [];
-  const inventoriesData = inventories?.data || [];
+  const inventoriesData = [];
   const customersData = customers?.data || [];
 
   const [formData, setFormData] = useState({
@@ -155,12 +155,12 @@ const StaffAddExport = () => {
       prevSelectedProducts.map((product) =>
         product.id === id
           ? {
-              ...product,
-              quantity: Math.min(
-                value,
-                inventoriesData.find((item) => item.id === id).quantity
-              ),
-            }
+            ...product,
+            quantity: Math.min(
+              value,
+              inventoriesData.find((item) => item.id === id).quantity
+            ),
+          }
           : product
       )
     );
@@ -177,7 +177,7 @@ const StaffAddExport = () => {
       if (
         product.quantity === 0 ||
         product.quantity >
-          inventoriesData.find((inv) => inv.id === product.id).quantity
+        inventoriesData.find((inv) => inv.id === product.id).quantity
       ) {
         message.error(
           "Please ensure all quantities are greater than 0 and less than or equal to the available quantity."
@@ -349,12 +349,14 @@ const StaffAddExport = () => {
       warehouseError,
       zoneError,
       productError,
-      inventoryError,
+      // inventoryError,
     ].filter(Boolean);
     if (errors.length > 0) {
       message.error("Failed to fetch data. Please try again.");
     }
-  }, [warehouseError, zoneError, productError, inventoryError]);
+  }, [warehouseError, zoneError, productError]);
+
+  //}, [warehouseError, zoneError, productError, inventoryError]);
 
   const handleOpenPopup = () => setIsPopupVisible(true);
   const handleClosePopup = () => setIsPopupVisible(false);
@@ -364,7 +366,7 @@ const StaffAddExport = () => {
     isWarehouseLoading ||
     isZoneLoading ||
     isProductLoading ||
-    isInventoryLoading ||
+    // isInventoryLoading ||
     isCustomerLoading;
 
   if (isLoading) return <Loading />;
@@ -372,16 +374,15 @@ const StaffAddExport = () => {
     warehouseError ||
     zoneError ||
     productError ||
-    inventoryError ||
     customerError
   )
     return <Error500 />;
 
   return (
-    <>
+    <div>
       <Breadcrumbs />
       <div className="MainDash relative">
-        <h1>New Export</h1>
+        <h1 className="font-bold text-3xl py-4">New Export</h1>
         <Form form={form} layout="vertical" initialValues={formData}>
           <Form.Item
             label="Description"
@@ -588,8 +589,8 @@ const StaffAddExport = () => {
             {formData.exportType === "CUSTOMER"
               ? "Create Customer Export"
               : formData.exportType === "WASTE"
-              ? "Create Waste Export"
-              : "Continue"}
+                ? "Create Waste Export"
+                : "Continue"}
           </Button>
         </Form>
       </div>
@@ -714,7 +715,7 @@ const StaffAddExport = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

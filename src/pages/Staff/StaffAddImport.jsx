@@ -13,7 +13,7 @@ import Error500 from "../../utils/Error500";
 
 const { Option } = Select;
 
-const StaffImport = () => {
+const StaffAddImport = () => {
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo?.userInfo?.data?.token;
   const currentWarehouseId = userInfo?.userInfo?.data?.warehouseId;
@@ -152,11 +152,11 @@ const StaffImport = () => {
       prevAllocations.map((allocation) =>
         allocation.productId === productId
           ? {
-              ...allocation,
-              zones: allocation.zones.map((zone, zoneIndex) =>
-                zoneIndex === index ? { ...zone, [field]: value } : zone
-              ),
-            }
+            ...allocation,
+            zones: allocation.zones.map((zone, zoneIndex) =>
+              zoneIndex === index ? { ...zone, [field]: value } : zone
+            ),
+          }
           : allocation
       )
     );
@@ -167,9 +167,9 @@ const StaffImport = () => {
       prevAllocations.map((allocation) =>
         allocation.productId === productId
           ? {
-              ...allocation,
-              zones: [...allocation.zones, { zoneId: null, quantity: 0 }],
-            }
+            ...allocation,
+            zones: [...allocation.zones, { zoneId: null, quantity: 0 }],
+          }
           : allocation
       )
     );
@@ -503,4 +503,4 @@ const StaffImport = () => {
   );
 };
 
-export default StaffImport;
+export default StaffAddImport;

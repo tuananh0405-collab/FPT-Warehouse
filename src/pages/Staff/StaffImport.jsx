@@ -18,13 +18,13 @@ function StaffImportPage() {
     <div>
       <Breadcrumbs />
       <div className="MainDash">
-        <h1>Export</h1>
+        <h1 className="font-bold text-3xl py-4">Import</h1>
         <div className="staff-button-flex">
           <Button
             style={{ width: "12%", background: "#000000", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <Link
-              to="/staff/export/new"
+              to="/staff/import/new"
               style={{ color: "white", display: "flex", alignItems: "center", justifyContent: 'center', width: '100%', textDecoration: 'none' }}
             >
               <AddIcon
