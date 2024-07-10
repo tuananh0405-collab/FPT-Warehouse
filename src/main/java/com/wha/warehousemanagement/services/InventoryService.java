@@ -211,6 +211,10 @@ public class InventoryService {
         inventoryRepository.save(toInventory);
     }
 
+    // find inventories by zone id
+    public List<Inventory> getInventoryByZoneId(Integer zoneId) {
+        return inventoryRepository.findByZoneId(zoneId);
+    }
     //
     public ResponseObject<?> getInventoryByWarehouseIdWithFilters(
             int pageNo, int limit, int warehouseId,
