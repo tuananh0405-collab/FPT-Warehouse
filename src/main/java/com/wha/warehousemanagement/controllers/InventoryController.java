@@ -3,8 +3,9 @@ package com.wha.warehousemanagement.controllers;
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
 import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
 import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
-import com.wha.warehousemanagement.models.ResponseObject;
 import com.wha.warehousemanagement.services.InventoryService;
+import com.wha.warehousemanagement.models.ResponseObject;
+import com.wha.warehousemanagement.models.Inventory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("/inventory")
@@ -87,6 +89,12 @@ public class InventoryController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    // find inventories by zone id
+    @GetMapping("/zones/{zoneId}/inventory")
+    public List<Inventory> getInventoryByZoneId(@PathVariable Integer zoneId) {
+        return inventoryService.getInventoryByZoneId(zoneId);
     }
 
     // Sửa lại URL để tránh xung đột

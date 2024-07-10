@@ -80,13 +80,21 @@ public class ImportController {
     }
 
     //localhost:8080/import/import?page=1
+//    @GetMapping("/import")
+//    public ResponseEntity<?> getAllImport(
+//            @RequestParam(value = "page", defaultValue = "1") int page
+//    ) {
+//        int limit = 20;
+//        page = page - 1;
+//        return ResponseEntity.ok(importService.getAllImports());
+//    }
     @GetMapping("/import")
     public ResponseEntity<?> getAllImport(
-            @RequestParam(value = "page", defaultValue = "1") int page
+//            @RequestParam(value = "page", defaultValue = "1") int page
     ) {
-        int limit = 20;
-        page = page - 1;
-        return ResponseEntity.ok(importService.getAllImports(page, limit));
+//        int limit = 20;
+//        page = page - 1;
+        return ResponseEntity.ok(importService.getAllImports());
     }
 
     //localhost:8080/import/total-import

@@ -199,21 +199,33 @@ public class ImportService {
         }
     }
 
-    public ResponseObject<?> getAllImports(int page, int limit) {
-        try {
-            PageRequest pageable = PageRequest.of(page, limit);
-            List<ImportResponse> response = importRepository.findAllImports(pageable)
-                    .stream()
-                    .map(importMapper::toDto)
-                    .collect(Collectors.toList());
-            return new ResponseObject<>(HttpStatus.OK.value(), "Imports retrieved successfully", response);
-        } catch (CustomException e) {
-            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
-        } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all imports", null);
-        }
+//    public ResponseObject<?> getAllImports(int page, int limit) {
+//        try {
+//            PageRequest pageable = PageRequest.of(page, limit);
+//            List<ImportResponse> response = importRepository.findAllImports(pageable)
+//                    .stream()
+//                    .map(importMapper::toDto)
+//                    .collect(Collectors.toList());
+//            return new ResponseObject<>(HttpStatus.OK.value(), "Imports retrieved successfully", response);
+//        } catch (CustomException e) {
+//            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+//        } catch (Exception e) {
+//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all imports", null);
+//        }
+//    }
+public ResponseObject<?> getAllImports() {
+    try {
+        List<ImportResponse> response = importRepository.findAll()
+                .stream()
+                .map(importMapper::toDto)
+                .collect(Collectors.toList());
+        return new ResponseObject<>(HttpStatus.OK.value(), "Imports retrieved successfully", response);
+    } catch (CustomException e) {
+        return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+    } catch (Exception e) {
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all imports", null);
     }
-
+}
     public ResponseObject<?> getTotalImports() {
         try {
             Long totalImport = importRepository.countAllImports();

@@ -38,6 +38,9 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     Long countInventoriesByWarehouseId(Integer warehouseId);
 
 
+    // find inventories by zone id
+    List<Inventory> findByZoneId(Integer zoneId);
+
     // zones transfer
     Inventory findByProductIdAndZoneId(int productId, int zoneId);
 
