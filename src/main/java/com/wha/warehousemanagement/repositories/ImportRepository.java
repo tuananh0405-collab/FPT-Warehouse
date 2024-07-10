@@ -25,7 +25,7 @@ public interface ImportRepository extends JpaRepository<Import, Integer> {
     @Query("SELECT i FROM Import i " +
             "LEFT JOIN i.customer c " +
             "LEFT JOIN i.warehouseTo w " +
-            "WHERE (i.warehouseFrom.id = :warehouseId) " +
+            "WHERE (i.warehouseTo.id = :warehouseId) " +
             "AND (:status IS NULL OR i.status = :status) " +
             "AND (" +
             ":search IS NULL OR LOWER(i.description) LIKE LOWER(CONCAT('%', :search, '%')) " +
@@ -45,13 +45,12 @@ public interface ImportRepository extends JpaRepository<Import, Integer> {
             @Param("warehouseId") Integer warehouseId,
             @Param("status") Status status,
             @Param("search") String search,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     @Query("SELECT i FROM Import i " +
             "LEFT JOIN i.customer c " +
             "LEFT JOIN i.warehouseTo w " +
-            "WHERE i.warehouseFrom.id = :warehouseId " +
+            "WHERE i.warehouseTo.id = :warehouseId " +
             "AND (:status IS NULL OR i.status = :status) " +
             "AND (" +
             ":search IS NULL OR LOWER(i.description) LIKE LOWER(CONCAT('%', :search, '%')) " +
@@ -67,7 +66,7 @@ public interface ImportRepository extends JpaRepository<Import, Integer> {
     @Query("SELECT COUNT(i) FROM Import i " +
             "LEFT JOIN i.customer c " +
             "LEFT JOIN i.warehouseTo w " +
-            "WHERE i.warehouseFrom.id = :warehouseId " +
+            "WHERE i.warehouseTo.id = :warehouseId " +
             "AND (:status IS NULL OR i.status = :status) " +
             "AND (" +
             ":search IS NULL OR LOWER(i.description) LIKE LOWER(CONCAT('%', :search, '%')) " +
@@ -77,7 +76,6 @@ public interface ImportRepository extends JpaRepository<Import, Integer> {
     Integer countImportsByWarehouseIdAndStatus(
             @Param("warehouseId") Integer warehouseId,
             @Param("status") Status status,
-            @Param("search") String search
-    );
+            @Param("search") String search);
 
 }

@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.time.DateUtils.parseDate;
+
 @Service
 @RequiredArgsConstructor
 public class ExportService {
@@ -82,6 +84,7 @@ public class ExportService {
     public ResponseObject<List<ExportResponse>> getAllExports(
             Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status, String search
     ) {
+        System.out.println("warehouseId: " + warehouseId + " pageNo: " + pageNo + " limit: " + limit + " sortBy: " + sortBy + " direction: " + direction + " status: " + status + " search: " + search);
         try {
             Pageable pageable;
             Page<Export> exports;
@@ -131,30 +134,41 @@ public class ExportService {
         }
     }
 
-    @Transactional
     public ResponseObject<?> updateExport(int id, ExportUpdateRequest request) {
+        System.out.println("Export update request: " + request.toString());
         try {
             Export export = exportRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
 
-            export.setDescription(request.getDescription());
-            export.setStatus(Status.valueOf(request.getStatus()));
-            export.setExportDate(new Date());
+            if (request.getDescription() != null && !request.getDescription().trim().isEmpty())
+                export.setDescription(request.getDescription());
+            if (request.getStatus() != null && !request.getStatus().trim().isEmpty())
+                export.setStatus(Status.valueOf(request.getStatus()));
+            if (request.getExportDate() != null)
+                export.setExportDate(request.getExportDate());
+
             exportRepository.save(export);
 
             if (export.getExportType() == ImportExportType.CUSTOMER) {
                 Customer customer = customerRepository.findById(request.getCustomerId())
                         .orElseThrow(() -> new CustomException(ErrorCode.CUSTOMER_NOT_FOUND));
 
-                customer.setName(request.getCustomerName());
-                customer.setAddress(request.getCustomerAddress());
-                customer.setPhone(request.getCustomerPhone());
-                customer.setEmail(request.getCustomerEmail());
+                if (request.getCustomerName() != null && !request.getCustomerName().trim().isEmpty())
+                    customer.setName(request.getCustomerName());
+                if (request.getCustomerAddress() != null && !request.getCustomerAddress().trim().isEmpty())
+                    customer.setAddress(request.getCustomerAddress());
+                if (request.getCustomerPhone() != null && !request.getCustomerPhone().trim().isEmpty())
+                    customer.setPhone(request.getCustomerPhone());
+                if (request.getCustomerEmail() != null && !request.getCustomerEmail().trim().isEmpty())
+                    customer.setEmail(request.getCustomerEmail());
+
                 customerRepository.save(customer);
             } else if (export.getExportType() == ImportExportType.WAREHOUSE) {
                 Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseIdTo())
                         .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
-                export.setWarehouseTo(warehouseTo);
+
+                if (request.getWarehouseIdTo() != null)
+                    export.setWarehouseTo(warehouseTo);
             }
             exportRepository.save(export);
             return new ResponseObject<>(HttpStatus.OK.value(), "Updated export successfully", null);

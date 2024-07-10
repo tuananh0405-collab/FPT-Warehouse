@@ -2,10 +2,12 @@ package com.wha.warehousemanagement.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.wha.warehousemanagement.models.ImportExportType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.sql.Date;
+
 
 @Data
 @NoArgsConstructor
@@ -18,7 +20,7 @@ public class ExportUpdateRequest {
 
         private String status;
 
-        private String exportDate;
+        private Date exportDate;
 
         private Integer warehouseIdTo;
 
