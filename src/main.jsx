@@ -46,6 +46,7 @@ import OrderExport from "./pages/Admin/OrderExport.jsx";
 import ExportDetails from "./pages/Admin/ExportDetails.jsx";
 import ImportDetails from "./pages/Admin/ImportDetails.jsx";
 import ReportComponent from "./pages/Admin/ReportComponent.jsx";
+import StaffTransfer from "./pages/Staff/StaffTransfer.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -86,6 +87,7 @@ const router = createBrowserRouter(
           <Route path="/staff/order/import" element={<StaffImport />} />
           <Route path="/staff/export/new" element={<StaffNewExport />} />
           <Route path="/staff/export/detail/:id" element={<StaffExportDetail />} />
+          <Route path="/staff/transfer" element={<StaffTransfer />} />
         </Route>
       </Route>
       {/* Route 404 cho tất cả các route khác */}

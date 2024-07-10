@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import '../../assets/styles/MainDash.css'
-import Logo from "../../assets/images/warehouse-1073.png";
+// import Logo from "../../assets/images/warehouse-1073.png";
+import Logo from "../../assets/images/FPT_logo_2010.svg.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
 import { StaffSidebarData } from "../../Data/Data";
 import { motion } from "framer-motion";
@@ -27,8 +28,6 @@ const StaffSidebar = () => {
     authToken = userInfo.userInfo.data.token;
     wid = userInfo.userInfo.data.warehouseId
   }
-
-
 
   const {
     data: warehouse,
@@ -81,7 +80,7 @@ const StaffSidebar = () => {
         <div className="logo">
           <img src={Logo} alt="logo" />
           <span>
-            FPT<span>-</span>W
+            <span>WHA</span>
           </span>
         </div>
 

@@ -1,8 +1,7 @@
 import DataComponent from "./DataComponent"
 import useDocumentTitle from "../../utils/UseDocumentTitle"
 
-const Data = () => {
-  
+const Data = () => { 
   useDocumentTitle('Data')
   return (
     <div><DataComponent/></div>

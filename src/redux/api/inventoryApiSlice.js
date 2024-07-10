@@ -7,7 +7,7 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
       query: (authToken) => ({
         url: `${INVENTORY_URL}`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
       }),
       providesTags: ["Inventory"],
@@ -34,7 +34,7 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
       query: ({ id, authToken }) => ({
         url: `${INVENTORY_URL}/${id}`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
         method: "DELETE",
       }),
@@ -44,7 +44,7 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
       query: ({ data, authToken }) => ({
         url: `${INVENTORY_URL}/${data.trackingId}`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
         method: "PUT",
         body: data,
@@ -55,14 +55,36 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
       query: ({ id, authToken }) => ({
         url: `${INVENTORY_URL}/zones/${id}/inventory`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
       }),
       providesTags: ["Inventory"],
       keepUnusedDataFor: 5,
     }),
+    transferProduct: builder.mutation({
+      query: ({ productId, fromZoneId, toZoneId, quantity, authToken }) => {
+        const url = `${INVENTORY_URL}/transfer?productId=${productId}&fromZoneId=${fromZoneId}&toZoneId=${toZoneId}&quantity=${quantity}`;
+        console.log('Request URL:', url); // Log the URL
+        return {
+          url,
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        };
+      },
+      invalidatesTags: ["Inventory"],
+      keepUnusedDataFor: 5,
+    }),
   }),
 });
 
-export const { useGetAllInventoriesQuery, useGetInventoryByIdQuery, useAddInventoryMutation, useDeleteInventoryMutation, useUpdateInventoryMutation, useGetInventoriesByZoneIdQuery
+export const {
+  useGetAllInventoriesQuery,
+  useGetInventoryByIdQuery,
+  useAddInventoryMutation,
+  useDeleteInventoryMutation,
+  useUpdateInventoryMutation,
+  useGetInventoriesByZoneIdQuery,
+  useTransferProductMutation,
 } = inventoryApiSlice;

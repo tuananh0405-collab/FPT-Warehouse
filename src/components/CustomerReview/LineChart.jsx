@@ -1,5 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactApexChart from "react-apexcharts";
+
+const generateLast12Months = () => {
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth(); 
+  const result = [];
+
+  for (let i = 0; i < 12; i++) {
+    result.push(months[(currentMonth + i + 1) % 12]);
+  }
+
+  return result;
+};
 
 const lineChartOptions = {
   legend: {
@@ -80,20 +96,7 @@ const lineChartOptions = {
   },
   xaxis: {
     type: "category",
-    categories: [
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-    ],
+    categories: generateLast12Months(),
     axisBorder: {
       show: false,
     },
@@ -108,43 +111,49 @@ const lineChartOptions = {
       },
     },
     min: 0,
-    max: 100,
+    max: 10,
   },
 };
 
-const LineChart = () => {
-  const [state, setState] = useState({
-    series: [
-      {
-        name: "Product A",
-        data: [10, 41, 35, 51, 49, 62, 69, 91, 148],
-      },
-      {
-        name: "Product B",
-        data: [23, 42, 35, 27, 43, 22, 17, 12, 45],
-      },
-    ],
+const extractData = (data, dateField) => {
+  const months = generateLast12Months();
+  const countByMonth = Array(12).fill(0);
+
+  data?.forEach((item) => {
+    const date = new Date(item[dateField]);
+    const monthIndex = date.getMonth();
+    const currentMonth = new Date().getMonth();
+    const adjustedMonthIndex = (monthIndex - currentMonth + 11) % 12;
+    countByMonth[adjustedMonthIndex]++;
   });
 
-  const handleReset = () => {
-    setState((prevState) => ({
-      ...prevState,
-    }));
-  };
+  return countByMonth;
+};
 
-  handleReset;
+const LineChart = ({ importData, exportData }) => {
+  const [series, setSeries] = useState([
+    { name: "Import", data: [] },
+    { name: "Export", data: [] },
+  ]);
+
+  useEffect(() => {
+    const importSeries = extractData(importData, "receivedDate");
+    const exportSeries = extractData(exportData, "exportDate");
+
+    setSeries([
+      { name: "Import", data: importSeries },
+      { name: "Export", data: exportSeries },
+    ]);
+  }, [importData, exportData]);
 
   return (
-    <div className="w-full h-full rounded-sm  shadow-default  ">
-      <div>
-        <div id="lineChart" className="-ml-5">
-          <ReactApexChart
-            options={lineChartOptions}
-            series={state.series}
-            type="line"
-            // height={300}
-          />
-        </div>
+    <div className="w-full h-full rounded-sm shadow-default">
+      <div id="lineChart" className="-ml-5">
+        <ReactApexChart
+          options={{ ...lineChartOptions, xaxis: { ...lineChartOptions.xaxis, categories: generateLast12Months() } }}
+          series={series}
+          type="line"
+        />
       </div>
     </div>
   );
