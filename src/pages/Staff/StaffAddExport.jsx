@@ -33,6 +33,7 @@ const StaffAddExport = () => {
   const [form] = Form.useForm();
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
+  const warehouseId = userInfo.userInfo.data.warehouseId;
   const [addExport, { isLoading: isExportCreating }] = useAddExportMutation();
   const [addCustomer, { isLoading: isCustomerCreating }] =
     useAddCustomerMutation();
@@ -263,7 +264,10 @@ const StaffAddExport = () => {
     }
   };
 
-  const filteredData = inventoriesData.filter((item) => {
+  const filteredData = inventoriesData.filter(
+    (item) =>
+      item.zone.warehouse.id === warehouseId && [5, 6, 7, 8].includes(item.zone.id)
+  ).filter((item) => {
     const now = new Date();
     const expiredAt = new Date(item.expiredAt);
     const inFifteenDays = new Date(now);

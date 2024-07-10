@@ -104,6 +104,7 @@ function StaffExportDetail() {
   const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
+    console.log(warehouseId);
     if (exportData) {
       setEditableData({
         ...exportData,
@@ -116,9 +117,10 @@ function StaffExportDetail() {
           : null,
       });
     }
-  }, [exportData]);
+  }, [warehouseId, exportData]);
 
   useEffect(() => {
+    console.log(exportProducts);
     const selected = exportProducts.map((product) => ({
       id: product.id,
       productId: product.product.id,
@@ -257,7 +259,7 @@ function StaffExportDetail() {
     if (selectedProducts.length > 0) {
       const newExportDetails = selectedProducts.map((product) => {
         const item = inventories.find(
-          (inv) => inv.product.id === product.product.id
+          (inv) => inv.product.id === product.productId
         );
         return {
           productId: item.product.id,
@@ -373,11 +375,6 @@ function StaffExportDetail() {
   };
 
   const calculateCurrentInventory = (item) => {
-    console.log(item);
-    if (!item) {
-      return 0;
-    }
-
     const existingExportDetail = exportProducts.find(
       (product) =>
         product.product.id === item.product.id &&
@@ -386,9 +383,11 @@ function StaffExportDetail() {
           new Date(item.expiredAt).getTime()
     );
 
-    return (
-      item.quantity + (existingExportDetail ? existingExportDetail.quantity : 0)
-    );
+    if (existingExportDetail) {
+      return item.quantity + existingExportDetail.quantity;
+    }
+
+    return item.quantity;
   };
 
   const handlePageChange = (page) => setCurrentPage(page);
@@ -397,13 +396,10 @@ function StaffExportDetail() {
     const { value } = e.target;
     setSelectedProducts((prevSelectedProducts) =>
       prevSelectedProducts.map((product) =>
-        product.id === id
+        product.productId === id
           ? {
               ...product,
-              quantity: Math.min(
-                value,
-                inventories.find((item) => item.id === id).quantity
-              ),
+              quantity: parseInt(value),
             }
           : product
       )
@@ -429,8 +425,16 @@ function StaffExportDetail() {
     }
   };
 
+  const handleSearch = (e) => {
+    setSearchText(e.target.value.toLowerCase());
+  };
+
   const filteredData = inventories
-    .filter((item) => item.zone.warehouse.id === warehouseId) // Filter inventories by zones in the current warehouse
+    .filter(
+      (item) =>
+        item.zone.warehouse.id === warehouseId &&
+        [5, 6, 7, 8].includes(item.zone.id)
+    )
     .filter((item) => {
       const now = new Date();
       const expiredAt = new Date(item.expiredAt);
@@ -446,8 +450,8 @@ function StaffExportDetail() {
       if (filterType === "valid" && expiredAt <= now) return false;
 
       return (
-        item.product.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.zone.name.toLowerCase().includes(searchText.toLowerCase())
+        item.product.name.toLowerCase().includes(searchText) ||
+        item.zone.name.toLowerCase().includes(searchText)
       );
     });
 
@@ -568,8 +572,15 @@ function StaffExportDetail() {
       key: "select",
       render: (_, record) => (
         <Checkbox
-          checked={selectedProducts.some((product) => product.productId === record.product.id)}
-          onChange={(e) => handleProductSelectChange(e, { ...record, productId: record.product.id })}
+          checked={selectedProducts.some(
+            (product) => product.productId === record.product.id
+          )}
+          onChange={(e) =>
+            handleProductSelectChange(e, {
+              ...record,
+              productId: record.product.id,
+            })
+          }
         />
       ),
     },
@@ -921,7 +932,7 @@ function StaffExportDetail() {
             <Input
               placeholder="Search by product or zone name"
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={handleSearch}
               style={{ marginBottom: 16 }}
             />
             <Table
@@ -950,44 +961,46 @@ function StaffExportDetail() {
           >
             <h2 className="text-xl font-bold mb-4">Selected Products</h2>
             {selectedProducts.map((product) => {
-  const item = inventories.find((inv) => inv.product.id === product.productId);
+              const item = inventories.find(
+                (inv) => inv.product.id === product.productId
+              );
 
-  if (!item) {
-    return null;
-  }
+              if (!item) {
+                return null;
+              }
 
-  const currentInventory = calculateCurrentInventory(item);
+              const currentInventory = calculateCurrentInventory(item);
 
-  return (
-    <div
-      key={product.id}
-      style={{
-        marginBottom: "10px",
-        padding: "10px",
-        border: "1px solid #ddd",
-        borderRadius: "5px",
-      }}
-    >
-      <h3>{item.product.name}</h3>
-      <p>Available: {currentInventory}</p>
-      <Input
-        type="number"
-        value={product.quantity}
-        onChange={(e) => handleQuantityChange(e, product.id)}
-        min={1}
-        max={currentInventory}
-        style={{ marginBottom: "10px" }}
-      />
-      <Button
-        type="link"
-        danger
-        onClick={() => handleRemoveProduct(product.id)}
-      >
-        Remove
-      </Button>
-    </div>
-  );
-})}
+              return (
+                <div
+                  key={product.id}
+                  style={{
+                    marginBottom: "10px",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "5px",
+                  }}
+                >
+                  <h3>{item.product.name}</h3>
+                  <p>Available: {currentInventory}</p>
+                  <Input
+                    type="number"
+                    value={product.quantity}
+                    onChange={(e) => handleQuantityChange(e, product.id)}
+                    min={1}
+                    max={currentInventory}
+                    style={{ marginBottom: "10px" }}
+                  />
+                  <Button
+                    type="link"
+                    danger
+                    onClick={() => handleRemoveProduct(product.id)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </Modal>
