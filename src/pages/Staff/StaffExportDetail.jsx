@@ -393,15 +393,10 @@ function StaffExportDetail() {
   const handlePageChange = (page) => setCurrentPage(page);
 
   const handleQuantityChange = (e, id) => {
-    const { value } = e.target;
+    const quantity = parseInt(e.target.value, 10);
     setSelectedProducts((prevSelectedProducts) =>
       prevSelectedProducts.map((product) =>
-        product.productId === id
-          ? {
-              ...product,
-              quantity: parseInt(value),
-            }
-          : product
+        product.id === id ? { ...product, quantity: quantity } : product
       )
     );
   };

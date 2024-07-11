@@ -111,7 +111,7 @@ const lineChartOptions = {
       },
     },
     min: 0,
-    max: 10,
+    max: 20,
   },
 };
 

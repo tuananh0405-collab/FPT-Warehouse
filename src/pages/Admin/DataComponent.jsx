@@ -43,9 +43,9 @@ const DataComponent = () => {
   ];
 
   const cardStyle = {
-    width: "100%",
+    width: "80%",
     height: 0,
-    paddingBottom: "100%",
+    paddingBottom: "80%",
     position: "relative",
     overflow: "hidden",
   };
@@ -55,7 +55,7 @@ const DataComponent = () => {
     top: 0,
     left: 0,
     width: "100%",
-    height: "100%",
+    height: "90%",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
