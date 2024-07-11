@@ -24,6 +24,16 @@ export const productApiSlice = apiSlice.injectEndpoints({
       providesTags: ["Product"],
       keepUnusedDataFor: 5,
     }),
+    getAllProductByWarehouseId: builder.query({
+      query: ({ id, authToken }) => ({
+        url: `${PRODUCT_URL}/product-list-for-export/${id}`,
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      }),
+      providesTags: ["Product"],
+      keepUnusedDataFor: 5,
+    }),
     getProductById: builder.query({
       query: ( {productId,authToken} ) => ({
         url: `${PRODUCT_URL}/${productId}`,
@@ -60,6 +70,7 @@ export const productApiSlice = apiSlice.injectEndpoints({
 export const {
   useAddProductMutation,
   useGetAllProductsQuery,
+  useGetAllProductByWarehouseIdQuery,
   useGetProductByIdQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
