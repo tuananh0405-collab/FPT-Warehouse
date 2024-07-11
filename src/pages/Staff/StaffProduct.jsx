@@ -1,8 +1,9 @@
 import React from 'react'
+import StaffProductComponent from './StaffProductsComponent'
 
 const StaffProduct = () => {
   return (
-    <div>StaffProduct</div>
+    <div><StaffProductComponent/></div>
   )
 }
 
