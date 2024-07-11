@@ -264,28 +264,38 @@ const StaffAddExport = () => {
     }
   };
 
-  const filteredData = inventoriesData.filter(
-    (item) =>
-      item.zone.warehouse.id === warehouseId && [5, 6, 7, 8].includes(item.zone.id)
-  ).filter((item) => {
-    const now = new Date();
-    const expiredAt = new Date(item.expiredAt);
-    const inFifteenDays = new Date(now);
-    inFifteenDays.setDate(now.getDate() + 15);
+  const warehouseZoneMapping = {
+    1: [1, 2, 3, 4],
+    2: [5, 6, 7, 8],
+    3: [9, 10, 11, 12],
+    4: [13, 14, 15, 16],
+  };
 
-    if (filterType === "expired" && expiredAt >= now) return false;
-    if (
-      filterType === "expiring" &&
-      (expiredAt < now || expiredAt > inFifteenDays)
+  const filteredData = inventoriesData
+    .filter(
+      (item) =>
+        item.zone.warehouse.id === warehouseId &&
+        warehouseZoneMapping[warehouseId].includes(item.zone.id)
     )
-      return false;
-    if (filterType === "valid" && expiredAt <= now) return false;
+    .filter((item) => {
+      const now = new Date();
+      const expiredAt = new Date(item.expiredAt);
+      const inFifteenDays = new Date(now);
+      inFifteenDays.setDate(now.getDate() + 15);
 
-    return (
-      item.product.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.zone.name.toLowerCase().includes(searchText.toLowerCase())
-    );
-  });
+      if (filterType === "expired" && expiredAt >= now) return false;
+      if (
+        filterType === "expiring" &&
+        (expiredAt < now || expiredAt > inFifteenDays)
+      )
+        return false;
+      if (filterType === "valid" && expiredAt <= now) return false;
+
+      return (
+        item.product.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.zone.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+    });
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * 10,

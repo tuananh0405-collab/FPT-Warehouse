@@ -424,11 +424,18 @@ function StaffExportDetail() {
     setSearchText(e.target.value.toLowerCase());
   };
 
+  const warehouseZoneMapping = {
+    1: [1, 2, 3, 4],
+    2: [5, 6, 7, 8],
+    3: [9, 10, 11, 12],
+    4: [13, 14, 15, 16],
+  };
+
   const filteredData = inventories
     .filter(
       (item) =>
         item.zone.warehouse.id === warehouseId &&
-        [5, 6, 7, 8].includes(item.zone.id)
+        warehouseZoneMapping[warehouseId].includes(item.zone.id)
     )
     .filter((item) => {
       const now = new Date();
