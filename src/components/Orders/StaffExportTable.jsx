@@ -36,8 +36,6 @@ function StaffExportTable({ searchValue }) {
     const exports = exportsData.data || [];
     const totalExportItem = totalExportItemData.data || 0;
 
-    console.log(exports);
-
     useEffect(() => {
         setSearch(searchValue);
     }, [searchValue]);

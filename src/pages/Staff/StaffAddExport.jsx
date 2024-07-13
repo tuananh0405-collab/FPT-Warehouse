@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { useAddExportMutation } from "../../redux/api/exportApiSlice";
 import { useAddCustomerMutation } from "../../redux/api/customersApiSlice";
 import { useCreateExportDetailsMutation } from "../../redux/api/exportDetailApiSlice";
+import AutoSelectModal from "../../components/Orders/AutoSelectModal";
 
 const { Option } = Select;
 
@@ -78,6 +79,9 @@ const StaffAddExport = () => {
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // For auto select feature
+  const [isAutoProductSelectVisible, setIsAutoProductSelectVisible] = useState(false);
 
   const warehousesData = warehouses?.data || [];
   const zonesData = zones?.data || [];
@@ -156,12 +160,12 @@ const StaffAddExport = () => {
       prevSelectedProducts.map((product) =>
         product.id === id
           ? {
-              ...product,
-              quantity: Math.min(
-                value,
-                inventoriesData.find((item) => item.id === id).quantity
-              ),
-            }
+            ...product,
+            quantity: Math.min(
+              value,
+              inventoriesData.find((item) => item.id === id).quantity
+            ),
+          }
           : product
       )
     );
@@ -178,7 +182,7 @@ const StaffAddExport = () => {
       if (
         product.quantity === 0 ||
         product.quantity >
-          inventoriesData.find((inv) => inv.id === product.id).quantity
+        inventoriesData.find((inv) => inv.id === product.id).quantity
       ) {
         message.error(
           "Please ensure all quantities are greater than 0 and less than or equal to the available quantity."
@@ -373,6 +377,20 @@ const StaffAddExport = () => {
   const handleOpenPopup = () => setIsPopupVisible(true);
   const handleClosePopup = () => setIsPopupVisible(false);
   const handlePageChange = (page) => setCurrentPage(page);
+
+  const handleAutoProductSelect = (products) => {
+    setSelectedProducts((prevProducts) => [
+      ...prevProducts,
+      ...products.map(product => ({
+        id: product.inventoryId, // Use inventory ID as the key identifier
+        name: product.product.name,
+        category: product.product.category.name,
+        quantity: product.quantity,
+        expiredAt: product.expiredAt,
+        zoneName: product.zoneName
+      }))
+    ]);
+  };
 
   const isLoading =
     isWarehouseLoading ||
@@ -602,8 +620,8 @@ const StaffAddExport = () => {
             {formData.exportType === "CUSTOMER"
               ? "Create Customer Export"
               : formData.exportType === "WASTE"
-              ? "Create Waste Export"
-              : "Continue"}
+                ? "Create Waste Export"
+                : "Continue"}
           </Button>
         </Form>
       </div>
@@ -649,9 +667,17 @@ const StaffAddExport = () => {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 style={{ width: "50%" }}
+                className="mr-4"
               />
+              <Button
+                className="bg-black text-white"
+                onClick={() => { setIsAutoProductSelectVisible(true) }}
+              >
+                Auto Select
+              </Button>
             </div>
             <div style={{ display: "flex", height: "80%" }}>
+              {isAutoProductSelectVisible && (<AutoSelectModal authToken={authToken} warehouseId={warehouseId} isModalOpen={isAutoProductSelectVisible} setIsModalOpen={setIsAutoProductSelectVisible} onProductSelect={handleAutoProductSelect} />)}
               <div style={{ width: "70%", paddingRight: "10px" }}>
                 <Table
                   dataSource={paginatedData}
