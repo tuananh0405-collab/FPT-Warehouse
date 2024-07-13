@@ -98,7 +98,7 @@ public class ExportController {
     }
 
 //    @PutMapping("/staff/process-export")
-//    public ResponseEntity<?> processExportByStaff(@RequestBody processExportByStaffRequest request) {
+//    public ResponseEntity<?> processExport(@RequestBody processExportByStaffRequest request) {
 //        return ResponseEntity.ok(exportService.processExportRequestToTransfer(request));
 //    }
 

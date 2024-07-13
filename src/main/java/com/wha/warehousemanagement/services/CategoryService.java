@@ -137,4 +137,13 @@ public class CategoryService {
         }
     }
 
+    public ResponseObject<List<CategoryResponse>> getAllSortedCategoryWithSearch(String search) {
+        try {
+            List<CategoryResponse> res = categoryMapper.toDto(categoryRepository.findAllCategoriesWithSearch(search));
+            return new ResponseObject<>(HttpStatus.OK.value(), "Get categories successfully", res);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all sorted categories with search", null);
+        }
+    }
+
 }

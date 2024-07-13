@@ -235,7 +235,7 @@ public class ExportDetailService {
                     // Nếu số lượng inventory đủ để xuất thì thêm vào suggestedDetails
                     if (inventory.getQuantity() >= quantityToExport) {
                         suggestedDetails.add(new SuggestedExportProductsResponse(
-                                null,
+                                inventory.getId(),
                                 "",
                                 product,
                                 quantityToExport,
@@ -248,7 +248,7 @@ public class ExportDetailService {
                     } else {
                         // Nếu số lượng inventory không đủ để xuất thì lấy hết số lượng inventory đó -> giảm số lượng cần xuất -> lấy inventory tiếp theo
                         suggestedDetails.add(new SuggestedExportProductsResponse(
-                                null,
+                                inventory.getId(),
                                 "",
                                 product,
                                 inventory.getQuantity(),

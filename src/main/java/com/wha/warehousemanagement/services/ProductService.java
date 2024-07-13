@@ -171,4 +171,7 @@ public class ProductService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all products by warehouseId", null);
         }
     }
+    public Integer getTotalProductsForAutoSelect(Integer warehouseId, Integer categoryId, String search) {
+        return productRepository.getTotalProductsForAutoSelect(warehouseId, categoryId, search);
+    }
 }

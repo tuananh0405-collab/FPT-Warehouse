@@ -48,7 +48,7 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.deleteExportDetail(ids));
     }
 
-    @GetMapping("/suggest")
+    @PostMapping("/suggest")
     public ResponseEntity<ResponseObject<List<SuggestedExportProductsResponse>>> suggestExportDetail(@RequestBody List<SuggestedExportProductsRequest> requests) {
         return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
     }
