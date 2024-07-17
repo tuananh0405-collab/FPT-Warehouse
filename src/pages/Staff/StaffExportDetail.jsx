@@ -5,6 +5,8 @@ import { useSelector } from "react-redux";
 import {
   useGetExportByIdQuery,
   useUpdateExportByIdMutation,
+  useApproveExportPendingMutation,
+  useConfirmShippedSuccessMutation
 } from "../../redux/api/exportApiSlice";
 import {
   useGetAllExportDetailsByExportIdQuery,
@@ -31,6 +33,9 @@ import {
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
+import CheckIcon from '@mui/icons-material/Check';
+import ExportPDFDocument from '../../components/Orders/ExportPDFDocument';
+import { PDFDownloadLink } from "@react-pdf/renderer";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -62,7 +67,8 @@ function StaffExportDetail() {
     isFetching: isInventoryLoading,
     error: inventoryError,
   } = useGetAllInventoriesQuery(authToken);
-
+  const [approveExportPending, { isLoading: isApproving }] = useApproveExportPendingMutation();
+  const [confirmShippedSuccess, { isLoading: isUpdatingToShipping }] = useConfirmShippedSuccessMutation();
   const {
     data: warehouses,
     isFetching: isWarehouseLoading,
@@ -73,6 +79,8 @@ function StaffExportDetail() {
   const exportProducts = exportProductsData.data || [];
   const inventories = inventoriesData?.data || [];
   const warehousesData = warehouses?.data || [];
+
+  console.log("exportData: ", exportData, "exportProducts: ", exportProducts);
 
   const [isProductListPopupVisible, setIsProductListPopupVisible] =
     useState(false);
@@ -104,7 +112,6 @@ function StaffExportDetail() {
   const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
-    console.log(warehouseId);
     if (exportData) {
       setEditableData({
         ...exportData,
@@ -120,7 +127,6 @@ function StaffExportDetail() {
   }, [warehouseId, exportData]);
 
   useEffect(() => {
-    console.log(exportProducts);
     const selected = exportProducts.map((product) => ({
       id: product.id,
       productId: product.product.id,
@@ -380,7 +386,7 @@ function StaffExportDetail() {
         product.product.id === item.product.id &&
         product.zone.id === item.zone.id &&
         new Date(product.expiredAt).getTime() ===
-          new Date(item.expiredAt).getTime()
+        new Date(item.expiredAt).getTime()
     );
 
     if (existingExportDetail) {
@@ -424,6 +430,33 @@ function StaffExportDetail() {
     setSearchText(e.target.value.toLowerCase());
   };
 
+  const handleApproveExport = async () => {
+    try {
+      const response = await approveExportPending({
+        authToken,
+        exportId: id, // lấy từ useParams
+      }).unwrap();
+
+      message.success("Export approved successfully!");
+    } catch (error) {
+      message.error(error.data ? error.data.message : "Failed to approve export");
+    }
+  };
+
+  const handleConfirmShipped = async () => {
+    try {
+      const response = await confirmShippedSuccess({
+        authToken,
+        exportId: id, // lấy từ useParams
+      }).unwrap();
+
+      message.success("Export approved successfully!");
+    } catch (error) {
+      message.error(error.data ? error.data.message : "Failed to approve export");
+    }
+  };
+
+
   const warehouseZoneMapping = {
     1: [1, 2, 3, 4],
     2: [5, 6, 7, 8],
@@ -465,26 +498,26 @@ function StaffExportDetail() {
   const columns = [
     ...(isEditMode
       ? [
-          {
-            title: "Select",
-            dataIndex: "select",
-            key: "select",
-            render: (_, record) => (
-              <Checkbox
-                checked={selectedProductIds.includes(record.id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedProductIds([...selectedProductIds, record.id]);
-                  } else {
-                    setSelectedProductIds(
-                      selectedProductIds.filter((id) => id !== record.id)
-                    );
-                  }
-                }}
-              />
-            ),
-          },
-        ]
+        {
+          title: "Select",
+          dataIndex: "select",
+          key: "select",
+          render: (_, record) => (
+            <Checkbox
+              checked={selectedProductIds.includes(record.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedProductIds([...selectedProductIds, record.id]);
+                } else {
+                  setSelectedProductIds(
+                    selectedProductIds.filter((id) => id !== record.id)
+                  );
+                }
+              }}
+            />
+          ),
+        },
+      ]
       : []),
     {
       title: "Product Name",
@@ -529,41 +562,41 @@ function StaffExportDetail() {
     },
     ...(isEditMode
       ? [
-          {
-            title: "Action",
-            key: "action",
-            render: (_, record) =>
-              editableRow === record.id ? (
-                <span>
-                  <a
-                    className="no-select"
-                    onClick={() => handleSaveRowEdit(record)}
-                  >
-                    Save
-                  </a>
-                  <a
-                    className="no-select"
-                    onClick={() => {
-                      setEditableRow(null);
-                      setEditableRowData({});
-                    }}
-                  >
-                    Cancel
-                  </a>
-                </span>
-              ) : (
+        {
+          title: "Action",
+          key: "action",
+          render: (_, record) =>
+            editableRow === record.id ? (
+              <span>
+                <a
+                  className="no-select"
+                  onClick={() => handleSaveRowEdit(record)}
+                >
+                  Save
+                </a>
                 <a
                   className="no-select"
                   onClick={() => {
-                    setEditableRow(record.id);
-                    setEditableRowData(record);
+                    setEditableRow(null);
+                    setEditableRowData({});
                   }}
                 >
-                  Change
+                  Cancel
                 </a>
-              ),
-          },
-        ]
+              </span>
+            ) : (
+              <a
+                className="no-select"
+                onClick={() => {
+                  setEditableRow(record.id);
+                  setEditableRowData(record);
+                }}
+              >
+                Change
+              </a>
+            ),
+        },
+      ]
       : []),
   ];
 
@@ -837,6 +870,14 @@ function StaffExportDetail() {
               <div>
                 {exportData.status === "PENDING" && (
                   <div className="action-buttons">
+                    <Button>
+                      <PDFDownloadLink
+                        document={<ExportPDFDocument exportData={exportData} exportProducts={exportProducts} />}
+                        fileName="export-details.pdf"
+                      >
+                        {({ blob, url, loading, error }) => (loading ? 'Preparing document...' : 'Download PDF')}
+                      </PDFDownloadLink>
+                    </Button>
                     <Button
                       style={{
                         background: "#0284c7",
@@ -846,6 +887,32 @@ function StaffExportDetail() {
                       onClick={handleOpenEditMode}
                     >
                       <EditNoteIcon /> Edit
+                    </Button>
+                    <Button
+                      style={{
+                        background: "#15803d",
+                        color: "white",
+                      }}
+                      type="default"
+                      onClick={handleApproveExport}
+                      disabled={isApproving}
+                    >
+                      <CheckIcon /> Confirm
+                    </Button>
+                  </div>
+                )}
+                {exportData.status === "SHIPPING" && (
+                  <div className="action-buttons">
+                    <Button
+                      style={{
+                        background: "#15803d",
+                        color: "white",
+                      }}
+                      type="default"
+                      onClick={handleConfirmShipped}
+                      disabled={isUpdatingToShipping}
+                    >
+                      <CheckIcon /> Succeed
                     </Button>
                   </div>
                 )}
@@ -859,7 +926,7 @@ function StaffExportDetail() {
         title="Export Details"
         width={800}
         className="custom-modal"
-        visible={isProductListPopupVisible}
+        open={isProductListPopupVisible}
         onCancel={handleCloseProductListPopup}
         footer={[
           <div className="footer-modal-button">
@@ -906,7 +973,7 @@ function StaffExportDetail() {
 
       <Modal
         title="Select Products"
-        visible={isProductModalVisible}
+        open={isProductModalVisible}
         onCancel={handleCloseProductModal}
         footer={[
           <Button key="close" onClick={handleCloseProductModal}>
@@ -1012,7 +1079,7 @@ function StaffExportDetail() {
         title={modalConfirmTitle}
         width={400}
         className="custom-modal"
-        visible={isConfirmationPopupVisible}
+        open={isConfirmationPopupVisible}
         onCancel={handleCloseConfirmationPopup}
         footer={[
           <div key="footer">

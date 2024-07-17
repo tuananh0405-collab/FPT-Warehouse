@@ -10,7 +10,6 @@ import { setCredentials } from "../../redux/features/auth/authSlice";
 import { jwtDecode } from "jwt-decode";
 import { message } from "antd";
 import animationData from "../../assets/log-bg.json";
-import Lottie from "lottie-react";
 const LoginComponent = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -124,11 +123,7 @@ const LoginComponent = () => {
             </div>
           </form>
           <div className="w-full px-4 md:w-1/2 xl:w-1/2 flex justify-center items-center">
-            <Lottie
-              animationData={animationData}
-              className="flex justify-center items-center h-full"
-              loop={true}
-            />
+
           </div>
         </div>
       </div>
