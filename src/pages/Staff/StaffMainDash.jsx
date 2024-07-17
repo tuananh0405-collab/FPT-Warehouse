@@ -118,7 +118,12 @@ const StaffMainDash = () => {
     data: allExports,
     error: isError,
     isLoading: isLoading,
-  } = useGetAllExportsByWarehouseidQuery({warehouseId: wid, authToken});
+  } = useGetAllExportsQuery(authToken);
+//   useGetAllExportsByWarehouseidQuery({
+//     wid,
+//     authToken,
+//     pageNo: 1,
+// });
   console.log("allExports")
   console.log(allExports)
   const {
@@ -130,12 +135,12 @@ const StaffMainDash = () => {
   return (
     <div className="MainDash">
       <div class="container mx-auto">
-        <div class="grid grid-cols-2  ">
-          <div class="flex  text-6xl  rounded-xl">
-            <LineChart importData={allImports?.data} exportData={allExports?.data}/>
-          </div>
+      <div className="flex justify-center items-center h-full">
+      <div className="max-w-lg w-full rounded-xl">
+        <LineChart importData={allImports?.data} exportData={allExports?.data} />
+      </div>
+    </div>
           
-        </div>
         <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 ">
           <div class="flex justify-center text-6xl  rounded-xl">
             <DonutChart data={allExports} title={"Export"} />

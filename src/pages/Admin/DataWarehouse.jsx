@@ -105,14 +105,14 @@ const DataWarehouse = () => {
         rowsPerPage={rowsPerPage}
         showModal={showModal}
       />
-      {/* <WarehouseModal
+      <WarehouseModal
         isModalVisible={isModalVisible}
         handleOk={handleOk}
         handleCancel={handleCancel}
         handleDelete={handleDelete}
         selectedWarehouse={selectedWarehouse}
         form={form}
-      /> */}
+      />
     </div>
   );
 };
