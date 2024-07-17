@@ -6,11 +6,10 @@ import {
 } from "../../redux/api/productApiSlice";
 import {useGetCategoriesQuery} from '../../redux/api/categoryApiSlice'
 import ProductTable from "../../components/Products/ProductTable";
-import ProductModal from "../../components/Products/ProductModal";
 import { Form } from "antd";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
-import ProductModalInventory from "../../components/Products/ProductModalInventory";
+// import ProductModalInventory from "../../components/Products/ProductModalInventory";
 
 const StaffProductComponent = () => {
   const userInfo = useSelector((state) => state.auth);
@@ -23,6 +22,7 @@ const StaffProductComponent = () => {
   }
   const { data: products, isLoading: productsLoading, error: productsError } = useGetAllProductByWarehouseIdQuery({ id: warehouseId, authToken });
   console.log(products);
+  console.log(warehouseId);
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useGetCategoriesQuery(authToken);
 
   const [page, setPage] = useState(1);
@@ -65,13 +65,13 @@ const StaffProductComponent = () => {
         rowsPerPage={rowsPerPage}
         showModal={showModal}
       />
-      <ProductModalInventory
+      {/* <ProductModalInventory
         isModalVisible={isModalVisible}
         handleCancel={handleCancel}
         selectedProduct={selectedProduct}
         form={form}
         categories={categories.data}
-      />
+      /> */}
     </div>
   );
 };

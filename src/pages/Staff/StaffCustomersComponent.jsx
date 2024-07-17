@@ -61,12 +61,12 @@ const StaffCustomerComponent = () => {
         rowsPerPage={rowsPerPage}
         showModal={showModal}
       />
-      <CustomerModal
+      {/* <CustomerModal
         isModalVisible={isModalVisible}
         handleCancel={handleCancel}
         selectedCustomer={selectedCustomer}
         form={form}
-      />
+      /> */}
     </div>
   );
 };
