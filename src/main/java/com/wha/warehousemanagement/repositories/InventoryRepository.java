@@ -127,4 +127,10 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
             @Param("zoneId") Integer zoneId,
             @Param("expiredAt") Date expiredAt);
 
+
+    @Query("SELECT i FROM Inventory i WHERE i.product.name = :productName AND (:expiredAt is not null or i.expiredAt = :expiredAt) AND i.zone.id = :zoneId")
+    Inventory findByExportDetail(@Param("productName") String productName,
+            @Param("expiredAt") Date expiredAt,
+            @Param("zoneId") Integer zoneId);
+
 }

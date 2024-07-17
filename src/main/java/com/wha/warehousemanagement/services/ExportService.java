@@ -3,10 +3,8 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportUpdateRequest;
-import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.dtos.responses.ExportResponse;
-import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ExportMapper;
@@ -24,8 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.time.DateUtils.parseDate;
 
 @Service
 @RequiredArgsConstructor
@@ -425,5 +421,51 @@ public class ExportService {
         return exportRepository.findAllExportsForAdmin(status, pageable);
     }
 
+    public ResponseObject<?> approveExportPending(Integer exportId) {
+        try {
+            Export export = exportRepository.findById(exportId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+
+            if (export.getStatus() != Status.PENDING) {
+                throw new CustomException(ErrorCode.INVALID_STATUS_TO_EXPORT);
+            }
+
+            List<ExportDetail> exportDetails = exportDetailRepository.findByExportId(export.getId());
+
+            for (ExportDetail exportDetail : exportDetails) {
+                Inventory inventory = inventoryRepository.findByExportDetail(
+                        exportDetail.getProduct().getName(),
+                        exportDetail.getExpiredAt(),
+                        exportDetail.getZone().getId()
+                );
+
+                inventory.setQuantity(inventory.getQuantity() - exportDetail.getQuantity());
+                inventoryRepository.save(inventory);
+            }
+
+            export.setStatus(Status.SHIPPING);
+            exportRepository.save(export);
+
+            return new ResponseObject<>(HttpStatus.OK.value(), "Approved export pending successfully", null);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed at approveExportPending", null);
+        }
+    }
+
+    public ResponseObject<?> confirmShippedSuccessfully (Integer exportid) {
+        try {
+            Export export = exportRepository.findById(exportid)
+                    .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+            export.setStatus(Status.SUCCEED);
+            exportRepository.save(export);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export shipped successfully", null);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to ship export", null);
+        }
+    }
 
 }

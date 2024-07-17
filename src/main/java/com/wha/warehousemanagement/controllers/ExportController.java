@@ -97,11 +97,6 @@ public class ExportController {
         return ResponseEntity.ok(exportService.createTransferBetweenWarehouses(request));
     }
 
-//    @PutMapping("/staff/process-export")
-//    public ResponseEntity<?> processExport(@RequestBody processExportByStaffRequest request) {
-//        return ResponseEntity.ok(exportService.processExportRequestToTransfer(request));
-//    }
-
     @GetMapping("/admin")
     public ResponseEntity<?> getAllExportsForAdmin(
             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -112,5 +107,19 @@ public class ExportController {
         int limit = 5;
         pageNo = pageNo - 1;
         return ResponseEntity.ok(exportService.getAllExportsForAdmin(pageNo, limit, sortBy, direction, status));
+    }
+
+    @PutMapping("/approve/{exportId}")
+    public ResponseEntity<?> approveExportRequest(
+            @PathVariable Integer exportId
+    ) {
+        return ResponseEntity.ok(exportService.approveExportPending(exportId));
+    }
+
+    @PutMapping("/shipped/{exportId}")
+    public ResponseEntity<?> shippedExportRequest(
+            @PathVariable Integer exportId
+    ) {
+        return ResponseEntity.ok(exportService.confirmShippedSuccessfully(exportId));
     }
 }
