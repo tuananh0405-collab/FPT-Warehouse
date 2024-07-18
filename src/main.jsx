@@ -29,7 +29,7 @@ import StaffZone from "./pages/Staff/StaffZone.jsx";
 import StaffProduct from "./pages/Staff/StaffProduct.jsx";
 import StaffCustomer from "./pages/Staff/StaffCustomer.jsx";
 import StaffExpport from "./pages/Staff/StaffExport.jsx";
-import StaffImport from "./pages/Staff/StaffImport.jsx";
+import StaffImportPage from "./pages/Staff/StaffImport.jsx";
 import StaffNewExport from "./pages/Staff/StaffAddExport.jsx";
 import StaffExportDetail from "./pages/Staff/StaffExportDetail.jsx";
 import StaffAddImport from "./pages/Staff/StaffAddImport.jsx";
@@ -64,9 +64,17 @@ const router = createBrowserRouter(
           <Route path="/products" element={<ProductComponent />} />
           <Route path="/data/warehouse" element={<DataWarehouse />} />
           <Route path="/data/zone" element={<DataZone />} />
-          <Route path="/data/zone/warehouseId/:id" element={<WarehouseZone />} />
+          <Route
+            path="/data/zone/warehouseId/:id"
+            element={<WarehouseZone />}
+          />
           <Route path="/data/category" element={<DataCategory />} />
           <Route path="/data/customer" element={<DataCustomers />} />
+          <Route path="/order/import" element={<OrderImport />} />
+          <Route path="/order/export" element={<OrderExport />} />
+          <Route path="/order/export/:id" element={<ExportDetails />} />
+          <Route path="/order/import/:id" element={<ImportDetails />} />
+          <Route path="/report" element={<ReportComponent />} />
           <Route path="/order/import" element={<OrderImport />} />
           <Route path="/order/export" element={<OrderExport />} />
           <Route path="/order/export/:id" element={<ExportDetails />} />
@@ -81,11 +89,14 @@ const router = createBrowserRouter(
           <Route path="/staff/orders" element={<StaffOrder />} />
           <Route path="/staff/data" element={<StaffData />} />
           <Route path="/staff/data/zone" element={<StaffZone />} />
-          <Route path="/staff/data/zone/:zoneid/inventory" element={<StaffZoneInventory />} />
+          <Route
+            path="/staff/data/zone/:zoneid/inventory"
+            element={<StaffZoneInventory />}
+          />
           <Route path="/staff/data/products" element={<StaffProduct />} />
           <Route path="/staff/data/customers" element={<StaffCustomer />} />
           <Route path="/staff/order/export" element={<StaffExpport />} />
-          <Route path="/staff/order/import" element={<StaffImport />} />
+          <Route path="/staff/order/import" element={<StaffImportPage />} />
           <Route path="/staff/export/new" element={<StaffNewExport />} />
           <Route path="/staff/import/new" element={<StaffAddImport />} />
           <Route path="/staff/export/detail/:id" element={<StaffExportDetail />} />

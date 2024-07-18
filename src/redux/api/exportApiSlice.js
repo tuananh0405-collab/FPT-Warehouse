@@ -112,6 +112,26 @@ export const exportApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Export"],
     }),
+    approveExportPending: builder.mutation({
+      query: ({ authToken, exportId }) => ({
+        url: `${EXPORT_URL}/approve/${exportId}`, // Sử dụng exportId trong URL
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        method: "PUT",
+      }),
+      invalidatesTags: ["Export"],
+    }),
+    confirmShippedSuccess: builder.mutation({
+      query: ({ authToken, exportId }) => ({
+        url: `${EXPORT_URL}/shipped/${exportId}`, // Sử dụng exportId trong URL
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        method: "PUT",
+      }),
+      invalidatesTags: ["Export"],
+    }),
   }),
 });
 
@@ -123,7 +143,9 @@ export const {
   useGetAllExportsQuery,
   useDeleteExportMutation,
   useGetExportByIdQuery,
-  useUpdateExportByIdMutation
+  useUpdateExportByIdMutation,
+  useApproveExportPendingMutation,
+  useConfirmShippedSuccessMutation,
 } = exportApiSlice;
 
 

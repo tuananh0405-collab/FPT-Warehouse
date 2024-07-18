@@ -7,6 +7,7 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Pagination from "@mui/material/Pagination";
 import { Button } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const createData = (name, id, description, address, createdAt) => {
   return { name, id, description, address, createdAt };
@@ -16,6 +17,7 @@ const WarehouseTable = ({ warehouseList, page, setPage, rowsPerPage, showModal }
   const rows = warehouseList.map((warehouse) =>
     createData(warehouse.name, warehouse.id, warehouse.description, warehouse.address, warehouse.createdAt)
   );
+  const navigate = useNavigate();
 
   const paginatedRows = rows.slice(
     (page - 1) * rowsPerPage,
@@ -40,7 +42,8 @@ const WarehouseTable = ({ warehouseList, page, setPage, rowsPerPage, showModal }
               <TableCell align="left">Description</TableCell>
               <TableCell align="left">Address</TableCell>
               <TableCell align="left">Created At</TableCell>
-              <TableCell align="left"></TableCell>
+              <TableCell align="left" >Details</TableCell>
+              <TableCell align="left" >Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody style={{ color: "white" }}>
@@ -62,6 +65,14 @@ const WarehouseTable = ({ warehouseList, page, setPage, rowsPerPage, showModal }
                     onClick={() => showModal(row.id)}
                   >
                     Details
+                  </Button>
+                </TableCell>
+                <TableCell align="left" className="Details">
+                  <Button
+                    type="default"
+                    onClick={() => navigate(`/data/zone/warehouseId/${row.id}`)}
+                  >
+                    View Zones
                   </Button>
                 </TableCell>
               </TableRow>

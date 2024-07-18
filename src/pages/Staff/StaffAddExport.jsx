@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { useAddExportMutation } from "../../redux/api/exportApiSlice";
 import { useAddCustomerMutation } from "../../redux/api/customersApiSlice";
 import { useCreateExportDetailsMutation } from "../../redux/api/exportDetailApiSlice";
+import AutoSelectModal from "../../components/Orders/AutoSelectModal";
 
 const { Option } = Select;
 
@@ -33,6 +34,7 @@ const StaffAddExport = () => {
   const [form] = Form.useForm();
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
+  const warehouseId = userInfo.userInfo.data.warehouseId;
   const [addExport, { isLoading: isExportCreating }] = useAddExportMutation();
   const [addCustomer, { isLoading: isCustomerCreating }] =
     useAddCustomerMutation();
@@ -54,11 +56,11 @@ const StaffAddExport = () => {
     isFetching: isProductLoading,
     error: productError,
   } = useGetAllProductsQuery(authToken);
-  // const {
-  //   data: inventories,
-  //   isFetching: isInventoryLoading,
-  //   error: inventoryError,
-  // } = useGetAllInventoriesQuery(authToken);
+  const {
+    data: inventories,
+    isFetching: isInventoryLoading,
+    error: inventoryError,
+  } = useGetAllInventoriesQuery(authToken);
   const {
     data: customers,
     isFetching: isCustomerLoading,
@@ -78,10 +80,13 @@ const StaffAddExport = () => {
   const [filterType, setFilterType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
+  // For auto select feature
+  const [isAutoProductSelectVisible, setIsAutoProductSelectVisible] = useState(false);
+
   const warehousesData = warehouses?.data || [];
   const zonesData = zones?.data || [];
   const productsData = products?.data || [];
-  const inventoriesData = [];
+  const inventoriesData = inventories?.data || [];
   const customersData = customers?.data || [];
 
   const [formData, setFormData] = useState({
@@ -263,25 +268,38 @@ const StaffAddExport = () => {
     }
   };
 
-  const filteredData = inventoriesData.filter((item) => {
-    const now = new Date();
-    const expiredAt = new Date(item.expiredAt);
-    const inFifteenDays = new Date(now);
-    inFifteenDays.setDate(now.getDate() + 15);
+  const warehouseZoneMapping = {
+    1: [1, 2, 3, 4],
+    2: [5, 6, 7, 8],
+    3: [9, 10, 11, 12],
+    4: [13, 14, 15, 16],
+  };
 
-    if (filterType === "expired" && expiredAt >= now) return false;
-    if (
-      filterType === "expiring" &&
-      (expiredAt < now || expiredAt > inFifteenDays)
+  const filteredData = inventoriesData
+    .filter(
+      (item) =>
+        item.zone.warehouse.id === warehouseId &&
+        warehouseZoneMapping[warehouseId].includes(item.zone.id)
     )
-      return false;
-    if (filterType === "valid" && expiredAt <= now) return false;
+    .filter((item) => {
+      const now = new Date();
+      const expiredAt = new Date(item.expiredAt);
+      const inFifteenDays = new Date(now);
+      inFifteenDays.setDate(now.getDate() + 15);
 
-    return (
-      item.product.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.zone.name.toLowerCase().includes(searchText.toLowerCase())
-    );
-  });
+      if (filterType === "expired" && expiredAt >= now) return false;
+      if (
+        filterType === "expiring" &&
+        (expiredAt < now || expiredAt > inFifteenDays)
+      )
+        return false;
+      if (filterType === "valid" && expiredAt <= now) return false;
+
+      return (
+        item.product.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.zone.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+    });
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * 10,
@@ -349,24 +367,36 @@ const StaffAddExport = () => {
       warehouseError,
       zoneError,
       productError,
-      // inventoryError,
+      inventoryError,
     ].filter(Boolean);
     if (errors.length > 0) {
       message.error("Failed to fetch data. Please try again.");
     }
-  }, [warehouseError, zoneError, productError]);
-
-  //}, [warehouseError, zoneError, productError, inventoryError]);
+  }, [warehouseError, zoneError, productError, inventoryError]);
 
   const handleOpenPopup = () => setIsPopupVisible(true);
   const handleClosePopup = () => setIsPopupVisible(false);
   const handlePageChange = (page) => setCurrentPage(page);
 
+  const handleAutoProductSelect = (products) => {
+    setSelectedProducts((prevProducts) => [
+      ...prevProducts,
+      ...products.map(product => ({
+        id: product.inventoryId, // Use inventory ID as the key identifier
+        name: product.product.name,
+        category: product.product.category.name,
+        quantity: product.quantity,
+        expiredAt: product.expiredAt,
+        zoneName: product.zoneName
+      }))
+    ]);
+  };
+
   const isLoading =
     isWarehouseLoading ||
     isZoneLoading ||
     isProductLoading ||
-    // isInventoryLoading ||
+    isInventoryLoading ||
     isCustomerLoading;
 
   if (isLoading) return <Loading />;
@@ -374,15 +404,16 @@ const StaffAddExport = () => {
     warehouseError ||
     zoneError ||
     productError ||
+    inventoryError ||
     customerError
   )
     return <Error500 />;
 
   return (
-    <div>
+    <>
       <Breadcrumbs />
       <div className="MainDash relative">
-        <h1 className="font-bold text-3xl py-4">New Export</h1>
+        <h1>New Export</h1>
         <Form form={form} layout="vertical" initialValues={formData}>
           <Form.Item
             label="Description"
@@ -636,9 +667,17 @@ const StaffAddExport = () => {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 style={{ width: "50%" }}
+                className="mr-4"
               />
+              <Button
+                className="bg-black text-white"
+                onClick={() => { setIsAutoProductSelectVisible(true) }}
+              >
+                Auto Select
+              </Button>
             </div>
             <div style={{ display: "flex", height: "80%" }}>
+              {isAutoProductSelectVisible && (<AutoSelectModal authToken={authToken} warehouseId={warehouseId} isModalOpen={isAutoProductSelectVisible} setIsModalOpen={setIsAutoProductSelectVisible} onProductSelect={handleAutoProductSelect} />)}
               <div style={{ width: "70%", paddingRight: "10px" }}>
                 <Table
                   dataSource={paginatedData}
@@ -715,7 +754,7 @@ const StaffAddExport = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

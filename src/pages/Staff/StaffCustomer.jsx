@@ -1,8 +1,9 @@
 import React from 'react'
+import StaffCustomerComponent from './StaffCustomersComponent'
 
 const StaffCustomer = () => {
   return (
-    <div>StaffCustomer</div>
+    <div><StaffCustomerComponent/></div>
   )
 }
 
