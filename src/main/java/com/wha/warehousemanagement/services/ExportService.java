@@ -106,6 +106,7 @@ public class ExportService {
             List<ExportResponse> response =
                     exportRepository.findAll()
                             .stream()
+                            .filter(export -> export.getWarehouseFrom() != null)
                             .map(exportMapper::toDto
                             )
                             .collect(Collectors.toList());
