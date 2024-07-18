@@ -1,10 +1,10 @@
 import React from 'react'
-import StaffMainDash from './StaffMainDash'
+import MainDash from '../Admin/MainDash'
 
 const StaffDashboard = () => {
   return (
     <div>
-       <StaffMainDash />
+       <MainDash />
     </div>
   )
 }

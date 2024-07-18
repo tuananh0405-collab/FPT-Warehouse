@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Table, Typography, Button } from 'antd';
 import { useSelector } from 'react-redux';
 import { useGetInventoriesByZoneIdQuery } from '../../redux/api/inventoryApiSlice';
@@ -15,21 +15,13 @@ const StaffZoneInventory = () => {
   const navigate = useNavigate();
   const userInfo = useSelector((state) => state.auth);
   let authToken;
-  let wid;
   if (userInfo && userInfo.userInfo && userInfo.userInfo.data) {
     authToken = userInfo.userInfo.data.token;
-    wid = userInfo.userInfo.data.warehouseId;
   }
 
   const { data: inventories, isLoading, error } = useGetInventoriesByZoneIdQuery({ id: zoneid, authToken });
   const { data: zone, isLoading2, error2 } = useGetZoneByIdQuery({ id: zoneid, authToken });
   console.log(zone);
-
-  const {data: zone, zoneIsLoading, zoneError} = useGetZoneByWarehouseIdQuery({ id: wid, authToken });
-  console.log(zone)
-  const zoneName = zone?.data.find((z) => z.id === parseInt(zoneid))?.name;
-  console.log(zoneid+zoneName)
-
 
   const handleTransfer = (productId, zoneId) => {
     navigate(`/staff/transfer?productId=${productId}&zoneId=${zoneId}`);
@@ -72,7 +64,7 @@ const StaffZoneInventory = () => {
       <Title level={2}>Inventory List for {zone?.data?.name}</Title>
       {isLoading ? (
         <Loading />
-      ) : error || zoneError ? (
+      ) : error ? (
         <Error500 />
       ) : (
         <Table

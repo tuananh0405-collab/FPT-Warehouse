@@ -84,18 +84,10 @@ const StaffAddImport = () => {
       const customers = customersData.data || [];
 
       const exportsWithCustomerNames = exports.map((exp) => {
-        console.log(exports);
-        let customerName = "Unknown";
-        // const customer = customers.find((cust) => cust.id === exp.customer.id);
-        if (exp.customer) {
-          const customer = customers.find(
-            (cust) => cust.id === exp.customer.id
-          );
-          customerName = customer ? customer.name : "Unknown";
-        }
+        const customer = customers.find((cust) => cust.id === exp.customer.id);
         return {
           ...exp,
-          customerName,
+          customerName: customer ? customer.name : "Unknown",
         };
       });
 
@@ -160,11 +152,11 @@ const StaffAddImport = () => {
       prevAllocations.map((allocation) =>
         allocation.productId === productId
           ? {
-              ...allocation,
-              zones: allocation.zones.map((zone, zoneIndex) =>
-                zoneIndex === index ? { ...zone, [field]: value } : zone
-              ),
-            }
+            ...allocation,
+            zones: allocation.zones.map((zone, zoneIndex) =>
+              zoneIndex === index ? { ...zone, [field]: value } : zone
+            ),
+          }
           : allocation
       )
     );
@@ -175,9 +167,9 @@ const StaffAddImport = () => {
       prevAllocations.map((allocation) =>
         allocation.productId === productId
           ? {
-              ...allocation,
-              zones: [...allocation.zones, { zoneId: null, quantity: 0 }],
-            }
+            ...allocation,
+            zones: [...allocation.zones, { zoneId: null, quantity: 0 }],
+          }
           : allocation
       )
     );

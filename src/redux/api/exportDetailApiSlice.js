@@ -91,23 +91,6 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["ExportDetail"],
     }),
-    autoGetProductFromWarehouse: builder.mutation({
-      query: ({ authToken, warehouseId, productId, quantity }) => ({
-        url: `${EXPORT_DETAIL_URL}/suggest`,
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: [
-          {
-            productId,
-            quantity,
-            warehouseId
-          }
-        ]
-      }),
-    })
   }),
 });
 
@@ -120,5 +103,4 @@ export const {
   useUpdateAndAddExportDetailsMutation,
   useCheckAvailableQuantityMutation,
   useGetExportDetailsByExportIdQuery,
-  useAutoGetProductFromWarehouseMutation,
 } = exportDetailApiSlice;

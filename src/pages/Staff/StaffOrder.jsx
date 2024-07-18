@@ -5,22 +5,20 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import StoreIcon from "@mui/icons-material/Store";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import { Meta } from "antd/es/list/Item";
-import LogoutIcon from "@mui/icons-material/Logout";
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const StaffOrder = () => {
   const cardData = [
     {
       title: "Import",
       description: "",
-      icon: <LogoutIcon style={{ fontSize: 64, transform: "rotate(90deg)" }} />,
+      icon: <LogoutIcon style={{ fontSize: 64, transform: 'rotate(90deg)' }} />,
       link: "/staff/order/import",
     },
     {
       title: "Export",
       description: "",
-      icon: (
-        <LogoutIcon style={{ fontSize: 64, transform: "rotate(-90deg)" }} />
-      ),
+      icon: <LogoutIcon style={{ fontSize: 64, transform: 'rotate(-90deg)' }} />,
       link: "/staff/order/export",
     },
   ];
@@ -75,7 +73,7 @@ const StaffOrder = () => {
         </Row>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default StaffOrder;
+export default StaffOrder
