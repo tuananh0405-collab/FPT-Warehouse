@@ -14,8 +14,11 @@ export const userApiSlice = apiSlice.injectEndpoints({
       keepUnusedDataFor: 5,
     }),
     getZoneById: builder.query({
-      query: (id) => ({
+      query: ({id,authToken}) => ({
         url: `${ZONE_URL}/${id}`,
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
       }),
       keepUnusedDataFor: 5,
     }),

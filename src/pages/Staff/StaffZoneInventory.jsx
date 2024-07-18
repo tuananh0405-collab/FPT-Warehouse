@@ -6,7 +6,7 @@ import { useGetInventoriesByZoneIdQuery } from '../../redux/api/inventoryApiSlic
 import Loading from '../../utils/Loading';
 import Error500 from '../../utils/Error500';
 import Breadcrumbs from '../../utils/Breadcumbs';
-import { useGetZoneByWarehouseIdQuery } from '../../redux/api/zoneApiSlice';
+import { useGetZoneByIdQuery } from '../../redux/api/zoneApiSlice';
 
 const { Title } = Typography;
 
@@ -22,7 +22,8 @@ const StaffZoneInventory = () => {
   }
 
   const { data: inventories, isLoading, error } = useGetInventoriesByZoneIdQuery({ id: zoneid, authToken });
-  console.log(inventories);
+  const { data: zone, isLoading2, error2 } = useGetZoneByIdQuery({ id: zoneid, authToken });
+  console.log(zone);
 
   const {data: zone, zoneIsLoading, zoneError} = useGetZoneByWarehouseIdQuery({ id: wid, authToken });
   console.log(zone)
@@ -68,8 +69,8 @@ const StaffZoneInventory = () => {
   return (
     <div>
       <Breadcrumbs />
-      <Title level={2}>Inventory List for {zoneName}</Title>
-      {isLoading || zoneIsLoading   ? (
+      <Title level={2}>Inventory List for {zone?.data?.name}</Title>
+      {isLoading ? (
         <Loading />
       ) : error || zoneError ? (
         <Error500 />

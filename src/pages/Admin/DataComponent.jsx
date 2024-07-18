@@ -45,7 +45,7 @@ const DataComponent = () => {
   const cardStyle = {
     width: "80%",
     height: 0,
-    paddingBottom: "80%",
+    paddingBottom: "60%",
     position: "relative",
     overflow: "hidden",
   };
@@ -66,7 +66,7 @@ const DataComponent = () => {
   return (
     <div>
       <Breadcrumbs/>
-      <div style={{ padding: "20px" }}>
+      <div style={{ padding: "10px" }}>
         <Row gutter={[16, 16]} justify="space-around">
           {cardData.map((card, index) => (
             <Col xs={24} sm={24} md={12} lg={8} xl={8} key={index}>
