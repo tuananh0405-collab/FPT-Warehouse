@@ -26,7 +26,7 @@ export const productApiSlice = apiSlice.injectEndpoints({
     }),
     getAllProductByWarehouseId: builder.query({
       query: ({ id, authToken }) => ({
-        url: `${PRODUCT_URL}/product-list-for-export/${id}`,
+        url: `${PRODUCT_URL}/product-list-for-auto-select/${id}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
         },

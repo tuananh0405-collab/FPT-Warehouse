@@ -1,11 +1,12 @@
 import React from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Typography, Button } from 'antd';
 import { useSelector } from 'react-redux';
 import { useGetInventoriesByZoneIdQuery } from '../../redux/api/inventoryApiSlice';
 import Loading from '../../utils/Loading';
 import Error500 from '../../utils/Error500';
 import Breadcrumbs from '../../utils/Breadcumbs';
+import { useGetZoneByWarehouseIdQuery } from '../../redux/api/zoneApiSlice';
 
 const { Title } = Typography;
 
@@ -14,12 +15,20 @@ const StaffZoneInventory = () => {
   const navigate = useNavigate();
   const userInfo = useSelector((state) => state.auth);
   let authToken;
+  let wid;
   if (userInfo && userInfo.userInfo && userInfo.userInfo.data) {
     authToken = userInfo.userInfo.data.token;
+    wid = userInfo.userInfo.data.warehouseId;
   }
 
   const { data: inventories, isLoading, error } = useGetInventoriesByZoneIdQuery({ id: zoneid, authToken });
   console.log(inventories);
+
+  const {data: zone, zoneIsLoading, zoneError} = useGetZoneByWarehouseIdQuery({ id: wid, authToken });
+  console.log(zone)
+  const zoneName = zone?.data.find((z) => z.id === parseInt(zoneid))?.name;
+  console.log(zoneid+zoneName)
+
 
   const handleTransfer = (productId, zoneId) => {
     navigate(`/staff/transfer?productId=${productId}&zoneId=${zoneId}`);
@@ -59,10 +68,10 @@ const StaffZoneInventory = () => {
   return (
     <div>
       <Breadcrumbs />
-      <Title level={2}>Inventory List for Zone {zoneid}</Title>
-      {isLoading ? (
+      <Title level={2}>Inventory List for {zoneName}</Title>
+      {isLoading || zoneIsLoading   ? (
         <Loading />
-      ) : error ? (
+      ) : error || zoneError ? (
         <Error500 />
       ) : (
         <Table
