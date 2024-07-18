@@ -4,24 +4,16 @@ import { EXPORT_URL } from "../constants";
 export const exportApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllExportsForAdmin: builder.query({
-      query: ({ authToken, pageNo = 1, sortBy = "id", direction = "asc", status }) => ({
-        url: `${EXPORT_URL}/admin`,
+      query: ({ authToken, page = 1 }) => ({
+        url: `${EXPORT_URL}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
         params: {
-          pageNo,
-          sortBy,
-          direction,
-          status,
+          page,
         },
       }),
       providesTags: ["Export"],
-      transformResponse: (response) => {
-        // Lọc bỏ các mục có warehouseFrom là null
-        const filteredContent = response.content.filter(exportItem => exportItem.warehouseFrom !== null);
-        return { ...response, content: filteredContent };
-      },
       keepUnusedDataFor: 5,
     }),
     getAllExportsByWarehouseid: builder.query({

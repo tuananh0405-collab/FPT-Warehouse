@@ -22,7 +22,7 @@ const DataWarehouse = () => {
   const [deleteWarehouse] = useDeleteWarehouseMutation();
   const [addWarehouse] = useAddWarehouseMutation();
   const [page, setPage] = useState(1);
-  const rowsPerPage = 3;
+  const rowsPerPage = 10;
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [form] = Form.useForm();
@@ -35,12 +35,19 @@ const DataWarehouse = () => {
     setIsModalVisible(true);
   };
 
-  const handleOk = async () => {
-    const values = await form.validateFields();
-    const data = { ...values, id: selectedWarehouse.id };
-    await updateWarehouse({ warehouseId: selectedWarehouse.id, formData: data, authToken });
-    setIsModalVisible(false);
+
+  const handleOk = async (values) => {
+    try {
+      const data = { ...values, id: selectedWarehouse.id };
+      await updateWarehouse({ warehouseId: selectedWarehouse.id, formData: data, authToken }).unwrap();
+      setIsModalVisible(false);
+      message.success("Warehouse updated successfully");
+    } catch (error) {
+      console.error(error);
+      message.error("Failed to update warehouse");
+    }
   };
+  
 
   const handleCancel = () => {
     setIsModalVisible(false);
