@@ -1,6 +1,8 @@
 package com.wha.warehousemanagement.services;
 
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
+import com.wha.warehousemanagement.dtos.requests.TransferProductRequest;
+import com.wha.warehousemanagement.dtos.requests.TransferRequest;
 import com.wha.warehousemanagement.dtos.requests.checkAvailableProductRequest;
 import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
 import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -180,28 +183,68 @@ public class InventoryService {
 
 
     //zones transfer
+//    @Transactional
+//    public void transferProductBetweenZones(int productId, int fromZoneId, int toZoneId, int quantity) {
+//        // Giảm số lượng sản phẩm trong zone xuất phát
+//        Inventory fromInventory = inventoryRepository.findByProductIdAndZoneId(productId, fromZoneId);
+//        if (fromInventory == null || fromInventory.getQuantity() < quantity) {
+//            throw new RuntimeException("Không đủ số lượng sản phẩm để chuyển");
+//        }
+//        fromInventory.setQuantity(fromInventory.getQuantity() - quantity);
+//        inventoryRepository.save(fromInventory);
+//
+//        // Tăng số lượng sản phẩm trong zone đích
+//        Inventory toInventory = inventoryRepository.findByProductIdAndZoneId(productId, toZoneId);
+//        if (toInventory == null) {
+//            Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+//            Zone zone = zoneRepository.findById(toZoneId).orElseThrow(() -> new RuntimeException("Zone not found"));
+//
+//            toInventory = new Inventory();
+//            toInventory.setProduct(product);
+//            toInventory.setZone(zone);
+//            toInventory.setQuantity(0);
+//        }
+//        toInventory.setQuantity(toInventory.getQuantity() + quantity);
+//        inventoryRepository.save(toInventory);
+//    }
+
     @Transactional
-    public void transferProductBetweenZones(int productId, int fromZoneId, int toZoneId, int quantity) {
+    public void transferProducts(List<TransferRequest> transferRequests) {
+        for (TransferRequest request : transferRequests) {
+            transferProductBetweenZones(request.getProductId(), request.getFromZoneId(), request.getToZoneId(), request.getQuantity(), request.getExpiredAt());
+        }
+    }
+
+    @Transactional
+    public void transferProductBetweenZones(int productId, int fromZoneId, int toZoneId, int quantity, Date expiredAt) {
         // Giảm số lượng sản phẩm trong zone xuất phát
-        Inventory fromInventory = inventoryRepository.findByProductIdAndZoneId(productId, fromZoneId);
-        if (fromInventory == null || fromInventory.getQuantity() < quantity) {
+        Optional<Inventory> fromInventoryOpt = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(productId, fromZoneId, expiredAt);
+        Inventory fromInventory = fromInventoryOpt.orElseThrow(() -> new RuntimeException("Không đủ số lượng sản phẩm để chuyển"));
+
+        if (fromInventory.getQuantity() < quantity) {
             throw new RuntimeException("Không đủ số lượng sản phẩm để chuyển");
         }
         fromInventory.setQuantity(fromInventory.getQuantity() - quantity);
         inventoryRepository.save(fromInventory);
 
-        // Tăng số lượng sản phẩm trong zone đích
-        Inventory toInventory = inventoryRepository.findByProductIdAndZoneId(productId, toZoneId);
-        if (toInventory == null) {
+        // Kiểm tra tồn kho tại zone đích với cùng expiredAt
+        Optional<Inventory> toInventoryOpt = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(productId, toZoneId, expiredAt);
+        Inventory toInventory;
+        if (toInventoryOpt.isPresent()) {
+            // Nếu tìm thấy tồn kho với cùng expiredAt, cộng thêm số lượng
+            toInventory = toInventoryOpt.get();
+            toInventory.setQuantity(toInventory.getQuantity() + quantity);
+        } else {
+            // Nếu không tìm thấy tồn kho với cùng expiredAt, tạo mới một inventory
             Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
             Zone zone = zoneRepository.findById(toZoneId).orElseThrow(() -> new RuntimeException("Zone not found"));
 
             toInventory = new Inventory();
             toInventory.setProduct(product);
             toInventory.setZone(zone);
-            toInventory.setQuantity(0);
+            toInventory.setQuantity(quantity);
+            toInventory.setExpiredAt(expiredAt);
         }
-        toInventory.setQuantity(toInventory.getQuantity() + quantity);
         inventoryRepository.save(toInventory);
     }
 
@@ -317,5 +360,9 @@ public class InventoryService {
         Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(productId, zoneId, expiredAt)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
         return inventoryMapper.toDto(inventory);
+    }
+
+    public List<Inventory> getInventoryByWarehouseId(Integer warehouseId) {
+        return inventoryRepository.findByZoneWarehouseId(warehouseId);
     }
 }
