@@ -18,9 +18,8 @@ import { useGetZoneByWarehouseIdQuery } from "../../redux/api/zoneApiSlice";
 import { useGetInventoriesByWarehouseIdQuery } from "../../redux/api/inventoryApiSlice";
 
 const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
-  console.log(initialInventory);
   const [transfers, setTransfers] = useState([
-    { productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }
+    { productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt, quantityError: '' }
   ]);
   const [isFormDisabled, setIsFormDisabled] = useState(true);
 
@@ -40,6 +39,11 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
 
   const handleTransfer = async (e) => {
     e.preventDefault();
+    const isValid = transfers.every((transfer) => !transfer.quantityError);
+    if (!isValid) {
+      message.error("Please fix the errors in the form before submitting");
+      return;
+    }
     try {
         const transferRequests = transfers.map((transfer) => ({
             productId: parseInt(transfer.productId, 10),
@@ -52,7 +56,7 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
             transferRequests,
             authToken,
         });
-        setTransfers([{ productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }]);
+        setTransfers([{ productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt, quantityError: '' }]);
         message.success("Transfers successfully");
         onTransferSuccess();
     } catch (err) {
@@ -61,7 +65,7 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
   };
 
   const handleAddTransfer = () => {
-    setTransfers([...transfers, { productId: '', fromZoneId: '', toZoneId: '', quantity: '', expiredAt: '' }]);
+    setTransfers([...transfers, { productId: '', fromZoneId: '', toZoneId: '', quantity: '', expiredAt: '', quantityError: '' }]);
   };
 
   const handleRemoveTransfer = (index) => {
@@ -72,6 +76,17 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
   const handleTransferChange = (index, field, value) => {
     const newTransfers = [...transfers];
     newTransfers[index][field] = value;
+    if (field === 'quantity') {
+      const selectedProductInventories = inventories
+        ? inventories.filter((inventory) => inventory.product.id === newTransfers[index].productId && inventory.zone.id === newTransfers[index].fromZoneId && inventory.expiredAt === newTransfers[index].expiredAt)
+        : [];
+      const availableQuantity = selectedProductInventories.length > 0 ? selectedProductInventories[0].quantity : 0;
+      if (value <= 0 || value > availableQuantity) {
+        newTransfers[index].quantityError = `Quantity must be greater than 0 and less than or equal to ${availableQuantity}`;
+      } else {
+        newTransfers[index].quantityError = '';
+      }
+    }
     setTransfers(newTransfers);
   };
 
@@ -79,8 +94,6 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
     ? Array.from(new Set(inventories.map((inventory) => inventory.product.id)))
         .map((productId) => inventories.find((inventory) => inventory.product.id === productId).product)
     : [];
-
-    // console.log(selectedProductInventories);
 
   return (
     <Box component="form" onSubmit={handleTransfer} sx={{ mt: 2 }}>
@@ -153,24 +166,6 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
               </FormControl>
             </Grid>
             <Grid item xs={2}>
-              <FormControl fullWidth variant="outlined" margin="normal" required>
-                <InputLabel id={`to-zone-label-${index}`}>To Zone</InputLabel>
-                <Select
-                  labelId={`to-zone-label-${index}`}
-                  value={transfer.toZoneId}
-                  onChange={(e) => handleTransferChange(index, 'toZoneId', e.target.value)}
-                  label="To Zone"
-                  disabled={isFormDisabled}
-                >
-                  {zones?.data?.map((zone) => (
-                    <MenuItem key={zone.id} value={zone.id}>
-                      {zone.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={2}>
               <TextField
                 fullWidth
                 variant="outlined"
@@ -180,6 +175,8 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
                 onChange={(e) => handleTransferChange(index, 'quantity', e.target.value)}
                 required
                 type="number"
+                error={!!transfer.quantityError}
+                helperText={transfer.quantityError}
                 disabled={isFormDisabled}
               />
             </Grid>
