@@ -7,7 +7,7 @@ const Staff = () => {
     <div className="App">
       <div className="AppGlass">
         <StaffSidebar />
-        <div className="content">
+        <div className="MainDash">
           <Outlet />
         </div>
       </div>

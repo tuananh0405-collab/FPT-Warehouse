@@ -6,10 +6,12 @@ import { useNavigate } from "react-router-dom";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import Loading from '../../utils/Loading';
 import WarehouseIcon from "@mui/icons-material/Warehouse";
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const { Meta } = Card;
 
 const DataZone = () => {
+  useDocumentTitle('Zones')
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
   const navigate = useNavigate();

@@ -14,8 +14,10 @@ import AddProductModal from "../../components/Products/AddProductModal";
 import { Button, message, Form } from "antd";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const ProductComponent = () => {
+  useDocumentTitle('Products')
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
   const { data: products, isLoading: productsLoading, error: productsError } = useGetAllProductsQuery(authToken);
@@ -24,7 +26,7 @@ const ProductComponent = () => {
   const [deleteProduct] = useDeleteProductMutation();
   const [addProduct] = useAddProductMutation();
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const rowsPerPage = 8;
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [form] = Form.useForm();
@@ -87,6 +89,8 @@ const ProductComponent = () => {
 
   return (
     <div className="">
+      <div className="flex justify-between" style={{paddingLeft:"3rem", paddingTop:"0.5rem"}}>
+      
       <h1 class="mb-2 text-2xl font-semibold text-dark">Products</h1>
       <Button
         type="primary"
@@ -95,6 +99,7 @@ const ProductComponent = () => {
       >
         Add new product
       </Button>
+      </div>
       <AddProductModal
         addNewVisible={addNewVisible}
         handleOkAdd={handleOkAdd}

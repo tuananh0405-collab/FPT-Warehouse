@@ -121,7 +121,7 @@ const MainDash = () => {
   } = useGetAllImports2Query({ authToken });
   // console.log(allImports);
   return (
-    <div className="MainDash">
+    <div className="">
       <div class="container mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 ">
           <div class="flex  text-6xl  rounded-xl">
