@@ -24,18 +24,8 @@ export const productApiSlice = apiSlice.injectEndpoints({
       providesTags: ["Product"],
       keepUnusedDataFor: 5,
     }),
-    getAllProductByWarehouseId: builder.query({
-      query: ({ id, authToken }) => ({
-        url: `${PRODUCT_URL}/product-list-for-export/${id}`,
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      }),
-      providesTags: ["Product"],
-      keepUnusedDataFor: 5,
-    }),
     getProductById: builder.query({
-      query: ({ productId, authToken }) => ({
+      query: ( {productId,authToken} ) => ({
         url: `${PRODUCT_URL}/${productId}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -64,47 +54,13 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
-    getProductListsForAutoSelect: builder.query({
-      query: ({ authToken, warehouseId, pageNo, sortBy, direction, categoryId, search }) => ({
-        url: `${PRODUCT_URL}/product-list-for-auto-select/${warehouseId}`,
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-        params: {
-          pageNo,
-          sortBy,
-          direction,
-          categoryId,
-          search,
-        },
-      }),
-      providesTags: ["Product"],
-      keepUnusedDataFor: 5,
-    }),
-    getTotalProductsForAutoSelect: builder.query({
-      query: ({ authToken, warehouseId, categoryId, search }) => ({
-        url: `${PRODUCT_URL}/product-list-for-auto-select/total/${warehouseId}`,
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-        params: {
-          categoryId,
-          search,
-        },
-      }),
-      providesTags: ["Product"],
-      keepUnusedDataFor: 5,
-    }),
   }),
 });
 
 export const {
   useAddProductMutation,
   useGetAllProductsQuery,
-  useGetAllProductByWarehouseIdQuery,
   useGetProductByIdQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
-  useGetProductListsForAutoSelectQuery,
-  useGetTotalProductsForAutoSelectQuery,
 } = productApiSlice;

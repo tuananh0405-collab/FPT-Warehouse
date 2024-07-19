@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import ReactApexChart from "react-apexcharts";
 import { useSelector } from "react-redux";
 import { useGetAllUsersQuery } from "../../redux/api/usersApiSlice";
+import {
+  useGetAllWarehousesQuery,
+  useGetWarehouseByIdQuery,
+} from "../../redux/api/warehousesApiSlice";
 
 const BarChart = () => {
   const [options, setOptions] = useState({
@@ -77,7 +81,12 @@ const BarChart = () => {
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
   const { data: users, isLoading, error } = useGetAllUsersQuery(authToken);
-
+  const {
+    data: warehouses,
+    isLoading2,
+    error2,
+  } = useGetAllWarehousesQuery(authToken);
+  // console.log(warehouses);
   useEffect(() => {
     if (users) {
       const warehouseData = {};
@@ -95,8 +104,18 @@ const BarChart = () => {
         }
       });
 
-      // Prepare data for the chart
       const warehouseIds = Object.keys(warehouseData);
+      console.log(warehouseIds);
+      const warehouseNames = warehouseIds.map((id) =>
+        warehouses?.data.map((w) => (w.id == id ? w.name.split(" ")[0] : null))
+      );
+
+      const flattenedWarehouseNames = warehouseNames
+        .flat()
+        .filter((name) => name !== null);
+
+      console.log(flattenedWarehouseNames);
+
       const staffCounts = warehouseIds.map((id) => warehouseData[id].staff);
       const adminCounts = warehouseIds.map((id) => warehouseData[id].admin);
 
@@ -117,7 +136,7 @@ const BarChart = () => {
         ...prevOptions,
         xaxis: {
           ...prevOptions.xaxis,
-          categories: warehouseIds,
+          categories: flattenedWarehouseNames,
         },
       }));
     }

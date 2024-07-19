@@ -152,11 +152,11 @@ const StaffAddImport = () => {
       prevAllocations.map((allocation) =>
         allocation.productId === productId
           ? {
-              ...allocation,
-              zones: allocation.zones.map((zone, zoneIndex) =>
-                zoneIndex === index ? { ...zone, [field]: value } : zone
-              ),
-            }
+            ...allocation,
+            zones: allocation.zones.map((zone, zoneIndex) =>
+              zoneIndex === index ? { ...zone, [field]: value } : zone
+            ),
+          }
           : allocation
       )
     );
@@ -167,9 +167,9 @@ const StaffAddImport = () => {
       prevAllocations.map((allocation) =>
         allocation.productId === productId
           ? {
-              ...allocation,
-              zones: [...allocation.zones, { zoneId: null, quantity: 0 }],
-            }
+            ...allocation,
+            zones: [...allocation.zones, { zoneId: null, quantity: 0 }],
+          }
           : allocation
       )
     );

@@ -13,7 +13,14 @@ const createData = (name, id, description, categoryName) => {
 };
 
 const ProductTable = ({ productList, page, setPage, rowsPerPage, showModal }) => {
-  const rows = productList.map((product) =>
+  const adjustedList = [...productList];
+  if (adjustedList.length > 1) {
+    const lastItem = adjustedList.pop();
+    adjustedList.unshift(lastItem);
+  }
+
+  rowsPerPage = 10;
+  const rows = adjustedList.map((product) =>
     createData(product.name, product.id, product.description, product.category.name)
   );
 
@@ -35,23 +42,24 @@ const ProductTable = ({ productList, page, setPage, rowsPerPage, showModal }) =>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell align="left">ID</TableCell>
+              <TableCell>Index</TableCell>
+              <TableCell align="left">Name</TableCell>
               <TableCell align="left">Description</TableCell>
               <TableCell align="left">Category</TableCell>
               <TableCell align="left"></TableCell>
             </TableRow>
           </TableHead>
           <TableBody style={{ color: "white" }}>
-            {paginatedRows.map((row) => (
+            {paginatedRows.map((row, index) => (
               <TableRow
                 key={row.id}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } ,
+                backgroundColor: index % 2 === 0 ? "#e0e0e0" : "#ffffff"}}
               >
                 <TableCell component="th" scope="row">
-                  {row.name}
+                  {(page - 1) * rowsPerPage + index + 1}
                 </TableCell>
-                <TableCell align="left">{row.id}</TableCell>
+                <TableCell align="left">{row.name}</TableCell>
                 <TableCell align="left">{row.description}</TableCell>
                 <TableCell align="left">{row.categoryName}</TableCell>
                 <TableCell align="left" className="Details">

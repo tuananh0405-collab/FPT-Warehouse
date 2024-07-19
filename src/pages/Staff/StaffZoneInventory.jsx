@@ -6,6 +6,7 @@ import { useGetInventoriesByZoneIdQuery } from '../../redux/api/inventoryApiSlic
 import Loading from '../../utils/Loading';
 import Error500 from '../../utils/Error500';
 import Breadcrumbs from '../../utils/Breadcumbs';
+import { useGetZoneByIdQuery } from '../../redux/api/zoneApiSlice';
 
 const { Title } = Typography;
 
@@ -19,7 +20,8 @@ const StaffZoneInventory = () => {
   }
 
   const { data: inventories, isLoading, error } = useGetInventoriesByZoneIdQuery({ id: zoneid, authToken });
-  console.log(inventories);
+  const { data: zone, isLoading2, error2 } = useGetZoneByIdQuery({ id: zoneid, authToken });
+  console.log(zone);
 
   const handleTransfer = (productId, zoneId) => {
     navigate(`/staff/transfer?productId=${productId}&zoneId=${zoneId}`);
@@ -59,7 +61,7 @@ const StaffZoneInventory = () => {
   return (
     <div>
       <Breadcrumbs />
-      <Title level={2}>Inventory List for Zone {zoneid}</Title>
+      <Title level={2}>Inventory List for {zone?.data?.name}</Title>
       {isLoading ? (
         <Loading />
       ) : error ? (

@@ -57,20 +57,8 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
         },
       }),
       keepUnusedDataFor: 5,
+
     }),
-    getAllSortedCategoryWithSearch: builder.query({
-      query: ({ authToken, search }) => ({
-        url: `${CATEGORY_URL}/all`,
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-        params: {
-          search
-        }
-      }),
-      providesTags: ["Category"],
-      keepUnusedDataFor: 5,
-    })
   }),
 });
 
@@ -79,6 +67,5 @@ export const {
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
   useGetCategoriesQuery,
-  useGetCategoryByIdQuery,
-  useGetAllSortedCategoryWithSearchQuery
+  useGetCategoryByIdQuery
 } = categoryApiSlice;

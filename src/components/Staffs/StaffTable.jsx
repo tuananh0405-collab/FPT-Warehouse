@@ -37,7 +37,13 @@ const makeStyle = (status) => {
 };
 
 const StaffTable = ({ staffList, page, setPage, rowsPerPage, showModal }) => {
-  const rows = staffList.map((staff) =>
+  rowsPerPage = 10;
+  const adjustedList = [...staffList];
+  if (adjustedList.length > 1) {
+    const lastItem = adjustedList.pop();
+    adjustedList.unshift(lastItem);
+  }
+  const rows = adjustedList.map((staff) =>
     createData(staff.fullName, staff.id, staff?.warehouse?.name, staff.role)
   );
 
@@ -59,23 +65,24 @@ const StaffTable = ({ staffList, page, setPage, rowsPerPage, showModal }) => {
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell>Full Name</TableCell>
-              <TableCell align="left">Tracking ID</TableCell>
+              <TableCell>Index</TableCell>
+              <TableCell align="left">Full name</TableCell>
               <TableCell align="left">On Charge</TableCell>
               <TableCell align="left">Role</TableCell>
               <TableCell align="left"></TableCell>
             </TableRow>
           </TableHead>
           <TableBody style={{ color: "white" }}>
-            {paginatedRows.map((row) => (
+          {paginatedRows.map((row, index) => (
               <TableRow
                 key={row.trackingId}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } ,
+                backgroundColor: index % 2 === 0 ? "#e0e0e0" : "#ffffff"}}
               >
                 <TableCell component="th" scope="row">
-                  {row.fullName}
+                  {(page - 1) * rowsPerPage + index + 1}
                 </TableCell>
-                <TableCell align="left">{row.trackingId}</TableCell>
+                <TableCell align="left">{row.fullName}</TableCell>
                 <TableCell align="left">{row.onCharge}</TableCell>
                 <TableCell align="left">
                   <span className="status" style={makeStyle(row.status)}>

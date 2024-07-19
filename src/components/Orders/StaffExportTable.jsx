@@ -7,7 +7,6 @@ import {
 } from '../../redux/api/exportApiSlice';
 import { FormatTime } from '../../utils/FormatTime';
 import { useNavigate } from 'react-router-dom';
-import ExportStatus from './ExportStatus';
 
 function StaffExportTable({ searchValue }) {
     const userInfo = useSelector((state) => state.auth.userInfo);
@@ -36,6 +35,8 @@ function StaffExportTable({ searchValue }) {
     });
     const exports = exportsData.data || [];
     const totalExportItem = totalExportItemData.data || 0;
+
+    console.log(exports);
 
     useEffect(() => {
         setSearch(searchValue);
@@ -125,7 +126,6 @@ function StaffExportTable({ searchValue }) {
             width: 120,
             filterMultiple: false,
             onFilter: (value, record) => record.status === value,
-            render: (status) => <ExportStatus status={status} />,
         },
         {
             title: 'Action',
