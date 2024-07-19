@@ -28,6 +28,8 @@ import {
 } from "@mui/material";
 import StaffTransfer from "./StaffTransfer";
 import useDocumentTitle from "../../utils/UseDocumentTitle";
+import Loading from "../../utils/Loading";
+import Error500 from "../../utils/Error500";
 
 const StaffProduct = () => {
   useDocumentTitle('Data')
@@ -86,9 +88,9 @@ const StaffProduct = () => {
     setOpen(false);
   };
 
-  if (inventoriesLoading || zonesLoading) return <p>Loading...</p>;
-  if (inventoriesError) return <p>Error: {inventoriesError.message}</p>;
-  if (zonesError) return <p>Error: {zonesError.message}</p>;
+  if (inventoriesLoading || zonesLoading) return <Loading/>;
+  if (inventoriesError) return <Error500/>;
+  if (zonesError) return <Error500/>;
 
   const filteredInventories = inventories.filter((inventory) => {
     return (

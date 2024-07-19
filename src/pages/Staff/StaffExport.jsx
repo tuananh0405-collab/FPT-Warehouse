@@ -4,16 +4,8 @@ import { Button } from "antd";
 import AddIcon from '@mui/icons-material/Add';
 import { Link } from "react-router-dom";
 import StaffExportTable from "../../components/Orders/StaffExportTable";
-import { Input } from 'antd';
-import { useState } from "react";
-import useDebounce from "../../utils/useDebounce"
-
-const { Search } = Input;
 
 function StaffExpport() {
-    const [searchValue, setSearchValue] = useState('');
-    const debouncedSearchTerm = useDebounce(searchValue, 500);
-
     return (
         <div>
             <div className="MainDash">
@@ -21,7 +13,8 @@ function StaffExpport() {
                 <h1 className="font-bold text-3xl py-4">Export</h1>
                 <div className="staff-button-flex">
                     <Button
-                        style={{ width: "12%", background: "#000000", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        type="primary"
+                        className="w-1/8 flex justify-center items-center mb-4"
                     >
                         <Link
                             to="/staff/export/new"
@@ -34,9 +27,8 @@ function StaffExpport() {
                             New Export
                         </Link>
                     </Button>
-                    <Search className="search-input" placeholder="Search export..." onChange={e => setSearchValue(e.target.value)} enterButton />
                 </div>
-                <StaffExportTable searchValue={debouncedSearchTerm} />
+                <StaffExportTable />
             </div>
         </div>
     );

@@ -8,9 +8,9 @@ import {
   Row,
   Col,
   message,
+  InputNumber,
+  Steps,
   Table,
-  Radio,
-  Checkbox,
   Pagination,
 } from "antd";
 import Breadcrumbs from "../../utils/Breadcumbs";
@@ -18,21 +18,23 @@ import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
 import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
 import { useGetAllZonesQuery } from "../../redux/api/zoneApiSlice";
-import { useGetAllInventoriesQuery } from "../../redux/api/inventoryApiSlice";
 import { useGetAllProductsQuery } from "../../redux/api/productApiSlice";
 import { useGetAllCustomersQuery } from "../../redux/api/customersApiSlice";
+import { useGetAllInventoriesQuery } from "../../redux/api/inventoryApiSlice";
 import { useSelector } from "react-redux";
 import { useAddExportMutation } from "../../redux/api/exportApiSlice";
 import { useAddCustomerMutation } from "../../redux/api/customersApiSlice";
 import { useCreateExportDetailsMutation } from "../../redux/api/exportDetailApiSlice";
 
 const { Option } = Select;
+const { Step } = Steps;
 
 const StaffAddExport = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
+  const warehouseId = userInfo.userInfo.data.warehouseId;
   const [addExport, { isLoading: isExportCreating }] = useAddExportMutation();
   const [addCustomer, { isLoading: isCustomerCreating }] =
     useAddCustomerMutation();
@@ -54,35 +56,31 @@ const StaffAddExport = () => {
     isFetching: isProductLoading,
     error: productError,
   } = useGetAllProductsQuery(authToken);
-  // const {
-  //   data: inventories,
-  //   isFetching: isInventoryLoading,
-  //   error: inventoryError,
-  // } = useGetAllInventoriesQuery(authToken);
   const {
     data: customers,
     isFetching: isCustomerLoading,
     error: customerError,
   } = useGetAllCustomersQuery(authToken);
+  const {
+    data: inventories,
+    isFetching: isInventoryLoading,
+    error: inventoryError,
+  } = useGetAllInventoriesQuery(authToken);
 
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [filter, setFilter] = useState("all");
-  const [zone, setZone] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [sortOrder, setSortOrder] = useState({
-    columnKey: null,
-    order: null,
-  });
-  const [searchText, setSearchText] = useState("");
+  const [currentStep, setCurrentStep] = useState(0);
   const [filterType, setFilterType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [zoneFilter, setZoneFilter] = useState(null);
+  const [expiredAtFilter, setExpiredAtFilter] = useState(null);
+  const [filteredInventories, setFilteredInventories] = useState([]);
 
   const warehousesData = warehouses?.data || [];
   const zonesData = zones?.data || [];
   const productsData = products?.data || [];
-  const inventoriesData = [];
   const customersData = customers?.data || [];
+  const inventoriesData = inventories?.data || [];
 
   const [formData, setFormData] = useState({
     description: "",
@@ -94,124 +92,101 @@ const StaffAddExport = () => {
     customerId: null,
   });
 
-  const [customerData, setCustomerData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
-
-  const handleCustomerChange = (e, field) => {
-    setCustomerData((prevData) => ({
-      ...prevData,
-      [field]: e.target.value,
-    }));
-  };
-
-  const handleTableChange = (pagination, filters, sorter) => {
-    setSortOrder({
-      columnKey: sorter.field,
-      order: sorter.order,
-    });
-  };
-
-  const handleProductSelectChange = (e, id) => {
-    if (e.target.checked) {
-      setSelectedProducts([...selectedProducts, { id, quantity: 0 }]);
-    } else {
-      setSelectedProducts(
-        selectedProducts.filter((product) => product.id !== id)
+  useEffect(() => {
+    if (!isInventoryLoading && inventories) {
+      const filteredInventories = inventoriesData.filter((inv) =>
+        zonesData.find(
+          (zone) => zone.id === inv.zone.id && zone.warehouseId === warehouseId
+        )
       );
+      setFilteredInventories(filteredInventories);
     }
-  };
+  }, [isInventoryLoading, inventoriesData, warehouseId, zonesData]);
 
-  const handleSelectChange = (value, name) => {
+  const handleFormChange = (changedValues) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: value,
+      ...changedValues,
     }));
-    if (name === "exportType" && value === "WASTE") {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
   };
 
-  const handleSelectAllChange = (e) => {
-    if (e.target.checked) {
-      const newSelectedProducts = filteredData.map((item) => ({
-        id: item.id,
-        quantity: 0,
-      }));
-      setSelectedProducts(newSelectedProducts);
-    } else {
-      setSelectedProducts([]);
-    }
+  const handleTableChange = (pagination) => {
+    setCurrentPage(pagination.current);
   };
 
-  const handleQuantityChange = (e, id) => {
-    const { value } = e.target;
-    setSelectedProducts((prevSelectedProducts) =>
-      prevSelectedProducts.map((product) =>
-        product.id === id
-          ? {
-            ...product,
-            quantity: Math.min(
-              value,
-              inventoriesData.find((item) => item.id === id).quantity
-            ),
-          }
-          : product
-      )
+  const handleProductSelectChange = (value, index) => {
+    const product = productsData.find((p) => p.id === value);
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts[index].id = product.id;
+    newSelectedProducts[index].name = product.name;
+    newSelectedProducts[index].zoneId = null;
+    newSelectedProducts[index].expiredAt = null;
+    newSelectedProducts[index].quantity = 1;
+    setSelectedProducts(newSelectedProducts);
+    const filteredInventories = inventoriesData.filter(
+      (inv) =>
+        inv.product.id === product.id &&
+        zonesData.find(
+          (zone) => zone.id === inv.zone.id && zone.warehouseId === warehouseId
+        )
     );
+    setFilteredInventories(filteredInventories);
   };
 
-  const handleRemoveProduct = (id) => {
-    setSelectedProducts(
-      selectedProducts.filter((product) => product.id !== id)
-    );
+  const handleZoneChange = (value, index) => {
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts[index].zoneId = value;
+    newSelectedProducts[index].expiredAt = null;
+    setSelectedProducts(newSelectedProducts);
   };
 
-  const handleDone = () => {
-    for (let product of selectedProducts) {
-      if (
-        product.quantity === 0 ||
-        product.quantity >
-        inventoriesData.find((inv) => inv.id === product.id).quantity
-      ) {
-        message.error(
-          "Please ensure all quantities are greater than 0 and less than or equal to the available quantity."
-        );
-        return;
+  const handleExpiredAtChange = (value, index) => {
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts[index].expiredAt = value;
+    setSelectedProducts(newSelectedProducts);
+  };
+
+  const handleQuantityChange = (value, index) => {
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts[index].quantity = value;
+    setSelectedProducts(newSelectedProducts);
+  };
+
+  const handleStepChange = async (current) => {
+    if (currentStep === 0 && current === 1) {
+      try {
+        await form.validateFields();
+        const currentDate = new Date().toISOString().split("T")[0];
+        if (formData.exportDate < currentDate) {
+          message.error("Export date must be today or later.");
+          return;
+        }
+        console.log("Form Data:", formData);
+        setCurrentStep(current);
+      } catch (error) {
+        message.error("Please fill out all required fields.");
       }
-    }
-    setIsPopupVisible(false);
-  };
-
-  const handleCreateCustomer = async () => {
-    try {
-      const customerDataPayload = {
-        name: customerData.name,
-        email: customerData.email,
-        phone: customerData.phone,
-        address: customerData.address,
-      };
-
-      const response = await addCustomer({
-        customerData: customerDataPayload,
-        authToken,
-      }).unwrap();
-      message.success("Customer created successfully!");
-      console.log("Customer data:", response.data);
-      const customerId = response.data.id;
-      await handleCreateExport(customerId);
-    } catch (error) {
-      console.error("Error creating customer:", error);
-      message.error("Failed to create customer. Please try again.");
+    } else if (currentStep === 1 && current === 2) {
+      if (selectedProducts.length === 0) {
+        message.error("Please add at least one product.");
+      } else {
+        console.log("Selected Products:", selectedProducts);
+        setCurrentStep(current);
+      }
+    } else {
+      setCurrentStep(current);
     }
   };
 
-  const handleCreateExport = async (customerId = null) => {
+  const handleNext = () => {
+    handleStepChange(currentStep + 1);
+  };
+
+  const handlePrev = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
+  const handleCreateExport = async () => {
     try {
       let exportData = {
         description: formData.description,
@@ -220,7 +195,7 @@ const StaffAddExport = () => {
         exportType: formData.exportType,
         warehouseIdFrom: formData.warehouseIdFrom,
         warehouseIdTo: formData.warehouseIdTo,
-        customerId: customerId || formData.customerId,
+        customerId: formData.customerId,
       };
 
       const response = await addExport({
@@ -231,16 +206,22 @@ const StaffAddExport = () => {
       console.log("Export data:", response.data);
       const exportId = response.data.id;
       await handleCreateExportDetails(exportId);
+      navigate("/staff/order/export");
     } catch (error) {
       console.error("Error creating export:", error);
       message.error("Failed to create export. Please try again.");
     }
   };
 
-  const handleCreateExportDetails = async (exportId = null) => {
+  const handleCreateExportDetails = async (exportId) => {
     try {
       const selectedProductDetails = selectedProducts.map((product) => {
-        const item = inventoriesData.find((inv) => inv.id === product.id);
+        const item = inventoriesData.find(
+          (inv) =>
+            inv.product.id === product.id &&
+            inv.zone.id === product.zoneId &&
+            inv.expiredAt === product.expiredAt
+        );
         return {
           productId: item.product.id,
           exportId: exportId,
@@ -249,12 +230,10 @@ const StaffAddExport = () => {
           zoneId: item.zone.id,
         };
       });
-      console.log("Selected Product Details:", selectedProductDetails); // Debugging line
       const response = await createExportDetails({
         data: selectedProductDetails,
         authToken,
       }).unwrap();
-      console.log("Export Details Creation Response:", response); // Debugging line
       message.success("Export details created successfully!");
       setSelectedProducts([]);
     } catch (error) {
@@ -263,458 +242,471 @@ const StaffAddExport = () => {
     }
   };
 
-  const filteredData = inventoriesData.filter((item) => {
-    const now = new Date();
-    const expiredAt = new Date(item.expiredAt);
-    const inFifteenDays = new Date(now);
-    inFifteenDays.setDate(now.getDate() + 15);
+  const handleAddProduct = () => {
+    setSelectedProducts([
+      ...selectedProducts,
+      { id: null, name: "", zoneId: null, expiredAt: null, quantity: 1 },
+    ]);
+  };
 
-    if (filterType === "expired" && expiredAt >= now) return false;
-    if (
-      filterType === "expiring" &&
-      (expiredAt < now || expiredAt > inFifteenDays)
-    )
-      return false;
-    if (filterType === "valid" && expiredAt <= now) return false;
+  const handleRemoveProduct = (index) => {
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts.splice(index, 1);
+    setSelectedProducts(newSelectedProducts);
+  };
 
-    return (
-      item.product.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.zone.name.toLowerCase().includes(searchText.toLowerCase())
+  const handleDropdownChange = (value, index, type) => {
+    const newSelectedProducts = [...selectedProducts];
+
+    if (type === "product") {
+      const product = productsData.find((p) => p.id === value);
+      newSelectedProducts[index].id = product.id;
+      newSelectedProducts[index].name = product.name;
+      newSelectedProducts[index].zoneId = null;
+      newSelectedProducts[index].expiredAt = null;
+      newSelectedProducts[index].quantity = 1;
+    } else if (type === "zone") {
+      newSelectedProducts[index].zoneId = value;
+      newSelectedProducts[index].expiredAt = null;
+    } else if (type === "expiredAt") {
+      newSelectedProducts[index].expiredAt = value;
+    }
+
+    setSelectedProducts(newSelectedProducts);
+  };
+
+  const getUniqueZones = (productId) => {
+    const filteredZones = [
+      ...new Set(
+        inventoriesData
+          .filter(
+            (inv) =>
+              inv.product.id === productId &&
+              zonesData.find(
+                (zone) =>
+                  zone.id === inv.zone.id && zone.warehouseId === warehouseId
+              )
+          )
+          .map((inv) => inv.zone.id)
+      ),
+    ];
+    return filteredZones.map((zoneId) =>
+      zonesData.find((z) => z.id === zoneId)
     );
-  });
+  };
 
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * 10,
-    currentPage * 10
-  );
+  const getUniqueExpiredAt = (productId, zoneId) => {
+    return [
+      ...new Set(
+        inventoriesData
+          .filter(
+            (inv) => inv.product.id === productId && inv.zone.id === zoneId
+          )
+          .map((inv) => inv.expiredAt)
+      ),
+    ];
+  };
+
+  if (
+    isWarehouseLoading ||
+    isZoneLoading ||
+    isProductLoading ||
+    isCustomerLoading ||
+    isInventoryLoading
+  )
+    return <Loading />;
+  if (
+    warehouseError ||
+    zoneError ||
+    productError ||
+    customerError ||
+    inventoryError
+  )
+    return <Error500 />;
 
   const columns = [
     {
-      title: (
-        <Checkbox
-          indeterminate={
-            selectedProducts.length > 0 &&
-            selectedProducts.length < filteredData.length
-          }
-          onChange={(e) => handleSelectAllChange(e)}
-          checked={
-            selectedProducts.length > 0 &&
-            selectedProducts.length === filteredData.length
-          }
-        />
-      ),
-      dataIndex: "select",
-      key: "select",
-      render: (text, record) => (
-        <Checkbox
-          checked={selectedProducts.some((product) => product.id === record.id)}
-          onChange={(e) => handleProductSelectChange(e, record.id)}
-        />
-      ),
-    },
-    {
       title: "Product Name",
-      dataIndex: ["product", "name"],
-      key: "productName",
-      sorter: (a, b) => a.product.name.localeCompare(b.product.name),
-      sortOrder: sortOrder.columnKey === "productName" && sortOrder.order,
-      render: (text, record) => record.product.name,
+      dataIndex: "name",
+      key: "name",
     },
     {
-      title: "Zone Name",
-      dataIndex: ["zone", "name"],
-      key: "zoneName",
-      sorter: (a, b) => a.zone.name.localeCompare(b.zone.name),
-      sortOrder: sortOrder.columnKey === "zoneName" && sortOrder.order,
-      render: (text, record) => record.zone.name,
-    },
-    {
-      title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
-      sorter: (a, b) => a.quantity - b.quantity,
-      sortOrder: sortOrder.columnKey === "quantity" && sortOrder.order,
+      title: "Zone",
+      dataIndex: "zone",
+      key: "zone",
     },
     {
       title: "Expired At",
       dataIndex: "expiredAt",
       key: "expiredAt",
-      sorter: (a, b) => new Date(a.expiredAt) - new Date(b.expiredAt),
-      sortOrder: sortOrder.columnKey === "expiredAt" && sortOrder.order,
+    },
+    {
+      title: "Quantity",
+      dataIndex: "quantity",
+      key: "quantity",
     },
   ];
 
-  useEffect(() => {
-    const errors = [
-      warehouseError,
-      zoneError,
-      productError,
-      // inventoryError,
-    ].filter(Boolean);
-    if (errors.length > 0) {
-      message.error("Failed to fetch data. Please try again.");
-    }
-  }, [warehouseError, zoneError, productError]);
+  const dataSource = selectedProducts.map((product, index) => {
+    const productItem = productsData.find((p) => p.id === product.id);
+    const zoneItem = zonesData.find((z) => z.id === product.zoneId);
+    return {
+      key: index,
+      name: productItem?.name,
+      zone: zoneItem?.name,
+      expiredAt: product.expiredAt,
+      quantity: product.quantity,
+    };
+  });
 
-  //}, [warehouseError, zoneError, productError, inventoryError]);
-
-  const handleOpenPopup = () => setIsPopupVisible(true);
-  const handleClosePopup = () => setIsPopupVisible(false);
-  const handlePageChange = (page) => setCurrentPage(page);
-
-  const isLoading =
-    isWarehouseLoading ||
-    isZoneLoading ||
-    isProductLoading ||
-    // isInventoryLoading ||
-    isCustomerLoading;
-
-  if (isLoading) return <Loading />;
-  if (
-    warehouseError ||
-    zoneError ||
-    productError ||
-    customerError
-  )
-    return <Error500 />;
+  const paginatedDataSource = dataSource.slice(
+    (currentPage - 1) * 5,
+    currentPage * 5
+  );
 
   return (
     <div>
       <Breadcrumbs />
       <div className="MainDash relative">
         <h1 className="font-bold text-3xl py-4">New Export</h1>
-        <Form form={form} layout="vertical" initialValues={formData}>
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={[
-              {
-                required: true,
-                message: "Please input the export description!",
-              },
-            ]}
-          >
-            <Input
-              name="description"
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Product Description"
-            />
-          </Form.Item>
-          <Form.Item
-            label="Export Type"
-            name="exportType"
-            rules={[{ required: true, message: "Please select export type!" }]}
-          >
-            <Select
-              placeholder="Select export type..."
-              onChange={(value) => handleSelectChange(value, "exportType")}
-            >
-              <Option value="CUSTOMER">CUSTOMER</Option>
-              <Option value="WAREHOUSE">WAREHOUSE</Option>
-              <Option value="WASTE">WASTE</Option>
-            </Select>
-          </Form.Item>
-          {formData.exportType === "CUSTOMER" && (
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="Customer Name"
-                  name="customerName"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input customer name!",
-                    },
-                  ]}
-                >
-                  <Input
-                    name="name"
-                    onChange={(e) =>
-                      setCustomerData({ ...customerData, name: e.target.value })
-                    }
-                    placeholder="Customer Name"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Customer Email"
-                  name="customerEmail"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input customer email!",
-                    },
-                  ]}
-                >
-                  <Input
-                    name="email"
-                    onChange={(e) =>
-                      setCustomerData({
-                        ...customerData,
-                        email: e.target.value,
-                      })
-                    }
-                    placeholder="Customer Email"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Customer Phone"
-                  name="customerPhone"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input customer phone!",
-                    },
-                  ]}
-                >
-                  <Input
-                    name="phone"
-                    onChange={(e) =>
-                      setCustomerData({
-                        ...customerData,
-                        phone: e.target.value,
-                      })
-                    }
-                    placeholder="Customer Phone"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Customer Address"
-                  name="customerAddress"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input customer address!",
-                    },
-                  ]}
-                >
-                  <Input
-                    name="address"
-                    onChange={(e) =>
-                      setCustomerData({
-                        ...customerData,
-                        address: e.target.value,
-                      })
-                    }
-                    placeholder="Customer Address"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          )}
-          <Form.Item
-            label="To:"
-            name="warehouseIdTo"
-            rules={[
-              {
-                required:
-                  formData.exportType !== "CUSTOMER" &&
-                  formData.exportType !== "WASTE",
-                message: "Please select warehouse to transfer!",
-              },
-            ]}
-          >
-            <Select
-              placeholder="Select warehouse to..."
-              onChange={(value) => handleSelectChange(value, "warehouseIdTo")}
-              disabled={
-                formData.exportType === "WASTE" ||
-                formData.exportType === "CUSTOMER"
-              }
-            >
-              {warehousesData
-                .filter(
-                  (warehouse) => warehouse.id !== formData.warehouseIdFrom
-                )
-                .map((warehouse) => (
-                  <Option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </Option>
-                ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label="Status" name="status">
-            <Input value="PENDING" disabled />
-          </Form.Item>
-          <Form.Item
-            label="Export Date"
-            name="exportDate"
-            rules={[{ required: true, message: "Please select export date!" }]}
-          >
-            <Input
-              type="date"
-              onChange={(e) =>
-                setFormData({ ...formData, exportDate: e.target.value })
-              }
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" onClick={handleOpenPopup}>
-              Choose Products
-            </Button>
-          </Form.Item>
-          <Button
-            type="primary"
-            onClick={async () => {
-              if (formData.exportType === "CUSTOMER") {
-                if (
-                  customerData.name &&
-                  customerData.email &&
-                  customerData.phone &&
-                  customerData.address
-                ) {
-                  try {
-                    await handleCreateCustomer();
-                  } catch (error) {
-                    console.error(
-                      "Failed to create export with customer:",
-                      error
-                    );
-                  }
-                } else {
-                  message.error("Please fill all customer fields.");
-                }
-              } else {
-                await handleCreateExport();
-              }
-            }}
-          >
-            {formData.exportType === "CUSTOMER"
-              ? "Create Customer Export"
-              : formData.exportType === "WASTE"
-                ? "Create Waste Export"
-                : "Continue"}
-          </Button>
-        </Form>
-      </div>
-      {isPopupVisible && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.75)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 50,
-          }}
+        <Steps
+          current={currentStep}
+          onChange={handleStepChange}
+          labelPlacement="vertical"
+          style={{ marginBottom: 24, maxWidth: "800px", margin: "auto" }}
         >
+          <Step description="Export Information" />
+          <Step description="Select Products" />
+          <Step description="Review and Confirm" />
+        </Steps>
+        {currentStep === 0 && (
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={formData}
+            onValuesChange={handleFormChange}
+            style={{ width: "800px", margin: "auto" }}
+          >
+            <Form.Item
+              label="Description"
+              name="description"
+              rules={[
+                {
+                  required: true,
+                  message: "Please input the export description!",
+                },
+              ]}
+            >
+              <Input placeholder="Product Description" />
+            </Form.Item>
+            <Form.Item
+              label="Export Type"
+              name="exportType"
+              rules={[
+                { required: true, message: "Please select export type!" },
+              ]}
+            >
+              <Select placeholder="Select export type...">
+                <Option value="CUSTOMER">CUSTOMER</Option>
+                <Option value="WAREHOUSE">WAREHOUSE</Option>
+                <Option value="WASTE">WASTE</Option>
+              </Select>
+            </Form.Item>
+            {formData.exportType === "CUSTOMER" && (
+              <Form.Item
+                label="Customer"
+                name="customerId"
+                rules={[{ required: true, message: "Please select customer!" }]}
+              >
+                <Select placeholder="Select customer...">
+                  {customersData.map((customer) => (
+                    <Option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            )}
+            {formData.exportType === "WAREHOUSE" && (
+              <Form.Item
+                label="To:"
+                name="warehouseIdTo"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select warehouse to transfer!",
+                  },
+                ]}
+              >
+                <Select placeholder="Select warehouse to...">
+                  {warehousesData
+                    .filter(
+                      (warehouse) => warehouse.id !== formData.warehouseIdFrom
+                    )
+                    .map((warehouse) => (
+                      <Option key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name}
+                      </Option>
+                    ))}
+                </Select>
+              </Form.Item>
+            )}
+            <Form.Item
+              label="Export Date"
+              name="exportDate"
+              rules={[
+                { required: true, message: "Please select export date!" },
+              ]}
+            >
+              <Input type="date" />
+            </Form.Item>
+            <Button type="primary" onClick={handleNext}>
+              Next
+            </Button>
+          </Form>
+        )}
+        {currentStep === 1 && (
           <div
             style={{
-              backgroundColor: "white",
+              maxWidth: "800px",
+              margin: "auto",
+              border: "1px solid black",
               padding: "20px",
-              borderRadius: "10px",
-              width: "90%",
-              height: "90%",
-              maxHeight: "100%",
-              overflowY: "auto",
+              borderRadius: "8px",
+              maxHeight: "600px",
+              overflowY: selectedProducts.length > 5 ? "scroll" : "auto",
             }}
           >
-            <div style={{ marginBottom: 16 }}>
-              <Radio.Group
-                onChange={(e) => setFilterType(e.target.value)}
-                value={filterType}
-                style={{ marginRight: 16 }}
-              >
-                <Radio value="all">All</Radio>
-                <Radio value="expired">Expired</Radio>
-                <Radio value="expiring">Expiring in 15 days</Radio>
-                <Radio value="valid">Valid</Radio>
-              </Radio.Group>
-              <Input
-                placeholder="Search by product or zone name"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: "50%" }}
-              />
-            </div>
-            <div style={{ display: "flex", height: "80%" }}>
-              <div style={{ width: "70%", paddingRight: "10px" }}>
-                <Table
-                  dataSource={paginatedData}
-                  columns={columns}
-                  rowKey="id"
-                  pagination={false}
-                  onChange={handleTableChange}
-                />
-                <Pagination
-                  current={currentPage}
-                  pageSize={10}
-                  total={filteredData.length}
-                  onChange={handlePageChange}
-                  style={{ marginTop: "10px", textAlign: "center" }}
-                />
-              </div>
-              <div
-                style={{
-                  width: "30%",
-                  maxHeight: "100%",
-                  overflowY: "auto",
-                  padding: "10px",
-                  border: "1px solid #ddd",
-                  borderRadius: "10px",
-                }}
-              >
-                <h2 className="text-xl font-bold mb-4">Selected Products</h2>
-                {selectedProducts.map((product) => {
-                  const item = inventoriesData.find(
-                    (inv) => inv.id === product.id
-                  );
-                  return (
-                    <div
-                      key={product.id}
-                      style={{
-                        marginBottom: "10px",
-                        padding: "10px",
-                        border: "1px solid #ddd",
-                        borderRadius: "5px",
-                      }}
+            <Button
+              type="primary"
+              onClick={handleAddProduct}
+              style={{
+                display: "block",
+                margin: "0 auto 20px auto",
+                width: "700px",
+              }}
+            >
+              Add Product
+            </Button>
+            {selectedProducts.map((product, index) => {
+              const uniqueZones = getUniqueZones(product.id);
+              const uniqueExpiredAt = getUniqueExpiredAt(
+                product.id,
+                product.zoneId
+              );
+
+              return (
+                <div
+                  key={index}
+                  style={{
+                    marginBottom: "20px",
+                    border: "1px solid black",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    width: "700px",
+                  }}
+                >
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item label="Product Name">
+                        <Select
+                          placeholder="Select product"
+                          value={product.id}
+                          onChange={(value) =>
+                            handleDropdownChange(value, index, "product")
+                          }
+                          style={{ width: "100%" }}
+                        >
+                          {productsData.map((p) => (
+                            <Option key={p.id} value={p.id}>
+                              {p.name}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label="Zone">
+                        <Select
+                          placeholder="Select zone"
+                          value={product.zoneId}
+                          onChange={(value) =>
+                            handleDropdownChange(value, index, "zone")
+                          }
+                          style={{ width: "100%" }}
+                          disabled={!product.id}
+                        >
+                          {uniqueZones.map((zone) => (
+                            <Option key={zone.id} value={zone.id}>
+                              {zone.name}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Form.Item label="Expired Date">
+                    <Select
+                      placeholder="Select expired date"
+                      value={product.expiredAt}
+                      onChange={(value) =>
+                        handleDropdownChange(value, index, "expiredAt")
+                      }
+                      style={{ width: "100%" }}
+                      disabled={!product.zoneId}
                     >
-                      <h3>{item.product.name}</h3>
-                      <p>Available: {item.quantity}</p>
-                      <Input
-                        type="number"
-                        value={product.quantity}
-                        onChange={(e) => handleQuantityChange(e, product.id)}
-                        min={1}
-                        max={item.quantity}
-                        style={{ marginBottom: "10px" }}
-                      />
-                      <Button
-                        type="link"
-                        danger
-                        onClick={() => handleRemoveProduct(product.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                      {uniqueExpiredAt.map((expiredAt) => (
+                        <Option key={expiredAt} value={expiredAt}>
+                          {expiredAt}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item label="Quantity">
+                        <InputNumber
+                          min={1}
+                          max={
+                            inventoriesData.find(
+                              (inv) =>
+                                inv.product.id === product.id &&
+                                inv.zone.id === product.zoneId &&
+                                inv.expiredAt === product.expiredAt
+                            )?.quantity || 1
+                          }
+                          value={product.quantity}
+                          onChange={(value) =>
+                            handleQuantityChange(value, index)
+                          }
+                          style={{ width: "100%" }}
+                          disabled={
+                            !product.id || !product.zoneId || !product.expiredAt
+                          }
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label="Inventory Quantity">
+                        <Input
+                          value={
+                            inventoriesData.find(
+                              (inv) =>
+                                inv.product.id === product.id &&
+                                inv.zone.id === product.zoneId &&
+                                inv.expiredAt === product.expiredAt
+                            )?.quantity || 0
+                          }
+                          readOnly
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Button
+                    type="link"
+                    danger
+                    onClick={() => handleRemoveProduct(index)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              );
+            })}
             <div className="flex justify-end mt-4" style={{ width: "100%" }}>
-              <Button
-                onClick={handleDone}
-                type="primary"
-                style={{ marginRight: "10px" }}
-              >
-                Done
+              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                Previous
               </Button>
-              <Button onClick={handleClosePopup}>Close</Button>
+              <Button type="primary" onClick={handleNext}>
+                Next
+              </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        {currentStep === 2 && (
+          <div style={{ maxWidth: "800px", margin: "auto" }}>
+            <h2>Review and Confirm</h2>
+            <Form layout="vertical">
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label="Description">
+                    <Input value={formData.description} readOnly />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="Export Type">
+                    <Input value={formData.exportType} readOnly />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label="Export Date">
+                    <Input value={formData.exportDate} readOnly />
+                  </Form.Item>
+                </Col>
+                {formData.exportType === "CUSTOMER" && (
+                  <Col span={12}>
+                    <Form.Item label="Customer">
+                      <Input
+                        value={
+                          customersData.find(
+                            (customer) => customer.id === formData.customerId
+                          )?.name
+                        }
+                        readOnly
+                      />
+                    </Form.Item>
+                  </Col>
+                )}
+                {formData.exportType === "WAREHOUSE" && (
+                  <Col span={12}>
+                    <Form.Item label="To">
+                      <Input
+                        value={
+                          warehousesData.find(
+                            (warehouse) =>
+                              warehouse.id === formData.warehouseIdTo
+                          )?.name
+                        }
+                        readOnly
+                      />
+                    </Form.Item>
+                  </Col>
+                )}
+              </Row>
+            </Form>
+            <h3>Selected Products</h3>
+            <div
+              style={{
+                maxHeight: "600px",
+                overflowY: dataSource.length > 5 ? "scroll" : "auto",
+              }}
+            >
+              <Table
+                columns={columns}
+                dataSource={paginatedDataSource}
+                pagination={false}
+              />
+            </div>
+            <Pagination
+              current={currentPage}
+              total={dataSource.length}
+              pageSize={5}
+              onChange={(page) => setCurrentPage(page)}
+              style={{ marginTop: "20px", textAlign: "center" }}
+            />
+            <div className="flex justify-end mt-4" style={{ width: "100%" }}>
+              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                Previous
+              </Button>
+              <Button type="primary" onClick={handleCreateExport}>
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

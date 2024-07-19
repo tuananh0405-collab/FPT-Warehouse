@@ -51,6 +51,7 @@ const DataWarehouse = () => {
     });
     setIsModalVisible(false);
   };
+  
 
   const handleCancel = () => {
     setIsModalVisible(false);

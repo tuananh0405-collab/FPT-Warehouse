@@ -121,12 +121,13 @@ const WarehouseTable = ({ warehouseList, page, setPage, rowsPerPage, showModal }
             {paginatedRows.map((row) => (
               <TableRow
                 key={row.id}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } ,
+                // backgroundColor: index % 2 === 0 ? "#e0e0e0" : "#ffffff"
+              }}
               >
                 <TableCell  scope="row">
                   {row.name}
                 </TableCell>
-                <TableCell align="left">{row.id}</TableCell>
                 <TableCell align="left">{row.description}</TableCell>
                 <TableCell align="left">{row.address}</TableCell>
                 <TableCell align="left">{row.createdAt}</TableCell>

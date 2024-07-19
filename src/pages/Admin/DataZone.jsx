@@ -4,7 +4,7 @@ import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
 import { Card, Row, Col } from "antd";
 import { useNavigate } from "react-router-dom";
 import Breadcrumbs from "../../utils/Breadcumbs";
-import Loading from '../../utils/Loading'
+import Loading from '../../utils/Loading';
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import useDocumentTitle from "../../utils/UseDocumentTitle";
 
@@ -53,21 +53,23 @@ const DataZone = () => {
       {isLoadingWarehouses ? (
         <Loading />
       ) : (
-        <Row gutter={[16, 16]} justify="space-around">
-          {warehouses?.data.map((warehouse) => (
-            <Col xs={24} sm={24} md={12} lg={8} xl={8} key={warehouse.id}>
-              <Card hoverable style={cardStyle} onClick={() => handleCardClick(warehouse.id)}>
-                <div style={cardContentStyle}>
-                  <WarehouseIcon style={{ fontSize: 64 }} />
-                  <Meta
-                    title={<div style={{ textAlign: "center" }}>{warehouse.name}</div>}
-                    description={<div style={{ textAlign: "center" }}>{warehouse.description}</div>}
-                  />
-                </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
+        <div style={{ padding: "10px" }}>
+          <Row gutter={[16, 16]} justify="space-around">
+            {warehouses?.data.map((warehouse) => (
+              <Col xs={24} sm={24} md={12} lg={8} xl={8} key={warehouse.id}>
+                <Card hoverable style={cardStyle} onClick={() => handleCardClick(warehouse.id)}>
+                  <div style={cardContentStyle}>
+                    <WarehouseIcon style={{ fontSize: 64 }} />
+                    <Meta
+                      title={<div style={{ textAlign: "center" }}>{warehouse.name}</div>}
+                      description={<div style={{ textAlign: "center" }}>{warehouse.description}</div>}
+                    />
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
       )}
     </div>
   );
