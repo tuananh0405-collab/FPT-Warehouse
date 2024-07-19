@@ -89,7 +89,7 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
           ? inventories.filter((inventory) => inventory.product.id === transfer.productId)
           : [];
 
-          console.log(selectedProductInventories);
+        const selectedZoneInventories = selectedProductInventories.filter((inventory) => inventory.zone.id === transfer.fromZoneId);
 
         return (
           <Grid container spacing={2} key={index}>
@@ -130,9 +130,27 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
               </FormControl>
               {transfer.fromZoneId && (
                 <Typography variant="body2">
-                  Available Quantity: {selectedProductInventories.find((inventory) => inventory.zone.id === transfer.fromZoneId && inventory.expiredAt === transfer.expiredAt)?.quantity || 0}
+                  Available Quantity: {selectedZoneInventories.find((inventory) => inventory.zone.id === transfer.fromZoneId && inventory.expiredAt === transfer.expiredAt)?.quantity || 0}
                 </Typography>
               )}
+            </Grid>
+            <Grid item xs={2}>
+              <FormControl fullWidth variant="outlined" margin="normal" required>
+                <InputLabel id={`expired-at-label-${index}`}>Expired At</InputLabel>
+                <Select
+                  labelId={`expired-at-label-${index}`}
+                  value={transfer.expiredAt}
+                  onChange={(e) => handleTransferChange(index, 'expiredAt', e.target.value)}
+                  label="Expired At"
+                  disabled={isFormDisabled || !transfer.fromZoneId}
+                >
+                  {selectedZoneInventories.map((inventory) => (
+                    <MenuItem key={inventory.expiredAt} value={inventory.expiredAt}>
+                      {new Date(inventory.expiredAt).toLocaleDateString()}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={2}>
               <FormControl fullWidth variant="outlined" margin="normal" required>
@@ -163,16 +181,6 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
                 required
                 type="number"
                 disabled={isFormDisabled}
-              />
-            </Grid>
-            <Grid item xs={2}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                margin="normal"
-                label="Expired At"
-                value={new Date(transfer.expiredAt).toLocaleDateString()}
-                disabled
               />
             </Grid>
             <Grid item xs={1} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
