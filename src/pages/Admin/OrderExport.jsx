@@ -6,10 +6,12 @@ import { Link } from 'react-router-dom';
 import { useGetAllExportsForAdminQuery, useGetExportByIdQuery } from '../../redux/api/exportApiSlice';
 import Loading from '../../utils/Loading';
 import Error500 from '../../utils/Error500';
+import useDocumentTitle from '../../utils/UseDocumentTitle';
 
 const { Option } = Select;
 
 const OrderExport = () => {
+  useDocumentTitle('Export')
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchParams, setSearchParams] = useState({ status: '', sortBy: 'id', direction: 'asc', pageNo: 1 });

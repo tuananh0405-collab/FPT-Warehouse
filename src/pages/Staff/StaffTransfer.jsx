@@ -1,185 +1,202 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { useTransferProductMutation } from "../../redux/api/inventoryApiSlice";
 import {
-  Container,
-  TextField,
-  Button,
-  Typography,
   Box,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
+  Typography,
+  Button,
+  TextField,
+  Grid,
+  IconButton,
 } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { message } from "antd";
-import { useLocation, useNavigate } from "react-router-dom";
 import { useGetZoneByWarehouseIdQuery } from "../../redux/api/zoneApiSlice";
-import { useGetProductByIdQuery } from "../../redux/api/productApiSlice";
+import { useGetInventoriesByWarehouseIdQuery } from "../../redux/api/inventoryApiSlice";
 
-const StaffTransfer = () => {
-  const [productId, setProductId] = useState("");
-  const [fromZoneId, setFromZoneId] = useState("");
-  const [toZoneId, setToZoneId] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [productName, setProductName] = useState("");
+const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
+  const [transfers, setTransfers] = useState([
+    { productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }
+  ]);
   const [isFormDisabled, setIsFormDisabled] = useState(true);
 
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const userInfo = useSelector((state) => state.auth);
-  let authToken;
-  let wid;
-  if (userInfo && userInfo.userInfo && userInfo.userInfo.data) {
-    authToken = userInfo.userInfo.data.token;
-    wid = userInfo.userInfo.data.warehouseId;
-  }
-
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const prodId = params.get("productId") || "";
-    const fromZone = params.get("zoneId") || "";
-
-    setProductId(prodId);
-    setFromZoneId(fromZone);
-
-    if (prodId && fromZone) {
+    if (initialInventory?.product?.id && initialInventory?.zone?.id) {
       setIsFormDisabled(false);
     } else {
       setIsFormDisabled(true);
     }
-  }, [location]);
+  }, [initialInventory]);
 
-  const { data: productData } = useGetProductByIdQuery(
-    { productId, authToken },
-    { skip: !productId }
-  );
-  useEffect(() => {
-    if (productData) {
-      setProductName(productData.data.name);
-    }
-  }, [productData]);
+  const { data: zones, isLoading: isLoadingZones, error: errorZones } = useGetZoneByWarehouseIdQuery({ id: initialInventory?.zone?.warehouse?.id, authToken });
 
-  const {
-    data: zones,
-    isLoading: isLoadingZones,
-    error: errorZones,
-  } = useGetZoneByWarehouseIdQuery({ id: wid, authToken });
+  const { data: inventories, error: inventoriesError, isLoading: inventoriesLoading } = useGetInventoriesByWarehouseIdQuery({ warehouseId: initialInventory?.zone?.warehouse?.id, authToken });
 
-  const [transferProduct, { isLoading, isSuccess, isError, error }] =
-    useTransferProductMutation();
+  const [transferProduct, { isLoading }] = useTransferProductMutation();
 
   const handleTransfer = async (e) => {
     e.preventDefault();
-    if (quantity <= 0) {
-      message.error("Quantity must be greater than zero");
-      return;
-    }
     try {
-      await transferProduct({
-        productId: parseInt(productId, 10),
-        fromZoneId: parseInt(fromZoneId, 10),
-        toZoneId: parseInt(toZoneId, 10),
-        quantity: parseInt(quantity, 10),
-        authToken,
-      });
-      setProductId("");
-      setFromZoneId("");
-      setToZoneId("");
-      setQuantity("");
-      message.success("Transfer successfully");
+        const transferRequests = transfers.map((transfer) => ({
+            productId: parseInt(transfer.productId, 10),
+            fromZoneId: parseInt(transfer.fromZoneId, 10),
+            toZoneId: parseInt(transfer.toZoneId, 10),
+            quantity: parseInt(transfer.quantity, 10),
+            expiredAt: transfer.expiredAt,
+        }));
+        await transferProduct({
+            transferRequests,
+            authToken,
+        });
+        setTransfers([{ productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }]);
+        message.success("Transfers successfully");
+        onTransferSuccess();
     } catch (err) {
-      message.error("Transfer unsuccessfully");
+        message.error("Transfers unsuccessfully");
     }
   };
 
-  const handleSelectProduct = () => {
-    navigate("/staff/data/zone");
+  const handleAddTransfer = () => {
+    setTransfers([...transfers, { productId: '', fromZoneId: '', toZoneId: '', quantity: '', expiredAt: '' }]);
   };
+
+  const handleRemoveTransfer = (index) => {
+    const newTransfers = transfers.filter((_, i) => i !== index);
+    setTransfers(newTransfers);
+  };
+
+  const handleTransferChange = (index, field, value) => {
+    const newTransfers = [...transfers];
+    newTransfers[index][field] = value;
+    setTransfers(newTransfers);
+  };
+
+  const uniqueProducts = inventories
+    ? Array.from(new Set(inventories.map((inventory) => inventory.product.id)))
+        .map((productId) => inventories.find((inventory) => inventory.product.id === productId).product)
+    : [];
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Transfer Product
-        </Typography>
-        <Box sx={{ my: 2 }}>
-          <Button
-            type="button"
-            variant="outlined"
-            color="error"
-            fullWidth
-            onClick={handleSelectProduct}
-            sx={{ mt: 2 }}
-          >
-            Select Product First
-          </Button>
-        </Box>
-        <form onSubmit={handleTransfer}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            margin="normal"
-            label="Product Name"
-            value={productName}
-            disabled
-          />
-          <TextField
-            fullWidth
-            variant="outlined"
-            margin="normal"
-            label="From"
-            value={
-              zones?.data?.find((zone) => zone.id === parseInt(fromZoneId, 10))
-                ?.name || ""
-            }
-            onChange={(e) => setFromZoneId(e.target.value)}
-            required
-            type="text"
-            disabled
-          />
-          <FormControl fullWidth variant="outlined" margin="normal" required>
-            <InputLabel id="to-zone-label">To</InputLabel>
-            <Select
-              labelId="to-zone-label"
-              value={toZoneId}
-              onChange={(e) => setToZoneId(e.target.value)}
-              label="To"
-              disabled={isFormDisabled}
-            >
-              {zones?.data?.map((zone) => (
-                <MenuItem key={zone.id} value={zone.id}>
-                  {zone.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            fullWidth
-            variant="outlined"
-            margin="normal"
-            label="Quantity"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            required
-            type="number"
-            disabled={isFormDisabled}
-          />
-          <Box sx={{ my: 2 }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={isLoading || isFormDisabled}
-            >
-              Transfer
-            </Button>
-          </Box>
-        </form>
+    <Box component="form" onSubmit={handleTransfer} sx={{ mt: 2 }}>
+      {transfers.map((transfer, index) => {
+        const selectedProductInventories = inventories
+          ? inventories.filter((inventory) => inventory.product.id === transfer.productId)
+          : [];
+
+        return (
+          <Grid container spacing={2} key={index}>
+            <Grid item xs={2}>
+              <FormControl fullWidth variant="outlined" margin="normal" required>
+                <InputLabel id={`product-label-${index}`}>Product</InputLabel>
+                <Select
+                  labelId={`product-label-${index}`}
+                  value={transfer.productId}
+                  onChange={(e) => handleTransferChange(index, 'productId', e.target.value)}
+                  label="Product"
+                  disabled={isFormDisabled}
+                >
+                  {uniqueProducts.map((product) => (
+                    <MenuItem key={product.id} value={product.id}>
+                      {product.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={2}>
+              <FormControl fullWidth variant="outlined" margin="normal" required>
+                <InputLabel id={`from-zone-label-${index}`}>From Zone</InputLabel>
+                <Select
+                  labelId={`from-zone-label-${index}`}
+                  value={transfer.fromZoneId}
+                  onChange={(e) => handleTransferChange(index, 'fromZoneId', e.target.value)}
+                  label="From Zone"
+                  disabled={isFormDisabled || !transfer.productId}
+                >
+                  {selectedProductInventories.map((inventory) => (
+                    <MenuItem key={inventory.zone.id} value={inventory.zone.id}>
+                      {inventory.zone.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {transfer.fromZoneId && (
+                <Typography variant="body2">
+                  Available Quantity: {selectedProductInventories.find((inventory) => inventory.zone.id === transfer.fromZoneId)?.quantity || 0}
+                </Typography>
+              )}
+            </Grid>
+            <Grid item xs={2}>
+              <FormControl fullWidth variant="outlined" margin="normal" required>
+                <InputLabel id={`to-zone-label-${index}`}>To Zone</InputLabel>
+                <Select
+                  labelId={`to-zone-label-${index}`}
+                  value={transfer.toZoneId}
+                  onChange={(e) => handleTransferChange(index, 'toZoneId', e.target.value)}
+                  label="To Zone"
+                  disabled={isFormDisabled}
+                >
+                  {zones?.data?.map((zone) => (
+                    <MenuItem key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={2}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                label="Quantity"
+                value={transfer.quantity}
+                onChange={(e) => handleTransferChange(index, 'quantity', e.target.value)}
+                required
+                type="number"
+                disabled={isFormDisabled}
+              />
+            </Grid>
+            <Grid item xs={2}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                label="Expired At"
+                type="date"
+                value={transfer.expiredAt ? new Date(transfer.expiredAt).toISOString().substr(0, 10) : ''}
+                onChange={(e) => handleTransferChange(index, 'expiredAt', e.target.value)}
+                required
+                disabled={isFormDisabled}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={1} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <IconButton onClick={() => handleRemoveTransfer(index)} disabled={transfers.length === 1}>
+                <DeleteIcon />
+              </IconButton>
+            </Grid>
+          </Grid>
+        );
+      })}
+      <Button onClick={handleAddTransfer} startIcon={<AddIcon />} sx={{ mt: 2 }} disabled={isLoading || isFormDisabled}>
+        Add Transfer
+      </Button>
+      <Box sx={{ my: 2 }}>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          disabled={isLoading || isFormDisabled}
+        >
+          Transfer
+        </Button>
       </Box>
-    </Container>
+    </Box>
   );
 };
 

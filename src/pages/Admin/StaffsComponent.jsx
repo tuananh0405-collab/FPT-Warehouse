@@ -13,8 +13,10 @@ import AddStaffModal from "../../components/Staffs/AddStaffModal";
 import { Button, message, Form } from "antd";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const StaffsComponent = () => {
+  useDocumentTitle('Staffs')
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
   const { data: staffs, isLoading, error } = useGetAllUsersQuery(authToken);
@@ -27,7 +29,7 @@ const StaffsComponent = () => {
   const [deleteUser] = useDeleteUserMutation();
   const [addStaff] = useAddStaffMutation();
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const rowsPerPage = 8;
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [form] = Form.useForm();
@@ -83,19 +85,22 @@ const StaffsComponent = () => {
   }
 
   if (error || error2) {
-    return <Error500/>;
+    return <Error500 />;
   }
 
   return (
     <div className="">
-      <h1 class="mb-2 text-2xl font-semibold text-dark">Staffs</h1>
-      <Button
-        type="primary"
-        style={{ background: "#40A578" }}
-        onClick={() => setAddNewVisible(true)}
-      >
-        Add new staff
-      </Button>
+      <div className="flex justify-between" style={{paddingLeft:"3rem", paddingTop:"0.5rem"}}>
+        <h1 class="mb-2 text-2xl font-semibold text-dark">Staffs</h1>
+        <Button
+          type="primary"
+          style={{ background: "#40A578" }}
+          onClick={() => setAddNewVisible(true)}
+        >
+          Add new staff
+        </Button>
+      </div>
+
       <AddStaffModal
         addNewVisible={addNewVisible}
         handleOkAdd={handleOkAdd}

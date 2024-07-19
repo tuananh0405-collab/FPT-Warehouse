@@ -6,8 +6,10 @@ import StoreIcon from "@mui/icons-material/Store";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import { Meta } from "antd/es/list/Item";
 import LogoutIcon from '@mui/icons-material/Logout';
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const StaffOrder = () => {
+  useDocumentTitle('Orders')
   const cardData = [
     {
       title: "Import",

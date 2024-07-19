@@ -44,7 +44,7 @@ const Breadcrumbs = () => {
   ];
 
   return (
-    <Breadcrumb style={{ margin: "16px 0" }}>
+    <Breadcrumb style={{ margin: "16px 0" }} className="breadcrumb">
       {breadcrumbItems.concat(extraBreadcrumbItems)}
     </Breadcrumb>
   );

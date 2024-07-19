@@ -6,10 +6,12 @@ import { SearchOutlined } from "@ant-design/icons";
 import { useGetAllImportsQuery, useGetImportByIdQuery } from "../../redux/api/importApiSlice";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const { Option } = Select;
 
 const OrderImport = () => {
+  useDocumentTitle('Import')
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchParams, setSearchParams] = useState({ status: "", sortBy: "id", direction: "asc", pageNo: 1 });

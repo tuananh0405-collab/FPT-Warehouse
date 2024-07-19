@@ -5,11 +5,13 @@ import { DownloadOutlined } from '@ant-design/icons';
 import { useGetInventorySnapshotReportQuery } from '../../redux/api/inventorySnapshotSlice';
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
+import useDocumentTitle from '../../utils/UseDocumentTitle';
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
 const ReportComponent = () => {
+  useDocumentTitle('Report')
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [trigger, setTrigger] = useState(false);
