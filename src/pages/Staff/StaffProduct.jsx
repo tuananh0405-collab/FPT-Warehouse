@@ -58,7 +58,7 @@ const StaffProduct = () => {
   const [open, setOpen] = useState(false);
   const [selectedInventory, setSelectedInventory] = useState(null);
 
-  const rowsPerPage = 7; // Initial rows per page, this can be adjusted dynamically based on the height of the container
+  const rowsPerPage = 10; // Initial rows per page, this can be adjusted dynamically based on the height of the container
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';

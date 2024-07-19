@@ -20,6 +20,7 @@ const createData = (name, id, email, phone, address) => {
 };
 
 const CustomerTable = ({ customerList, page, setPage, rowsPerPage, showModal }) => {
+  rowsPerPage = 10;
   const [anchorElName, setAnchorElName] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [searchName, setSearchName] = useState("");

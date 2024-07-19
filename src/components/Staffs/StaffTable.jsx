@@ -38,6 +38,7 @@ const makeStyle = (status) => {
 };
 
 const StaffTable = ({ staffList, page, setPage, rowsPerPage, showModal }) => {
+  rowsPerPage=10;
   const [anchorElFullName, setAnchorElFullName] = useState(null);
   const [anchorElOnCharge, setAnchorElOnCharge] = useState(null);
   const [anchorElRole, setAnchorElRole] = useState(null);

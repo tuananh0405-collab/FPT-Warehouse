@@ -26,6 +26,7 @@ const ProductTable = ({
   rowsPerPage,
   showModal,
 }) => {
+  rowsPerPage=10;
   const [anchorElName, setAnchorElName] = useState(null);
   const [anchorElCategory, setAnchorElCategory] = useState(null);
 
