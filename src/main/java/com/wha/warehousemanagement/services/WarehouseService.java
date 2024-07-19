@@ -75,12 +75,12 @@ public class WarehouseService {
             if (!warehouseRepository.existsById(id)) {
                 throw new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND);
             }
-            if (warehouseRepository.existsByName(request.getName())) {
-                throw new CustomException(ErrorCode.WAREHOUSE_NAME_EXISTS);
-            }
-            if (warehouseRepository.existsByAddress(request.getAddress())) {
-                throw new CustomException(ErrorCode.WAREHOUSE_ADDRESS_EXISTS);
-            }
+//            if (warehouseRepository.existsByName(request.getName())) {
+//                throw new CustomException(ErrorCode.WAREHOUSE_NAME_EXISTS);
+//            }
+//            if (warehouseRepository.existsByAddress(request.getAddress())) {
+//                throw new CustomException(ErrorCode.WAREHOUSE_ADDRESS_EXISTS);
+//            }
             Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
             if (request.getName() != null && !request.getName().trim().isEmpty()) {
                 warehouse.setName(request.getName());

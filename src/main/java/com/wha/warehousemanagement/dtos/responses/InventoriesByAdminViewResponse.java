@@ -20,7 +20,6 @@ public class InventoriesByAdminViewResponse {
     private String productDescription;
     private String productCategory;
     private int productQuantity;
-    private int productHeldQuantity;
     private Date productExpiryDate;
     private String productZone;
 }

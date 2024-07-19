@@ -3,10 +3,8 @@ package com.wha.warehousemanagement.services;
 import com.wha.warehousemanagement.dtos.requests.ExportRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportTransferRequest;
 import com.wha.warehousemanagement.dtos.requests.ExportUpdateRequest;
-import com.wha.warehousemanagement.dtos.requests.processExportByStaffRequest;
 import com.wha.warehousemanagement.dtos.responses.ExportByAdminReqResponse;
 import com.wha.warehousemanagement.dtos.responses.ExportResponse;
-import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
 import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ExportMapper;
@@ -80,20 +78,11 @@ public class ExportService {
     }
 
     public ResponseObject<List<ExportResponse>> getAllExports(
-            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status, String search
+            Integer warehouseId
     ) {
         try {
-            Pageable pageable;
-            Page<Export> exports;
-            if (sortBy != null && !sortBy.isEmpty() && direction != null && !direction.isEmpty()) {
-                Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-                pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
-                exports = exportRepository.findAllByWarehouseWithDefaultSort(warehouseId, status, search, pageable);
-            } else {
-                pageable = PageRequest.of(pageNo, limit);
-                exports = exportRepository.findAllByWarehouseSorted(warehouseId, status, search, pageable);
-            }
-            List<ExportResponse> responses = exportMapper.toDto(exports.getContent());
+            List<Export> exports = exportRepository.findByWarehouseFromId(warehouseId);
+            List<ExportResponse> responses = exportMapper.toDto(exports);
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all exports successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
@@ -107,6 +96,7 @@ public class ExportService {
             List<ExportResponse> response =
                     exportRepository.findAll()
                             .stream()
+                            .filter(export -> export.getWarehouseFrom() != null)
                             .map(exportMapper::toDto
                             )
                             .collect(Collectors.toList());
@@ -131,30 +121,41 @@ public class ExportService {
         }
     }
 
-    @Transactional
     public ResponseObject<?> updateExport(int id, ExportUpdateRequest request) {
+        System.out.println("Export update request: " + request.toString());
         try {
             Export export = exportRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
 
-            export.setDescription(request.getDescription());
-            export.setStatus(Status.valueOf(request.getStatus()));
-            export.setExportDate(new Date());
+            if (request.getDescription() != null && !request.getDescription().trim().isEmpty())
+                export.setDescription(request.getDescription());
+            if (request.getStatus() != null && !request.getStatus().trim().isEmpty())
+                export.setStatus(Status.valueOf(request.getStatus()));
+            if (request.getExportDate() != null)
+                export.setExportDate(request.getExportDate());
+
             exportRepository.save(export);
 
             if (export.getExportType() == ImportExportType.CUSTOMER) {
                 Customer customer = customerRepository.findById(request.getCustomerId())
                         .orElseThrow(() -> new CustomException(ErrorCode.CUSTOMER_NOT_FOUND));
 
-                customer.setName(request.getCustomerName());
-                customer.setAddress(request.getCustomerAddress());
-                customer.setPhone(request.getCustomerPhone());
-                customer.setEmail(request.getCustomerEmail());
+                if (request.getCustomerName() != null && !request.getCustomerName().trim().isEmpty())
+                    customer.setName(request.getCustomerName());
+                if (request.getCustomerAddress() != null && !request.getCustomerAddress().trim().isEmpty())
+                    customer.setAddress(request.getCustomerAddress());
+                if (request.getCustomerPhone() != null && !request.getCustomerPhone().trim().isEmpty())
+                    customer.setPhone(request.getCustomerPhone());
+                if (request.getCustomerEmail() != null && !request.getCustomerEmail().trim().isEmpty())
+                    customer.setEmail(request.getCustomerEmail());
+
                 customerRepository.save(customer);
             } else if (export.getExportType() == ImportExportType.WAREHOUSE) {
                 Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseIdTo())
                         .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
-                export.setWarehouseTo(warehouseTo);
+
+                if (request.getWarehouseIdTo() != null)
+                    export.setWarehouseTo(warehouseTo);
             }
             exportRepository.save(export);
             return new ResponseObject<>(HttpStatus.OK.value(), "Updated export successfully", null);
@@ -411,5 +412,51 @@ public class ExportService {
         return exportRepository.findAllExportsForAdmin(status, pageable);
     }
 
+    public ResponseObject<?> approveExportPending(Integer exportId) {
+        try {
+            Export export = exportRepository.findById(exportId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+
+            if (export.getStatus() != Status.PENDING) {
+                throw new CustomException(ErrorCode.INVALID_STATUS_TO_EXPORT);
+            }
+
+            List<ExportDetail> exportDetails = exportDetailRepository.findByExportId(export.getId());
+
+            for (ExportDetail exportDetail : exportDetails) {
+                Inventory inventory = inventoryRepository.findByExportDetail(
+                        exportDetail.getProduct().getName(),
+                        exportDetail.getExpiredAt(),
+                        exportDetail.getZone().getId()
+                );
+
+                inventory.setQuantity(inventory.getQuantity() - exportDetail.getQuantity());
+                inventoryRepository.save(inventory);
+            }
+
+            export.setStatus(Status.SHIPPING);
+            exportRepository.save(export);
+
+            return new ResponseObject<>(HttpStatus.OK.value(), "Approved export pending successfully", null);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed at approveExportPending", null);
+        }
+    }
+
+    public ResponseObject<?> confirmShippedSuccessfully (Integer exportid) {
+        try {
+            Export export = exportRepository.findById(exportid)
+                    .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+            export.setStatus(Status.SUCCEED);
+            exportRepository.save(export);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export shipped successfully", null);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to ship export", null);
+        }
+    }
 
 }

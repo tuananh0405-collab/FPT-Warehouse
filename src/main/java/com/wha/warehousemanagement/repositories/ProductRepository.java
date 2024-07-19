@@ -27,4 +27,16 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
                                                            @Param("warehouseId") Integer warehouseId,
                                                            @Param("categoryId") Integer categoryId,
                                                            @Param("search") String search);
+
+    @Query("SELECT COUNT(p) FROM Product p " +
+            "JOIN p.category c " +
+            "JOIN p.inventories i " +
+            "JOIN i.zone z " +
+            "JOIN z.warehouse w " +
+            "WHERE w.id = :warehouseId " +
+            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+            "AND (:search IS NULL OR p.name LIKE %:search%)")
+    Integer getTotalProductsForAutoSelect(@Param("warehouseId") Integer warehouseId,
+                                          @Param("categoryId") Integer categoryId,
+                                          @Param("search") String search);
 }

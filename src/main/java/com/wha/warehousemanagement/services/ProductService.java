@@ -64,7 +64,6 @@ public class ProductService {
                     .stream().map(
                             product -> {
                                 ProductResponse response = productMapper.toDto(product);
-                                System.out.println(response);
                                 CategoryResponse categoryResponse = categoryMapper.toDto(product.getCategory());
                                 response.setCategory(categoryResponse);
                                 return response;
@@ -128,6 +127,7 @@ public class ProductService {
 
     public ResponseObject<Object> deleteAllProducts() {
         try {
+
             List<Product> list = new ArrayList<>(productRepository.findAll());
             if (list.isEmpty()) {
                 throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -170,5 +170,8 @@ public class ProductService {
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all products by warehouseId", null);
         }
+    }
+    public Integer getTotalProductsForAutoSelect(Integer warehouseId, Integer categoryId, String search) {
+        return productRepository.getTotalProductsForAutoSelect(warehouseId, categoryId, search);
     }
 }

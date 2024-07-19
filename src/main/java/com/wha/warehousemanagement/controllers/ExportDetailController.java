@@ -48,7 +48,7 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.deleteExportDetail(ids));
     }
 
-    @GetMapping("/suggest")
+    @PostMapping("/suggest")
     public ResponseEntity<ResponseObject<List<SuggestedExportProductsResponse>>> suggestExportDetail(@RequestBody List<SuggestedExportProductsRequest> requests) {
         return ResponseEntity.ok(exportDetailService.suggestExportInventory(requests));
     }
@@ -66,5 +66,12 @@ public class ExportDetailController {
     @GetMapping("/export-products/{exportId}")
     public ResponseEntity<?> getProductsInExportByExportId(@PathVariable("exportId") Integer exportId) {
         return ResponseEntity.ok(exportDetailService.getProductsInExportByExportId(exportId));
+    }
+
+    @PostMapping("/update-and-add")
+    public ResponseEntity<?> updateAndAddExportDetails(
+            @RequestBody List<ExportDetailRequest> requests,
+            @RequestParam Integer exportId) {
+        return ResponseEntity.ok(exportDetailService.updateAndAddExportDetails(requests, exportId));
     }
 }

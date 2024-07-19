@@ -9,6 +9,7 @@ import com.wha.warehousemanagement.exceptions.ErrorCode;
 import com.wha.warehousemanagement.mappers.ExportDetailMapper;
 import com.wha.warehousemanagement.mappers.ExportMapper;
 import com.wha.warehousemanagement.mappers.ProductMapper;
+import com.wha.warehousemanagement.mappers.ZoneMapper;
 import com.wha.warehousemanagement.models.*;
 import com.wha.warehousemanagement.repositories.*;
 import jakarta.transaction.Transactional;
@@ -33,6 +34,8 @@ public class ExportDetailService {
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final InventoryService inventoryService;
+    private final ZoneRepository zoneRepository;
+    private final ZoneMapper zoneMapper;
 
     public ResponseObject<?> getAllExportDetails() {
         try {
@@ -42,6 +45,7 @@ public class ExportDetailService {
                         ExportDetailResponse response = exportDetailMapper.toDto(imp);
                         response.setExport(exportMapper.toDto(imp.getExport()));
                         response.setProduct(productMapper.toDto(imp.getProduct()));
+                        response.setZone(zoneMapper.toDto(imp.getZone()));
                         return response;
                     })
                     .collect(Collectors.toList());
@@ -60,6 +64,7 @@ public class ExportDetailService {
                         ExportDetailResponse exportDetailResponse = exportDetailMapper.toDto(imp);
                         exportDetailResponse.setExport(exportMapper.toDto(imp.getExport()));
                         exportDetailResponse.setProduct(productMapper.toDto(imp.getProduct()));
+                        exportDetailResponse.setZone(zoneMapper.toDto(imp.getZone()));
                         return exportDetailResponse;
                     })
                     .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
@@ -86,15 +91,18 @@ public class ExportDetailService {
                                 request.getProductId(), request.getZoneId(), request.getExpiredAt())
                         .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
 
-                // Update held quantity and available quantity
-                inventory.setHeldQuantity((inventory.getHeldQuantity() == null ? 0 : inventory.getHeldQuantity()) + request.getQuantity());
+                // Update available quantity
                 inventory.setQuantity(inventory.getQuantity() - request.getQuantity());
 
                 inventoryRepository.save(inventory);
             }
 
             exportDetailRepository.saveAll(exportDetails);
-            return new ResponseObject<>(HttpStatus.OK.value(), "Export details created and inventory updated successfully", null);
+            List<ExportDetailResponse> responses = new ArrayList<>();
+            for (ExportDetail x : exportDetails) {
+                responses.add(exportDetailMapper.toDto(x));
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export details created and inventory updated successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
@@ -126,6 +134,8 @@ public class ExportDetailService {
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
         exportDetail.setQuantity(request.getQuantity());
         exportDetail.setExpiredAt(request.getExpiredAt());
+        exportDetail.setZone(zoneRepository.findById(request.getZoneId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ZONE_NOT_FOUND)));
         return exportDetail;
     }
 
@@ -139,7 +149,8 @@ public class ExportDetailService {
                                 imp.getExport().getId(),
                                 productMapper.toDto(imp.getProduct()),
                                 imp.getQuantity(),
-                                imp.getExpiredAt()
+                                imp.getExpiredAt(),
+                                zoneMapper.toDto(imp.getZone())
                         );
                     })
                     .toList();
@@ -185,7 +196,7 @@ public class ExportDetailService {
                 List<Inventory> inventories = inventoryMap.get(request.getProductId());
                 // int totalQuantityInWarehouse = inventories.stream().mapToInt(Inventory::getQuantity).sum();
                 int totalQuantityInWarehouse = inventoryRepository.countTotalQuantityByProductIdAndWarehouseId(request.getProductId(), request.getWarehouseId());
-                if(totalQuantityInWarehouse < request.getQuantity()){
+                if (totalQuantityInWarehouse < request.getQuantity()) {
                     // Nếu số lượng tồn kho không đủ để xuất thì trả về thông báo
                     suggestedDetails.add(new SuggestedExportProductsResponse(
                             null,
@@ -224,7 +235,7 @@ public class ExportDetailService {
                     // Nếu số lượng inventory đủ để xuất thì thêm vào suggestedDetails
                     if (inventory.getQuantity() >= quantityToExport) {
                         suggestedDetails.add(new SuggestedExportProductsResponse(
-                                null,
+                                inventory.getId(),
                                 "",
                                 product,
                                 quantityToExport,
@@ -237,7 +248,7 @@ public class ExportDetailService {
                     } else {
                         // Nếu số lượng inventory không đủ để xuất thì lấy hết số lượng inventory đó -> giảm số lượng cần xuất -> lấy inventory tiếp theo
                         suggestedDetails.add(new SuggestedExportProductsResponse(
-                                null,
+                                inventory.getId(),
                                 "",
                                 product,
                                 inventory.getQuantity(),
@@ -264,6 +275,7 @@ public class ExportDetailService {
                         ExportDetailResponse response = exportDetailMapper.toDto(imp);
                         response.setExport(exportMapper.toDto(imp.getExport()));
                         response.setProduct(productMapper.toDto(imp.getProduct()));
+                        response.setZone(zoneMapper.toDto(imp.getZone()));
                         return response;
                     })
                     .toList();
@@ -285,6 +297,7 @@ public class ExportDetailService {
                                 .product(productMapper.toDto(imp.getProduct()))
                                 .quantity(imp.getQuantity())
                                 .expiredAt(imp.getExpiredAt().toString())
+                                .zone(zoneMapper.toDto(imp.getZone()))
                                 .build();
                     })
                     .toList();
@@ -295,5 +308,193 @@ public class ExportDetailService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get export details", null);
         }
     }
+
+//    @Transactional
+//    public ResponseObject<?> updateAndAddExportDetails(List<ExportDetailRequest> requests, Integer exportId) {
+//        try {
+//            List<ExportDetail> exportDetails = new ArrayList<>();
+//
+//            // Fetch existing export details
+//            List<ExportDetail> existingExportDetails = exportDetailRepository.findByExportId(exportId);
+//            Map<Integer, ExportDetail> existingExportDetailsMap = existingExportDetails.stream()
+//                    .collect(Collectors.toMap(ExportDetail::getId, ed -> ed));
+//
+//            // Identify which export details are updated or added
+//            for (ExportDetailRequest request : requests) {
+//                ExportDetail exportDetail = null;
+//                for (ExportDetail ed : existingExportDetails) {
+//                    if (ed.getProduct().getId().equals(request.getProductId()) &&
+//                            ed.getZone().getId().equals(request.getZoneId()) &&
+//                            ed.getExpiredAt().equals(request.getExpiredAt())) {
+//                        exportDetail = ed;
+//                        break;
+//                    }
+//                }
+//
+//                Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+//                                request.getProductId(), request.getZoneId(), request.getExpiredAt())
+//                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+//
+//                if (exportDetail != null) {
+//                    // Update existing export detail
+//                    int oldQuantity = exportDetail.getQuantity();
+//                    int newQuantity = request.getQuantity();
+//                    int quantityDifference = newQuantity - oldQuantity;
+//
+//                    // Hoàn lại số lượng cũ vào kho trước khi cập nhật
+//                    inventory.setQuantity(inventory.getQuantity() + oldQuantity);
+//
+//                    if (inventory.getQuantity() < newQuantity) {
+//                        throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY);
+//                    }
+//
+//                    // Trừ đi số lượng mới từ kho
+//                    inventory.setQuantity(inventory.getQuantity() - newQuantity);
+//
+//                    exportDetail.setQuantity(newQuantity);
+//                    exportDetails.add(exportDetail);
+//                    existingExportDetailsMap.remove(exportDetail.getId());
+//                } else {
+//                    // Create new export detail
+//                    exportDetail = new ExportDetail();
+//                    exportDetail = update(exportDetail, request);
+//                    exportDetails.add(exportDetail);
+//
+//                    // Trừ đi số lượng từ kho
+//                    if (inventory.getQuantity() < request.getQuantity()) {
+//                        throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY);
+//                    }
+//                    inventory.setQuantity(inventory.getQuantity() - request.getQuantity());
+//                }
+//
+//                // Save adjusted inventory
+//                inventoryRepository.save(inventory);
+//            }
+//
+//            // Identify and process deletions
+//            for (ExportDetail exportDetail : existingExportDetailsMap.values()) {
+//                Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+//                                exportDetail.getProduct().getId(), exportDetail.getZone().getId(), exportDetail.getExpiredAt())
+//                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+//
+//                // Hoàn lại số lượng vào kho khi xóa
+//                inventory.setQuantity(inventory.getQuantity() + exportDetail.getQuantity());
+//                inventoryRepository.save(inventory);
+//                exportDetailRepository.delete(exportDetail);
+//            }
+//
+//            exportDetailRepository.saveAll(exportDetails);
+//            List<ExportDetailResponse> responses = exportDetails.stream()
+//                    .map(exportDetailMapper::toDto)
+//                    .collect(Collectors.toList());
+//            return new ResponseObject<>(HttpStatus.OK.value(), "Export details updated, added, and inventory adjusted successfully", responses);
+//        } catch (CustomException e) {
+//            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+//        } catch (Exception e) {
+//            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export details, add new ones, and adjust inventory", null);
+//        }
+//    }
+
+    @Transactional
+    public ResponseObject<?> updateAndAddExportDetails(List<ExportDetailRequest> newRequests, Integer exportId) {
+        try {
+            // Fetch existing export details
+            List<ExportDetail> existingExportDetails = exportDetailRepository.findByExportId(exportId);
+
+            // Map for quick lookup of existing export details by key
+            Map<String, ExportDetail> existingExportDetailsMap = existingExportDetails.stream()
+                    .collect(Collectors.toMap(
+                            ed -> ed.getProduct().getId() + "-" + ed.getZone().getId() + "-" + ed.getExpiredAt().getTime(),
+                            ed -> ed
+                    ));
+
+            // Map for quick lookup of new export details by key
+            Map<String, ExportDetailRequest> newRequestsMap = newRequests.stream()
+                    .collect(Collectors.toMap(
+                            req -> req.getProductId() + "-" + req.getZoneId() + "-" + req.getExpiredAt().getTime(),
+                            req -> req
+                    ));
+
+            List<ExportDetail> detailsToUpdate = new ArrayList<>();
+            List<ExportDetail> detailsToAdd = new ArrayList<>();
+            List<ExportDetail> detailsToDelete = new ArrayList<>();
+
+            // Identify updates and deletions
+            for (ExportDetail existingDetail : existingExportDetails) {
+                String key = existingDetail.getProduct().getId() + "-" + existingDetail.getZone().getId() + "-" + existingDetail.getExpiredAt().getTime();
+                ExportDetailRequest newRequest = newRequestsMap.get(key);
+
+                if (newRequest != null) {
+                    // Update if quantity has changed
+                    if (!existingDetail.getQuantity().equals(newRequest.getQuantity())) {
+                        Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                                        existingDetail.getProduct().getId(), existingDetail.getZone().getId(), existingDetail.getExpiredAt())
+                                .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+
+                        int oldQuantity = existingDetail.getQuantity();
+                        int newQuantity = newRequest.getQuantity();
+                        inventory.setQuantity(inventory.getQuantity() + oldQuantity - newQuantity);
+
+                        if (inventory.getQuantity() < 0) {
+                            throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY);
+                        }
+
+                        existingDetail.setQuantity(newQuantity);
+                        inventoryRepository.save(inventory);
+                        detailsToUpdate.add(existingDetail);
+                    }
+                    newRequestsMap.remove(key);
+                } else {
+                    // Mark for deletion
+                    Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                                    existingDetail.getProduct().getId(), existingDetail.getZone().getId(), existingDetail.getExpiredAt())
+                            .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+
+                    inventory.setQuantity(inventory.getQuantity() + existingDetail.getQuantity());
+                    inventoryRepository.save(inventory);
+                    detailsToDelete.add(existingDetail);
+                }
+            }
+
+            // Identify additions
+            for (ExportDetailRequest newRequest : newRequestsMap.values()) {
+                Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                                newRequest.getProductId(), newRequest.getZoneId(), newRequest.getExpiredAt())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+
+                if (inventory.getQuantity() < newRequest.getQuantity()) {
+                    throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY);
+                }
+
+                inventory.setQuantity(inventory.getQuantity() - newRequest.getQuantity());
+                inventoryRepository.save(inventory);
+
+                ExportDetail newDetail = new ExportDetail();
+                newDetail = update(newDetail, newRequest);
+                detailsToAdd.add(newDetail);
+            }
+
+            // Perform updates, additions, and deletions
+            exportDetailRepository.saveAll(detailsToUpdate);
+            exportDetailRepository.saveAll(detailsToAdd);
+            exportDetailRepository.deleteAll(detailsToDelete);
+
+            List<ExportDetailResponse> responses = new ArrayList<>();
+            for (ExportDetail ed : detailsToUpdate) {
+                responses.add(exportDetailMapper.toDto(ed));
+            }
+            for (ExportDetail ed : detailsToAdd) {
+                responses.add(exportDetailMapper.toDto(ed));
+            }
+
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export details updated, added, and inventory adjusted successfully", responses);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            e.printStackTrace(); // Log exception details
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export details, add new ones, and adjust inventory", null);
+        }
+    }
+
 
 }

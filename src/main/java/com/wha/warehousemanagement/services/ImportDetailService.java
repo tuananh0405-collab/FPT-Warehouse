@@ -82,11 +82,10 @@ public class ImportDetailService {
 
                 Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
                                 request.getProductId(), request.getZoneId(), request.getExpiredAt())
-                        .orElse(new Inventory(null, product, zone, 0, 0, request.getExpiredAt()));
+                        .orElse(new Inventory(null, product, zone, 0, request.getExpiredAt()));
 
                 // Update quantity
                 inventory.setQuantity(inventory.getQuantity() + request.getQuantity());
-                inventory.setHeldQuantity((inventory.getHeldQuantity() == null ? 0 : inventory.getHeldQuantity()));
 
                 inventoryRepository.save(inventory);
             }

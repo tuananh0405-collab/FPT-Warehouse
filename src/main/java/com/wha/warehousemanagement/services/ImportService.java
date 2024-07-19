@@ -84,6 +84,8 @@ public class ImportService {
     public ResponseObject<List<ImportResponse>> getAllImports(
             Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status, String search
     ) {
+        System.out.println("warehouseId: " + warehouseId + " pageNo: " + pageNo + " limit: " + limit + " sortBy: " + sortBy + " direction: " + direction + " status: " + status + " search: " + search);
+
         try {
             Pageable pageable;
             Page<Import> imports;

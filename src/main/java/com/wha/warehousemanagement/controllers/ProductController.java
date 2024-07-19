@@ -28,7 +28,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getAllProducts(@PathVariable("id") int id) {
+    public ResponseEntity<?> getProductById(@PathVariable("id") int id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
@@ -48,7 +48,7 @@ public class ProductController {
     }
 
     //localhost:6060/product/product-list-for-export/1?page=1&sortBy=id&search=product:1
-    @GetMapping("/product-list-for-export/{warehouseId}")
+    @GetMapping("/product-list-for-auto-select/{warehouseId}")
     public ResponseEntity<ResponseObject<List<ProductListForExportResponse>>> getProductListForExport(
             @PathVariable("warehouseId") Integer warehouseId,
             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -57,7 +57,7 @@ public class ProductController {
             @RequestParam(value = "categoryId", required = false) Integer categoryId,
             @RequestParam(value = "search", required = false) String search
     ) {
-        int limit = 20;
+        int limit = 10;
         pageNo = pageNo - 1;
 
         if (categoryId != null && categoryId == 0) {
@@ -69,14 +69,18 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProductsByWarehouseId(warehouseId, pageNo, limit, sortBy, direction, categoryId, search));
     }
 
-    //localhost:6060/product/product-list-for-export/1?page=1&sortBy=id&search=product:1
-//    @GetMapping("/product-list/{warehouseId}")
-//    public ResponseEntity<ResponseObject<List<ProductListForExportResponse>>> getProductListByWarehouseId(
-//            @PathVariable("warehouseId") Integer warehouseId,
-//
-//    ) {
-//
-//        return ResponseEntity.ok(productService.getAllProductsByWarehouseId(warehouseId));
-//    }
-
+    @GetMapping("/product-list-for-auto-select/total/{warehouseId}")
+    public ResponseEntity<?> getTotalProductListForAutoSelect(
+            @PathVariable("warehouseId") Integer warehouseId,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "search", required = false) String search
+    ) {
+        if (categoryId != null && categoryId == 0) {
+            categoryId = null;
+        }
+        if (search != null && search.isBlank()) {
+            search = null;
+        }
+        return ResponseEntity.ok(productService.getTotalProductsForAutoSelect(warehouseId, categoryId, search));
+    }
 }

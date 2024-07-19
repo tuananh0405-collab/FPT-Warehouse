@@ -16,7 +16,7 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 public class SuggestedExportProductsResponse {
-    private Integer id;
+    private Integer inventoryId;
     private String status;
     private ProductResponse product;
     private Integer quantity;

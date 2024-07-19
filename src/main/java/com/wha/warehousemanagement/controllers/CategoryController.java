@@ -43,4 +43,10 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.deleteAllCategories());
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllSortedCategoryWithSearch (
+            @RequestParam(value = "search", required = false) String search
+    ) {
+        return ResponseEntity.ok(categoryService.getAllSortedCategoryWithSearch(search));
+    }
 }
