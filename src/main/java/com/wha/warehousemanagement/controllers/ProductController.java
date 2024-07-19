@@ -69,4 +69,14 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProductsByWarehouseId(warehouseId, pageNo, limit, sortBy, direction, categoryId, search));
     }
 
+    //localhost:6060/product/product-list-for-export/1?page=1&sortBy=id&search=product:1
+//    @GetMapping("/product-list/{warehouseId}")
+//    public ResponseEntity<ResponseObject<List<ProductListForExportResponse>>> getProductListByWarehouseId(
+//            @PathVariable("warehouseId") Integer warehouseId,
+//
+//    ) {
+//
+//        return ResponseEntity.ok(productService.getAllProductsByWarehouseId(warehouseId));
+//    }
+
 }

@@ -1,6 +1,8 @@
 package com.wha.warehousemanagement.controllers;
 
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
+import com.wha.warehousemanagement.dtos.requests.TransferProductRequest;
+import com.wha.warehousemanagement.dtos.requests.TransferRequest;
 import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
 import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.services.InventoryService;
@@ -78,13 +80,23 @@ public class InventoryController {
     }
 
     //zones transfer
+//    @PostMapping("/transfer")
+//    public ResponseEntity<String> transferProduct(@RequestParam int productId,
+//                                                  @RequestParam int fromZoneId,
+//                                                  @RequestParam int toZoneId,
+//                                                  @RequestParam int quantity) {
+//        try {
+//            inventoryService.transferProductBetweenZones(productId, fromZoneId, toZoneId, quantity);
+//            return ResponseEntity.ok("Chuyển sản phẩm thành công");
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+//        }
+//    }
+
     @PostMapping("/transfer")
-    public ResponseEntity<String> transferProduct(@RequestParam int productId,
-                                                  @RequestParam int fromZoneId,
-                                                  @RequestParam int toZoneId,
-                                                  @RequestParam int quantity) {
+    public ResponseEntity<String> transferProducts(@RequestBody List<TransferRequest> transferRequests) {
         try {
-            inventoryService.transferProductBetweenZones(productId, fromZoneId, toZoneId, quantity);
+            inventoryService.transferProducts(transferRequests);
             return ResponseEntity.ok("Chuyển sản phẩm thành công");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -180,5 +192,12 @@ public class InventoryController {
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date expiredAt) {
         InventoryResponse response = inventoryService.searchInventoryByProductIdZoneIdAndExpiredAt(productId, zoneId, expiredAt);
         return ResponseEntity.ok(new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", response));
+    }
+
+
+    @GetMapping("/allByWarehouseId/{warehouseId}")
+    public ResponseEntity<?> getInventoryByWarehouseId(@PathVariable Integer warehouseId) {
+        List<Inventory> inventories = inventoryService.getInventoryByWarehouseId(warehouseId);
+        return ResponseEntity.ok(inventories);
     }
 }

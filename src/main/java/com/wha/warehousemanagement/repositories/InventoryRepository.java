@@ -121,10 +121,15 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i WHERE i.zone.warehouse.id = :warehouseId AND i.product.id = :productId")
     int findTotalQuantityByWarehouseAndProductId(int warehouseId, int productId);
 
+//    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.id = :zoneId AND i.expiredAt = :expiredAt")
+//    Optional<Inventory> findByProductIdAndZoneIdAndExpiredAt(
+//            @Param("productId") Integer productId,
+//            @Param("zoneId") Integer zoneId,
+//            @Param("expiredAt") Date expiredAt);
+
+    List<Inventory> findByZoneWarehouseId(Integer warehouseId);
+
     @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.id = :zoneId AND i.expiredAt = :expiredAt")
-    Optional<Inventory> findByProductIdAndZoneIdAndExpiredAt(
-            @Param("productId") Integer productId,
-            @Param("zoneId") Integer zoneId,
-            @Param("expiredAt") Date expiredAt);
+    Optional<Inventory> findByProductIdAndZoneIdAndExpiredAt(@Param("productId") Integer productId, @Param("zoneId") Integer zoneId, @Param("expiredAt") Date expiredAt);
 
 }
