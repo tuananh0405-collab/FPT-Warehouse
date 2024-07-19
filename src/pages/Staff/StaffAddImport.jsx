@@ -212,7 +212,6 @@ const StaffAddImport = () => {
         warehouseIdTo: formData.warehouseIdTo,
       };
 
-      // Log all ID fields to ensure they are not null
       console.log("Import Data to be sent:", importData);
       if (!importData.warehouseIdTo) {
         throw new Error("warehouseIdTo must not be null");
@@ -232,7 +231,6 @@ const StaffAddImport = () => {
     } catch (error) {
       console.error("Error creating import:", error);
 
-      // Check if error has a response and log the response
       if (error.response) {
         console.error("Error response data:", error.response.data);
       }
@@ -321,8 +319,11 @@ const StaffAddImport = () => {
             layout="vertical"
             initialValues={formData}
             onValuesChange={handleFormChange}
-            style={{ width: "800px", margin: "auto" }}
+            style={{ width: "800px", margin: "auto", marginTop: "20px" }}
           >
+            <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
+              Import Information
+            </h2>
             <Form.Item
               label="Description"
               name="description"
@@ -357,150 +358,157 @@ const StaffAddImport = () => {
               border: "1px solid black",
               padding: "20px",
               borderRadius: "8px",
-              maxHeight: "600px",
-              overflowY: selectedProducts.length > 5 ? "scroll" : "auto",
             }}
           >
-            {selectedProducts.map((product, productIndex) => (
-              <div
-                key={productIndex}
+            <div className="sticky top-0 z-10">
+              <Button
+                type="primary"
+                onClick={handleAddProduct}
                 style={{
-                  marginBottom: "20px",
-                  border: "1px solid black",
-                  padding: "10px",
-                  borderRadius: "8px",
+                  display: "block",
+                  margin: "0 auto 20px auto",
                   width: "700px",
                 }}
               >
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item label="Product Name">
-                      <Select
-                        placeholder="Select product"
-                        value={product.name}
-                        onChange={(value) =>
-                          handleProductSelectChange(value, productIndex)
-                        }
-                        style={{ width: "100%" }}
-                      >
-                        {getAvailableProducts().map((p) => (
-                          <Option key={p.id} value={p.id}>
-                            {p.name}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item label="Expired At">
-                      <Input
-                        type="date"
-                        value={product.expiredAt}
-                        onChange={(e) => {
-                          const newSelectedProducts = [...selectedProducts];
-                          newSelectedProducts[productIndex].expiredAt =
-                            e.target.value;
-                          setSelectedProducts(newSelectedProducts);
-                        }}
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Row gutter={16}>
-                  <Col span={24}>
-                    {productZones[productIndex]?.map((zone, zoneIndex) => (
-                      <Row gutter={8} key={zoneIndex}>
-                        <Col span={10}>
-                          <Form.Item
-                            label={`Zone ${zoneIndex + 1}`}
-                            labelCol={{ span: 10 }}
-                            wrapperCol={{ span: 14 }}
-                          >
-                            <Select
-                              placeholder="Select zone"
-                              value={zone.zoneId}
-                              onChange={(value) =>
-                                handleZoneAllocationChange(
-                                  productIndex,
-                                  zoneIndex,
-                                  "zoneId",
-                                  value
-                                )
-                              }
-                              style={{ width: "100%" }}
+                Add Product
+              </Button>
+            </div>
+            <div
+              style={{
+                maxHeight: "400px",
+                overflowY: "auto",
+              }}
+            >
+              {selectedProducts.map((product, productIndex) => (
+                <div
+                  key={productIndex}
+                  style={{
+                    marginBottom: "20px",
+                    border: "1px solid black",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    width: "700px",
+                  }}
+                >
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item label="Product Name">
+                        <Select
+                          placeholder="Select product"
+                          value={product.name}
+                          onChange={(value) =>
+                            handleProductSelectChange(value, productIndex)
+                          }
+                          style={{ width: "100%" }}
+                        >
+                          {getAvailableProducts().map((p) => (
+                            <Option key={p.id} value={p.id}>
+                              {p.name}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label="Expired At">
+                        <Input
+                          type="date"
+                          value={product.expiredAt}
+                          onChange={(e) => {
+                            const newSelectedProducts = [...selectedProducts];
+                            newSelectedProducts[productIndex].expiredAt =
+                              e.target.value;
+                            setSelectedProducts(newSelectedProducts);
+                          }}
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={16}>
+                    <Col span={24}>
+                      {productZones[productIndex]?.map((zone, zoneIndex) => (
+                        <Row gutter={8} key={zoneIndex}>
+                          <Col span={10}>
+                            <Form.Item
+                              label={`Zone ${zoneIndex + 1}`}
+                              labelCol={{ span: 10 }}
+                              wrapperCol={{ span: 14 }}
                             >
-                              {getAvailableZones(productIndex).map((zone) => (
-                                <Option key={zone.id} value={zone.id}>
-                                  {zone.name}
-                                </Option>
-                              ))}
-                            </Select>
-                          </Form.Item>
-                        </Col>
-                        <Col span={10}>
-                          <Form.Item
-                            label="Quantity"
-                            labelCol={{ span: 10 }}
-                            wrapperCol={{ span: 14 }}
-                          >
-                            <InputNumber
-                              min={1}
-                              value={zone.quantity}
-                              onChange={(value) =>
-                                handleZoneAllocationChange(
-                                  productIndex,
-                                  zoneIndex,
-                                  "quantity",
-                                  value
-                                )
+                              <Select
+                                placeholder="Select zone"
+                                value={zone.zoneId}
+                                onChange={(value) =>
+                                  handleZoneAllocationChange(
+                                    productIndex,
+                                    zoneIndex,
+                                    "zoneId",
+                                    value
+                                  )
+                                }
+                                style={{ width: "100%" }}
+                              >
+                                {getAvailableZones(productIndex).map((zone) => (
+                                  <Option key={zone.id} value={zone.id}>
+                                    {zone.name}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                          <Col span={10}>
+                            <Form.Item
+                              label="Quantity"
+                              labelCol={{ span: 10 }}
+                              wrapperCol={{ span: 14 }}
+                            >
+                              <InputNumber
+                                min={1}
+                                value={zone.quantity}
+                                onChange={(value) =>
+                                  handleZoneAllocationChange(
+                                    productIndex,
+                                    zoneIndex,
+                                    "quantity",
+                                    value
+                                  )
+                                }
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col span={4}>
+                            <Button
+                              type="danger"
+                              icon={<MinusCircleOutlined />}
+                              onClick={() =>
+                                handleRemoveZone(productIndex, zoneIndex)
                               }
                               style={{ width: "100%" }}
                             />
-                          </Form.Item>
-                        </Col>
-                        <Col span={4}>
-                          <Button
-                            type="danger"
-                            icon={<MinusCircleOutlined />}
-                            onClick={() =>
-                              handleRemoveZone(productIndex, zoneIndex)
-                            }
-                            style={{ width: "100%" }}
-                          />
-                        </Col>
-                      </Row>
-                    ))}
-                  </Col>
-                </Row>
-                <Button
-                  type="dashed"
-                  onClick={() => handleAddZone(productIndex)}
-                  style={{ width: "100%", marginTop: "10px" }}
-                >
-                  <PlusOutlined /> Add Zone
-                </Button>
-                <Button
-                  type="link"
-                  danger
-                  onClick={() => handleRemoveProduct(productIndex)}
-                  style={{ marginTop: "10px" }}
-                >
-                  Remove Product
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="primary"
-              onClick={handleAddProduct}
-              style={{
-                display: "block",
-                margin: "0 auto 20px auto",
-                width: "700px",
-              }}
-            >
-              Add Product
-            </Button>
+                          </Col>
+                        </Row>
+                      ))}
+                    </Col>
+                  </Row>
+                  <Button
+                    type="dashed"
+                    onClick={() => handleAddZone(productIndex)}
+                    style={{ width: "100%", marginTop: "10px" }}
+                  >
+                    <PlusOutlined /> Add Zone
+                  </Button>
+                  <Button
+                    type="link"
+                    danger
+                    onClick={() => handleRemoveProduct(productIndex)}
+                    style={{ marginTop: "10px" }}
+                  >
+                    Remove Product
+                  </Button>
+                </div>
+              ))}
+            </div>
             <div className="flex justify-end mt-4" style={{ width: "100%" }}>
               <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
                 Previous
@@ -512,8 +520,18 @@ const StaffAddImport = () => {
           </div>
         )}
         {currentStep === 2 && (
-          <div style={{ maxWidth: "800px", margin: "auto" }}>
-            <h2>Review and Confirm</h2>
+          <div
+            style={{ maxWidth: "800px", margin: "auto", minHeight: "600px" }}
+          >
+            <h1
+              style={{
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: "10px",
+              }}
+            >
+              Review and Confirm
+            </h1>
             <Form layout="vertical">
               <Row gutter={16}>
                 <Col span={12}>
@@ -527,45 +545,17 @@ const StaffAddImport = () => {
                   </Form.Item>
                 </Col>
               </Row>
-              <Row gutter={16}>
-                {formData.importType === "CUSTOMER" && (
-                  <Col span={12}>
-                    <Form.Item label="Customer">
-                      <Input
-                        value={
-                          customersData.find(
-                            (customer) => customer.id === formData.customerId
-                          )?.name
-                        }
-                        readOnly
-                      />
-                    </Form.Item>
-                  </Col>
-                )}
-                {formData.importType === "WAREHOUSE" && (
-                  <Col span={12}>
-                    <Form.Item label="To">
-                      <Input
-                        value={
-                          warehousesData.find(
-                            (warehouse) =>
-                              warehouse.id === formData.warehouseIdTo
-                          )?.name
-                        }
-                        readOnly
-                      />
-                    </Form.Item>
-                  </Col>
-                )}
-              </Row>
             </Form>
-            <h3>Selected Products</h3>
-            <div
+            <h3
               style={{
-                maxHeight: "600px",
-                overflowY: selectedProducts.length > 5 ? "scroll" : "auto",
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: "10px",
               }}
             >
+              Selected Products
+            </h3>
+            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
               <Table
                 columns={[
                   { title: "Product Name", dataIndex: "name", key: "name" },
@@ -598,7 +588,7 @@ const StaffAddImport = () => {
                     quantity: zone.quantity,
                   }))
                 )}
-                pagination={false}
+                pagination={{ pageSize: 5, position: ["bottomCenter"] }}
               />
             </div>
             <div className="flex justify-end mt-4" style={{ width: "100%" }}>
