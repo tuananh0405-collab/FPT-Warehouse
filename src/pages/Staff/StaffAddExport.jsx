@@ -405,6 +405,9 @@ const StaffAddExport = () => {
             onValuesChange={handleFormChange}
             style={{ width: "800px", margin: "auto" }}
           >
+            <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
+              Export Information
+            </h2>
             <Form.Item
               label="Description"
               name="description"
@@ -652,7 +655,15 @@ const StaffAddExport = () => {
         )}
         {currentStep === 2 && (
           <div style={{ maxWidth: "800px", margin: "auto" }}>
-            <h2>Review and Confirm</h2>
+            <h1
+              style={{
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: "10px",
+              }}
+            >
+              Review and Confirm
+            </h1>
             <Form layout="vertical">
               <Row gutter={16}>
                 <Col span={12}>
@@ -703,7 +714,15 @@ const StaffAddExport = () => {
                 )}
               </Row>
             </Form>
-            <h3>Selected Products</h3>
+            <h3
+              style={{
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: "10px",
+              }}
+            >
+              Selected Products
+            </h3>
             <div
               style={{
                 maxHeight: "600px",
