@@ -18,6 +18,7 @@ import { useGetZoneByWarehouseIdQuery } from "../../redux/api/zoneApiSlice";
 import { useGetInventoriesByWarehouseIdQuery } from "../../redux/api/inventoryApiSlice";
 
 const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
+  console.log(initialInventory);
   const [transfers, setTransfers] = useState([
     { productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }
   ]);
@@ -79,12 +80,16 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
         .map((productId) => inventories.find((inventory) => inventory.product.id === productId).product)
     : [];
 
+    // console.log(selectedProductInventories);
+
   return (
     <Box component="form" onSubmit={handleTransfer} sx={{ mt: 2 }}>
       {transfers.map((transfer, index) => {
         const selectedProductInventories = inventories
           ? inventories.filter((inventory) => inventory.product.id === transfer.productId)
           : [];
+
+          console.log(selectedProductInventories);
 
         return (
           <Grid container spacing={2} key={index}>
@@ -125,7 +130,7 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
               </FormControl>
               {transfer.fromZoneId && (
                 <Typography variant="body2">
-                  Available Quantity: {selectedProductInventories.find((inventory) => inventory.zone.id === transfer.fromZoneId)?.quantity || 0}
+                  Available Quantity: {selectedProductInventories.find((inventory) => inventory.zone.id === transfer.fromZoneId && inventory.expiredAt === transfer.expiredAt)?.quantity || 0}
                 </Typography>
               )}
             </Grid>

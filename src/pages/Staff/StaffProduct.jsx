@@ -47,6 +47,7 @@ const StaffProduct = () => {
 
   const [warehouseId, setWarehouseId] = useState(wid);
   const { data: inventories, error: inventoriesError, isLoading: inventoriesLoading } = useGetInventoriesByWarehouseIdQuery({ warehouseId, authToken });
+  console.log(inventories);
   const { data: zones, error: zonesError, isLoading: zonesLoading } = useGetZoneByWarehouseIdQuery({ id: wid, authToken });
 
   const [page, setPage] = useState(1);
