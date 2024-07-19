@@ -166,12 +166,8 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
                 variant="outlined"
                 margin="normal"
                 label="Expired At"
-                type="date"
-                value={transfer.expiredAt ? new Date(transfer.expiredAt).toISOString().substr(0, 10) : ''}
-                onChange={(e) => handleTransferChange(index, 'expiredAt', e.target.value)}
-                required
-                disabled={isFormDisabled}
-                InputLabelProps={{ shrink: true }}
+                value={new Date(transfer.expiredAt).toLocaleDateString()}
+                disabled
               />
             </Grid>
             <Grid item xs={1} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
