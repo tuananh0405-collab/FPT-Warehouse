@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ExportRepository extends JpaRepository<Export, Integer> {
     boolean existsByTransferKey(String transferKey);
@@ -87,4 +89,19 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
             @Param("status") Status status,
             Pageable pageable
     );
+
+
+    @Query("SELECT e FROM Export e " +
+            "LEFT JOIN e.customer c " +
+            "LEFT JOIN e.warehouseTo w " +
+            "WHERE (e.warehouseFrom.id = :warehouseId) " +
+            "ORDER BY " +
+            "CASE " +
+            "WHEN e.status = 'PENDING' THEN 1 " +
+            "WHEN e.status = 'SHIPPING' THEN 2 " +
+            "WHEN e.status = 'SUCCEED' THEN 3 " +
+            "WHEN e.status = 'CANCEL' THEN 4 " +
+            "ELSE 5 END, " +
+            "e.exportDate ASC")
+    List<Export> findByWarehouseFromId(@Param("warehouseId") Integer warehouseId);
 }

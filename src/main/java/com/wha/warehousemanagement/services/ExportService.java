@@ -78,21 +78,11 @@ public class ExportService {
     }
 
     public ResponseObject<List<ExportResponse>> getAllExports(
-            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Status status, String search
+            Integer warehouseId
     ) {
-        System.out.println("warehouseId: " + warehouseId + " pageNo: " + pageNo + " limit: " + limit + " sortBy: " + sortBy + " direction: " + direction + " status: " + status + " search: " + search);
         try {
-            Pageable pageable;
-            Page<Export> exports;
-            if (sortBy != null && !sortBy.isEmpty() && direction != null && !direction.isEmpty()) {
-                Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-                pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
-                exports = exportRepository.findAllByWarehouseWithDefaultSort(warehouseId, status, search, pageable);
-            } else {
-                pageable = PageRequest.of(pageNo, limit);
-                exports = exportRepository.findAllByWarehouseSorted(warehouseId, status, search, pageable);
-            }
-            List<ExportResponse> responses = exportMapper.toDto(exports.getContent());
+            List<Export> exports = exportRepository.findByWarehouseFromId(warehouseId);
+            List<ExportResponse> responses = exportMapper.toDto(exports);
             return new ResponseObject<>(HttpStatus.OK.value(), "Get all exports successfully", responses);
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);

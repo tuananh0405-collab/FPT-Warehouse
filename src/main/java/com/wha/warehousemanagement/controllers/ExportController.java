@@ -34,18 +34,10 @@ public class ExportController {
     //
     @GetMapping("/by-warehouse/{warehouseId}")
     public ResponseEntity<ResponseObject<List<ExportResponse>>> getAllExports(
-            @PathVariable("warehouseId") Integer warehouseId,
-            @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-            @RequestParam(value = "sortBy", required = false) String sortBy,
-            @RequestParam(value = "direction", required = false) String direction,
-            @RequestParam(value = "status", required = false) Status status,
-            @RequestParam(value = "search", required = false) String search
+            @PathVariable("warehouseId") Integer warehouseId
     ) {
-        int limit = 5;
-        pageNo = pageNo - 1;
-        search = search.isBlank() ? null : search;
         return ResponseEntity.ok(exportService.getAllExports(
-                warehouseId, pageNo, limit, sortBy, direction, status, search
+                warehouseId
         ));
     }
 
