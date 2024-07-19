@@ -84,18 +84,10 @@ const StaffAddImport = () => {
       const customers = customersData.data || [];
 
       const exportsWithCustomerNames = exports.map((exp) => {
-        console.log(exports);
-        let customerName = "Unknown";
-        // const customer = customers.find((cust) => cust.id === exp.customer.id);
-        if (exp.customer) {
-          const customer = customers.find(
-            (cust) => cust.id === exp.customer.id
-          );
-          customerName = customer ? customer.name : "Unknown";
-        }
+        const customer = customers.find((cust) => cust.id === exp.customer.id);
         return {
           ...exp,
-          customerName,
+          customerName: customer ? customer.name : "Unknown",
         };
       });
 

@@ -7,7 +7,7 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
       query: (authToken) => ({
         url: `${INVENTORY_URL}`,
         headers: {
-          Authorization: `Bearer ${authToken}`,
+          'Authorization': `Bearer ${authToken}`,
         },
       }),
       providesTags: ["Inventory"],

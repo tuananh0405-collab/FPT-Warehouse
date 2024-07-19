@@ -7,7 +7,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: (authToken) => ({
         url: `${ZONE_URL}/all`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
       }),
       providesTags: ["Zone"],
@@ -34,7 +34,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: ({ id, authToken }) => ({
         url: `${ZONE_URL}/${id}`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
         method: "DELETE",
       }),
@@ -44,7 +44,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: ({ data, authToken }) => ({
         url: `${ZONE_URL}/${data.trackingId}`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
         method: "PUT",
         body: data,
@@ -55,16 +55,20 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: ({ id, authToken }) => ({
         url: `${ZONE_URL}/warehouse/${id}`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
       }),
       providesTags: ["Zone"],
       keepUnusedDataFor: 5,
     }),
-    
   }),
 });
 
 export const {
-  useGetAllZonesQuery, useGetZoneByIdQuery, useAddZoneMutation, useDeleteZoneMutation, useUpdateZoneMutation, useGetZoneByWarehouseIdQuery
+  useGetAllZonesQuery,
+  useGetZoneByIdQuery,
+  useAddZoneMutation,
+  useDeleteZoneMutation,
+  useUpdateZoneMutation,
+  useGetZoneByWarehouseIdQuery,
 } = userApiSlice;
