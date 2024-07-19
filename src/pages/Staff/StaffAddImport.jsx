@@ -1,197 +1,204 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { Table, Button, Modal, Select, InputNumber, message } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import { useGetAllExportsQuery } from "../../redux/api/exportApiSlice";
-import { useGetAllCustomersQuery } from "../../redux/api/customersApiSlice";
-import { useGetAllExportDetailsQuery } from "../../redux/api/exportDetailApiSlice";
-import { useGetZoneByWarehouseIdQuery } from "../../redux/api/zoneApiSlice";
-import { useAddImportMutation } from "../../redux/api/importApiSlice.js";
-import { useCreateImportDetailsMutation } from "../../redux/api/importDetailApiSlice";
+import { useNavigate } from "react-router-dom";
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Row,
+  Col,
+  message,
+  InputNumber,
+  Steps,
+  Table,
+} from "antd";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import Breadcrumbs from "../../utils/Breadcumbs";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
+import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
+import { useGetAllZonesQuery } from "../../redux/api/zoneApiSlice";
+import { useGetAllProductsQuery } from "../../redux/api/productApiSlice";
+import { useGetAllCustomersQuery } from "../../redux/api/customersApiSlice";
+import { useGetAllInventoriesQuery } from "../../redux/api/inventoryApiSlice";
+import { useSelector } from "react-redux";
+import { useAddImportMutation } from "../../redux/api/importApiSlice";
+import { useAddCustomerMutation } from "../../redux/api/customersApiSlice";
+import { useCreateImportDetailsMutation } from "../../redux/api/importDetailApiSlice";
 
 const { Option } = Select;
+const { Step } = Steps;
 
 const StaffAddImport = () => {
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
   const userInfo = useSelector((state) => state.auth);
-  const authToken = userInfo?.userInfo?.data?.token;
-  const currentWarehouseId = userInfo?.userInfo?.data?.warehouseId;
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [sortOrder, setSortOrder] = useState({
-    columnKey: null,
-    order: null,
-  });
-  const [filteredData, setFilteredData] = useState([]);
-  const [paginatedData, setPaginatedData] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [selectedExportDetails, setSelectedExportDetails] = useState([]);
-  const [zoneAllocations, setZoneAllocations] = useState([]);
-  const [formData, setFormData] = useState({
-    description: "",
-    status: "PENDING",
-    exportDate: "",
-    exportType: "",
-    warehouseIdFrom: null,
-    warehouseIdTo: currentWarehouseId,
-    customerId: null,
-  });
-
-  // const [addImport, { isLoading: isAddingImport }] = useAddImportMutation();
-  // const [createImportDetailsApi, { isLoading: isCreatingImportDetails }] =
-  //   useCreateImportDetailsMutation();
+  const authToken = userInfo.userInfo.data.token;
+  const warehouseId = userInfo.userInfo.data.warehouseId;
   const [addImport, { isLoading: isImportCreating }] = useAddImportMutation();
+  const [addCustomer, { isLoading: isCustomerCreating }] =
+    useAddCustomerMutation();
   const [createImportDetails, { isLoading: isImportDetailsCreating }] =
     useCreateImportDetailsMutation();
-  const {
-    data: exportsData,
-    isFetching: isFetchingExports,
-    error: exportsError,
-  } = useGetAllExportsQuery(authToken);
 
   const {
-    data: customersData,
-    isFetching: isFetchingCustomers,
-    error: customersError,
+    data: warehouses,
+    isFetching: isWarehouseLoading,
+    error: warehouseError,
+  } = useGetAllWarehousesQuery(authToken);
+  const {
+    data: zones,
+    isFetching: isZoneLoading,
+    error: zoneError,
+  } = useGetAllZonesQuery(authToken);
+  const {
+    data: products,
+    isFetching: isProductLoading,
+    error: productError,
+  } = useGetAllProductsQuery(authToken);
+  const {
+    data: customers,
+    isFetching: isCustomerLoading,
+    error: customerError,
   } = useGetAllCustomersQuery(authToken);
-
   const {
-    data: exportDetailsData,
-    isFetching: isFetchingExportDetails,
-    error: exportDetailsError,
-  } = useGetAllExportDetailsQuery(authToken);
+    data: inventories,
+    isFetching: isInventoryLoading,
+    error: inventoryError,
+  } = useGetAllInventoriesQuery(authToken);
 
-  const {
-    data: zonesData,
-    isFetching: isFetchingZones,
-    error: zonesError,
-  } = useGetZoneByWarehouseIdQuery({ id: currentWarehouseId, authToken });
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [productZones, setProductZones] = useState({});
 
-  useEffect(() => {
-    if (
-      exportsData &&
-      customersData &&
-      exportDetailsData &&
-      currentWarehouseId
-    ) {
-      const exports =
-        exportsData.data?.filter(
-          (exp) => exp.warehouseTo && exp.warehouseTo.id === currentWarehouseId
-        ) || [];
-      const customers = customersData.data || [];
+  const warehousesData = warehouses?.data || [];
+  const zonesData =
+    zones?.data.filter((zone) => zone.warehouseId === warehouseId) || [];
+  const productsData = products?.data || [];
+  const customersData = customers?.data || [];
+  const inventoriesData = inventories?.data || [];
 
-      const exportsWithCustomerNames = exports.map((exp) => {
-        const customer = customers.find((cust) => cust.id === exp.customer.id);
-        return {
-          ...exp,
-          customerName: customer ? customer.name : "Unknown",
-        };
-      });
+  const [formData, setFormData] = useState({
+    description: "",
+    status: "SUCCEED",
+    importType: "CUSTOMER",
+    transferKey: "",
+    warehouseIdFrom: null,
+    warehouseIdTo: warehouseId,
+  });
 
-      setFilteredData(exportsWithCustomerNames);
-      setTotal(exportsWithCustomerNames.length);
+  const handleFormChange = (changedValues) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      ...changedValues,
+    }));
+  };
+
+  const handleProductSelectChange = (value, index) => {
+    const product = productsData.find((p) => p.id === value);
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts[index] = {
+      ...newSelectedProducts[index],
+      productId: product.id,
+      name: product.name,
+    };
+    setSelectedProducts(newSelectedProducts);
+  };
+
+  const handleZoneAllocationChange = (
+    productIndex,
+    zoneIndex,
+    field,
+    value
+  ) => {
+    const newProductZones = { ...productZones };
+    if (!newProductZones[productIndex]) {
+      newProductZones[productIndex] = [];
     }
-  }, [exportsData, customersData, exportDetailsData, currentWarehouseId]);
-
-  useEffect(() => {
-    const start = (currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    let sortedData = [...filteredData];
-
-    if (sortOrder.columnKey) {
-      sortedData.sort((a, b) => {
-        if (a[sortOrder.columnKey] < b[sortOrder.columnKey])
-          return sortOrder.order === "ascend" ? -1 : 1;
-        if (a[sortOrder.columnKey] > b[sortOrder.columnKey])
-          return sortOrder.order === "ascend" ? 1 : -1;
-        return 0;
-      });
+    if (!newProductZones[productIndex][zoneIndex]) {
+      newProductZones[productIndex][zoneIndex] = {};
     }
-
-    setPaginatedData(sortedData.slice(start, end));
-  }, [filteredData, currentPage, pageSize, sortOrder]);
-
-  const handleTableChange = (pagination, filters, sorter) => {
-    setSortOrder({
-      columnKey: sorter.field,
-      order: sorter.order,
-    });
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
+    newProductZones[productIndex][zoneIndex][field] = value;
+    setProductZones(newProductZones);
   };
 
-  const handleViewDetail = (exportId) => {
-    const exportDetails = exportDetailsData.data.filter(
-      (detail) => detail.export.id === exportId
-    );
-    const exportData = exportsData.data.find((exp) => exp.id === exportId);
-    setSelectedExportDetails(exportDetails);
-    setFormData({
-      description: exportData.description || "Xuất hàng điện tử 2",
-      status: exportData.status || "SUCCEED",
-      importType: exportData.exportType || "WAREHOUSE",
-      transferKey: exportData.transferKey || "",
-      warehouseIdFrom: exportData.warehouseFrom?.id || null,
-      warehouseIdTo: currentWarehouseId, // lấy từ state của userInfo
-      customerId: exportData.customer.id, // lấy từ đối tượng export được chọn
-    });
-    setZoneAllocations(
-      exportDetails.map((detail) => ({
-        productId: detail.product.id,
-        zones: [{ zoneId: null, quantity: 0 }],
-      }))
-    );
-    setIsModalOpen(true);
+  const handleAddZone = (productIndex) => {
+    const newProductZones = { ...productZones };
+    if (!newProductZones[productIndex]) {
+      newProductZones[productIndex] = [];
+    }
+    newProductZones[productIndex].push({ zoneId: null, quantity: 0 });
+    setProductZones(newProductZones);
   };
 
-  const handleZoneAllocationChange = (productId, index, field, value) => {
-    setZoneAllocations((prevAllocations) =>
-      prevAllocations.map((allocation) =>
-        allocation.productId === productId
-          ? {
-            ...allocation,
-            zones: allocation.zones.map((zone, zoneIndex) =>
-              zoneIndex === index ? { ...zone, [field]: value } : zone
-            ),
-          }
-          : allocation
-      )
-    );
-  };
-
-  const handleAddZone = (productId) => {
-    setZoneAllocations((prevAllocations) =>
-      prevAllocations.map((allocation) =>
-        allocation.productId === productId
-          ? {
-            ...allocation,
-            zones: [...allocation.zones, { zoneId: null, quantity: 0 }],
-          }
-          : allocation
-      )
-    );
-  };
-
-  const validateZoneAllocations = () => {
-    for (let detail of selectedExportDetails) {
-      const allocation = zoneAllocations.find(
-        (allocation) => allocation.productId === detail.product.id
-      );
-      const totalAllocated = allocation.zones.reduce(
-        (total, zone) => total + zone.quantity,
-        0
-      );
-      if (totalAllocated !== detail.quantity) {
-        message.error(
-          `Total allocated quantity for product ${detail.product.name} does not match its quantity.`
-        );
-        return false;
+  const handleRemoveZone = (productIndex, zoneIndex) => {
+    const newProductZones = { ...productZones };
+    if (newProductZones[productIndex]) {
+      newProductZones[productIndex].splice(zoneIndex, 1);
+      if (newProductZones[productIndex].length === 0) {
+        delete newProductZones[productIndex];
       }
+      setProductZones(newProductZones);
     }
-    return true;
+  };
+
+  const handleAddProduct = () => {
+    setSelectedProducts([
+      ...selectedProducts,
+      {
+        productId: null,
+        name: "",
+        expiredAt: "",
+      },
+    ]);
+  };
+
+  const handleRemoveProduct = (index) => {
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts.splice(index, 1);
+    setSelectedProducts(newSelectedProducts);
+
+    const newProductZones = { ...productZones };
+    delete newProductZones[index];
+    setProductZones(newProductZones);
+  };
+
+  const handleStepChange = async (current) => {
+    if (currentStep === 0 && current === 1) {
+      try {
+        await form.validateFields();
+        console.log("Form Data:", formData);
+        setCurrentStep(current);
+      } catch (error) {
+        message.error("Please fill out all required fields.");
+      }
+    } else if (currentStep === 1 && (current === 2 || current === 0)) {
+      if (selectedProducts.length === 0 && current === 2) {
+        message.error("Please add at least one product.");
+      } else if (
+        current === 2 &&
+        selectedProducts.some(
+          (product, index) =>
+            !productZones[index] || productZones[index].length === 0
+        )
+      ) {
+        message.error("Each product must have at least one zone.");
+      } else {
+        console.log("Selected Products:", selectedProducts);
+        console.log("Product Zones:", productZones);
+        setCurrentStep(current);
+      }
+    } else {
+      setCurrentStep(current);
+    }
+  };
+
+  const handleNext = () => {
+    handleStepChange(currentStep + 1);
+  };
+
+  const handlePrev = () => {
+    handleStepChange(currentStep - 1);
   };
 
   const handleCreateImport = async () => {
@@ -200,47 +207,50 @@ const StaffAddImport = () => {
         description: formData.description,
         status: formData.status,
         importType: formData.importType,
-        transferKey: formData.transferKey,
-        warehouseIdFrom: formData.warehouseIdFrom,
+        transferKey: formData.transferKey || null,
+        warehouseIdFrom: formData.warehouseIdFrom || null,
         warehouseIdTo: formData.warehouseIdTo,
-        customerId: formData.customerId,
       };
 
-      console.log("Import data to be sent:", importData);
+      // Log all ID fields to ensure they are not null
+      console.log("Import Data to be sent:", importData);
+      if (!importData.warehouseIdTo) {
+        throw new Error("warehouseIdTo must not be null");
+      }
+
       const response = await addImport({
         data: importData,
         authToken,
       }).unwrap();
 
-      if (response && response.data && response.data.id) {
-        message.success("Import created successfully!");
-        console.log("Import data:", response.data);
-        const importId = response.data.id;
-        await handleCreateImportDetails(importId);
-      } else {
-        throw new Error("Invalid response from server");
-      }
+      message.success("Import created successfully!");
+      console.log("Response from create import:", response);
+
+      const importId = response.data.id;
+      await handleCreateImportDetails(importId);
+      navigate("/staff/order/import");
     } catch (error) {
       console.error("Error creating import:", error);
+
+      // Check if error has a response and log the response
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+      }
       message.error("Failed to create import. Please try again.");
     }
   };
 
   const handleCreateImportDetails = async (importId = null) => {
     try {
-      const importDetails = zoneAllocations
-        .map((allocation) =>
-          allocation.zones.map((zone) => ({
-            productId: allocation.productId,
-            importId: importId,
-            quantity: zone.quantity,
-            zoneId: zone.zoneId,
-            expiredAt: selectedExportDetails.find(
-              (detail) => detail.product.id === allocation.productId
-            ).expiredAt,
-          }))
-        )
-        .flat();
+      const importDetails = selectedProducts.flatMap((product, productIndex) =>
+        productZones[productIndex].map((zone) => ({
+          productId: product.productId,
+          importId: importId,
+          quantity: zone.quantity,
+          zoneId: zone.zoneId,
+          expiredAt: product.expiredAt,
+        }))
+      );
 
       console.log("Import details to be sent:", importDetails);
       const detailsResponse = await createImportDetails({
@@ -249,257 +259,360 @@ const StaffAddImport = () => {
       }).unwrap();
       console.log("Import details created:", detailsResponse);
       message.success("Import details created successfully!");
-      setSelectedExportDetails([]);
+      setSelectedProducts([]);
+      setProductZones({});
     } catch (error) {
       console.error("Error creating import details:", error);
       message.error("Failed to create import details. Please try again.");
     }
   };
 
-  const handleImport = async () => {
-    if (validateZoneAllocations()) {
-      await handleCreateImport();
-    }
+  const getAvailableProducts = () => {
+    const selectedProductIds = selectedProducts.map(
+      (product) => product.productId
+    );
+    return productsData.filter(
+      (product) => !selectedProductIds.includes(product.id)
+    );
   };
 
-  const columns = [
-    {
-      title: "Export ID",
-      dataIndex: "id",
-      key: "id",
-      sorter: true,
-    },
-    {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
-      sorter: true,
-    },
-    {
-      title: "Export Date",
-      dataIndex: "exportDate",
-      key: "exportDate",
-      sorter: true,
-    },
-    {
-      title: "Customer Name",
-      dataIndex: "customerName",
-      key: "customerName",
-      sorter: true,
-    },
-    {
-      title: "View Detail",
-      key: "viewDetail",
-      render: (text, record) => (
-        <Button onClick={() => handleViewDetail(record.id)}>View Detail</Button>
-      ),
-    },
-  ];
+  const getAvailableZones = (productIndex) => {
+    const selectedZoneIds = (productZones[productIndex] || []).map(
+      (zone) => zone.zoneId
+    );
+    return zonesData.filter((zone) => !selectedZoneIds.includes(zone.id));
+  };
 
   if (
-    isFetchingExports ||
-    isFetchingCustomers ||
-    isFetchingExportDetails ||
-    isFetchingZones
-    // isAddingImport ||
-    // isCreatingImportDetails
+    isWarehouseLoading ||
+    isZoneLoading ||
+    isProductLoading ||
+    isCustomerLoading ||
+    isInventoryLoading
   )
     return <Loading />;
-  if (exportsError || customersError || exportDetailsError || zonesError)
+  if (
+    warehouseError ||
+    zoneError ||
+    productError ||
+    customerError ||
+    inventoryError
+  )
     return <Error500 />;
 
   return (
-    <>
-      <h1>Staff Import</h1>
-      <Table
-        dataSource={paginatedData}
-        columns={columns}
-        rowKey="id"
-        pagination={{ current: currentPage, pageSize, total }}
-        onChange={handleTableChange}
-      />
-      <Modal
-        title="Export Details"
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setIsModalOpen(false)}>
-            Close
-          </Button>,
-          <Button
-            key="import"
-            type="primary"
-            onClick={() => setIsImportModalOpen(true)}
+    <div>
+      <Breadcrumbs />
+      <div className="MainDash relative">
+        <h1 className="font-bold text-3xl py-4">New Import</h1>
+        <Steps
+          current={currentStep}
+          onChange={handleStepChange}
+          labelPlacement="vertical"
+          style={{ marginBottom: 24, maxWidth: "800px", margin: "auto" }}
+        >
+          <Step description="Import Information" />
+          <Step description="Select Products" />
+          <Step description="Review and Confirm" />
+        </Steps>
+        {currentStep === 0 && (
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={formData}
+            onValuesChange={handleFormChange}
+            style={{ width: "800px", margin: "auto" }}
           >
-            Import
-          </Button>,
-        ]}
-      >
-        <Table
-          dataSource={selectedExportDetails}
-          columns={[
-            {
-              title: "Product Name",
-              dataIndex: ["product", "name"],
-              key: "productName",
-            },
-            { title: "Quantity", dataIndex: "quantity", key: "quantity" },
-            { title: "Expired At", dataIndex: "expiredAt", key: "expiredAt" },
-          ]}
-          rowKey="id"
-          pagination={false}
-          expandable={{
-            expandedRowRender: (record) => (
-              <>
-                {zoneAllocations
-                  .find(
-                    (allocation) => allocation.productId === record.product.id
-                  )
-                  .zones.map((zone, index) => (
-                    <div
-                      key={index}
-                      style={{ display: "flex", marginBottom: "8px" }}
-                    >
+            <Form.Item
+              label="Description"
+              name="description"
+              rules={[
+                {
+                  required: true,
+                  message: "Please input the import description!",
+                },
+              ]}
+            >
+              <Input placeholder="Product Description" />
+            </Form.Item>
+            <Form.Item
+              label="Import Type"
+              name="importType"
+              rules={[
+                { required: true, message: "Please select import type!" },
+              ]}
+            >
+              <Input value="CUSTOMER" readOnly />
+            </Form.Item>
+            <Button type="primary" onClick={handleNext}>
+              Next
+            </Button>
+          </Form>
+        )}
+        {currentStep === 1 && (
+          <div
+            style={{
+              maxWidth: "800px",
+              margin: "auto",
+              border: "1px solid black",
+              padding: "20px",
+              borderRadius: "8px",
+              maxHeight: "600px",
+              overflowY: selectedProducts.length > 5 ? "scroll" : "auto",
+            }}
+          >
+            {selectedProducts.map((product, productIndex) => (
+              <div
+                key={productIndex}
+                style={{
+                  marginBottom: "20px",
+                  border: "1px solid black",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  width: "700px",
+                }}
+              >
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item label="Product Name">
                       <Select
-                        style={{ width: "60%" }}
-                        placeholder="Select a zone"
+                        placeholder="Select product"
+                        value={product.name}
                         onChange={(value) =>
-                          handleZoneAllocationChange(
-                            record.product.id,
-                            index,
-                            "zoneId",
-                            value
-                          )
+                          handleProductSelectChange(value, productIndex)
                         }
+                        style={{ width: "100%" }}
                       >
-                        {zonesData.data.map((zone) => (
-                          <Option key={zone.id} value={zone.id}>
-                            {zone.name}
+                        {getAvailableProducts().map((p) => (
+                          <Option key={p.id} value={p.id}>
+                            {p.name}
                           </Option>
                         ))}
                       </Select>
-                      <InputNumber
-                        min={0}
-                        max={record.quantity}
-                        value={zone.quantity}
-                        onChange={(value) =>
-                          handleZoneAllocationChange(
-                            record.product.id,
-                            index,
-                            "quantity",
-                            value
-                          )
-                        }
-                        style={{ marginLeft: "8px", width: "30%" }}
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Expired At">
+                      <Input
+                        type="date"
+                        value={product.expiredAt}
+                        onChange={(e) => {
+                          const newSelectedProducts = [...selectedProducts];
+                          newSelectedProducts[productIndex].expiredAt =
+                            e.target.value;
+                          setSelectedProducts(newSelectedProducts);
+                        }}
+                        style={{ width: "100%" }}
                       />
-                    </div>
-                  ))}
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => handleAddZone(record.product.id)}
-                >
-                  Add Zone
-                </Button>
-              </>
-            ),
-          }}
-        />
-      </Modal>
-      <Modal
-        title="Import Products"
-        open={isImportModalOpen}
-        onCancel={() => setIsImportModalOpen(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setIsImportModalOpen(false)}>
-            Cancel
-          </Button>,
-          <Button key="submit" type="primary" onClick={handleImport}>
-            Submit
-          </Button>,
-        ]}
-        width={800} // Increase the width of the modal
-      >
-        <div>
-          <h3>Products</h3>
-          <Table
-            dataSource={selectedExportDetails}
-            columns={[
-              {
-                title: "Product Name",
-                dataIndex: ["product", "name"],
-                key: "productName",
-              },
-              { title: "Quantity", dataIndex: "quantity", key: "quantity" },
-              {
-                title: "Expired At",
-                dataIndex: "expiredAt",
-                key: "expiredAt",
-              },
-              {
-                title: "Zones",
-                key: "zones",
-                render: (text, record) => (
-                  <>
-                    {zoneAllocations
-                      .find(
-                        (allocation) =>
-                          allocation.productId === record.product.id
-                      )
-                      .zones.map((zone, index) => (
-                        <div
-                          key={index}
-                          style={{ display: "flex", marginBottom: "8px" }}
-                        >
-                          <Select
-                            style={{ width: "60%" }}
-                            placeholder="Select a zone"
-                            onChange={(value) =>
-                              handleZoneAllocationChange(
-                                record.product.id,
-                                index,
-                                "zoneId",
-                                value
-                              )
-                            }
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={24}>
+                    {productZones[productIndex]?.map((zone, zoneIndex) => (
+                      <Row gutter={8} key={zoneIndex}>
+                        <Col span={10}>
+                          <Form.Item
+                            label={`Zone ${zoneIndex + 1}`}
+                            labelCol={{ span: 10 }}
+                            wrapperCol={{ span: 14 }}
                           >
-                            {zonesData.data.map((zone) => (
-                              <Option key={zone.id} value={zone.id}>
-                                {zone.name}
-                              </Option>
-                            ))}
-                          </Select>
-                          <InputNumber
-                            min={0}
-                            max={record.quantity}
-                            value={zone.quantity}
-                            onChange={(value) =>
-                              handleZoneAllocationChange(
-                                record.product.id,
-                                index,
-                                "quantity",
-                                value
-                              )
+                            <Select
+                              placeholder="Select zone"
+                              value={zone.zoneId}
+                              onChange={(value) =>
+                                handleZoneAllocationChange(
+                                  productIndex,
+                                  zoneIndex,
+                                  "zoneId",
+                                  value
+                                )
+                              }
+                              style={{ width: "100%" }}
+                            >
+                              {getAvailableZones(productIndex).map((zone) => (
+                                <Option key={zone.id} value={zone.id}>
+                                  {zone.name}
+                                </Option>
+                              ))}
+                            </Select>
+                          </Form.Item>
+                        </Col>
+                        <Col span={10}>
+                          <Form.Item
+                            label="Quantity"
+                            labelCol={{ span: 10 }}
+                            wrapperCol={{ span: 14 }}
+                          >
+                            <InputNumber
+                              min={1}
+                              value={zone.quantity}
+                              onChange={(value) =>
+                                handleZoneAllocationChange(
+                                  productIndex,
+                                  zoneIndex,
+                                  "quantity",
+                                  value
+                                )
+                              }
+                              style={{ width: "100%" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={4}>
+                          <Button
+                            type="danger"
+                            icon={<MinusCircleOutlined />}
+                            onClick={() =>
+                              handleRemoveZone(productIndex, zoneIndex)
                             }
-                            style={{ marginLeft: "8px", width: "30%" }}
+                            style={{ width: "100%" }}
                           />
-                        </div>
-                      ))}
-                    <Button
-                      icon={<PlusOutlined />}
-                      onClick={() => handleAddZone(record.product.id)}
-                    >
-                      Add Zone
-                    </Button>
-                  </>
-                ),
-              },
-            ]}
-            rowKey="id"
-            pagination={false}
-          />
-        </div>
-      </Modal>
-    </>
+                        </Col>
+                      </Row>
+                    ))}
+                  </Col>
+                </Row>
+                <Button
+                  type="dashed"
+                  onClick={() => handleAddZone(productIndex)}
+                  style={{ width: "100%", marginTop: "10px" }}
+                >
+                  <PlusOutlined /> Add Zone
+                </Button>
+                <Button
+                  type="link"
+                  danger
+                  onClick={() => handleRemoveProduct(productIndex)}
+                  style={{ marginTop: "10px" }}
+                >
+                  Remove Product
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="primary"
+              onClick={handleAddProduct}
+              style={{
+                display: "block",
+                margin: "0 auto 20px auto",
+                width: "700px",
+              }}
+            >
+              Add Product
+            </Button>
+            <div className="flex justify-end mt-4" style={{ width: "100%" }}>
+              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                Previous
+              </Button>
+              <Button type="primary" onClick={handleNext}>
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+        {currentStep === 2 && (
+          <div style={{ maxWidth: "800px", margin: "auto" }}>
+            <h2>Review and Confirm</h2>
+            <Form layout="vertical">
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label="Description">
+                    <Input value={formData.description} readOnly />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="Import Type">
+                    <Input value={formData.importType} readOnly />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                {formData.importType === "CUSTOMER" && (
+                  <Col span={12}>
+                    <Form.Item label="Customer">
+                      <Input
+                        value={
+                          customersData.find(
+                            (customer) => customer.id === formData.customerId
+                          )?.name
+                        }
+                        readOnly
+                      />
+                    </Form.Item>
+                  </Col>
+                )}
+                {formData.importType === "WAREHOUSE" && (
+                  <Col span={12}>
+                    <Form.Item label="To">
+                      <Input
+                        value={
+                          warehousesData.find(
+                            (warehouse) =>
+                              warehouse.id === formData.warehouseIdTo
+                          )?.name
+                        }
+                        readOnly
+                      />
+                    </Form.Item>
+                  </Col>
+                )}
+              </Row>
+            </Form>
+            <h3>Selected Products</h3>
+            <div
+              style={{
+                maxHeight: "600px",
+                overflowY: selectedProducts.length > 5 ? "scroll" : "auto",
+              }}
+            >
+              <Table
+                columns={[
+                  { title: "Product Name", dataIndex: "name", key: "name" },
+                  {
+                    title: "Expired At",
+                    dataIndex: "expiredAt",
+                    key: "expiredAt",
+                  },
+                  {
+                    title: "Zone",
+                    dataIndex: "zoneId",
+                    key: "zoneId",
+                    render: (zoneId) => {
+                      const zone = zonesData.find((z) => z.id === zoneId);
+                      return zone ? zone.name : "N/A";
+                    },
+                  },
+                  {
+                    title: "Quantity",
+                    dataIndex: "quantity",
+                    key: "quantity",
+                  },
+                ]}
+                dataSource={selectedProducts.flatMap((product, productIndex) =>
+                  productZones[productIndex].map((zone, zoneIndex) => ({
+                    key: `${productIndex}-${zoneIndex}`,
+                    name: product.name,
+                    expiredAt: product.expiredAt,
+                    zoneId: zone.zoneId,
+                    quantity: zone.quantity,
+                  }))
+                )}
+                pagination={false}
+              />
+            </div>
+            <div className="flex justify-end mt-4" style={{ width: "100%" }}>
+              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                Previous
+              </Button>
+              <Button type="primary" onClick={handleCreateImport}>
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

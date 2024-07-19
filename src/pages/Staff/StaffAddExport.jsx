@@ -206,7 +206,7 @@ const StaffAddExport = () => {
       console.log("Export data:", response.data);
       const exportId = response.data.id;
       await handleCreateExportDetails(exportId);
-      navigate("http://localhost:3000/staff/order/export");
+      navigate("/staff/order/export");
     } catch (error) {
       console.error("Error creating export:", error);
       message.error("Failed to create export. Please try again.");
