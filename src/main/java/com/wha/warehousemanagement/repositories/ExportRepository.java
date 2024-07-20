@@ -2,6 +2,7 @@ package com.wha.warehousemanagement.repositories;
 
 import com.wha.warehousemanagement.models.Export;
 import com.wha.warehousemanagement.models.Status;
+import com.wha.warehousemanagement.models.Warehouse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -90,7 +91,6 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
             Pageable pageable
     );
 
-
     @Query("SELECT e FROM Export e " +
             "LEFT JOIN e.customer c " +
             "LEFT JOIN e.warehouseTo w " +
@@ -104,4 +104,7 @@ public interface ExportRepository extends JpaRepository<Export, Integer> {
             "ELSE 5 END, " +
             "e.exportDate ASC")
     List<Export> findByWarehouseFromId(@Param("warehouseId") Integer warehouseId);
+
+    Export findFirstByWarehouseFromOrderByIdDesc(Warehouse warehouseFrom);
+
 }

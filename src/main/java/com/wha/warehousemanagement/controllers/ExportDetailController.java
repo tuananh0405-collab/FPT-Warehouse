@@ -37,6 +37,11 @@ public class ExportDetailController {
         return ResponseEntity.ok(exportDetailService.createExportDetail(requests));
     }
 
+    @PostMapping("/check-quantity")
+    public ResponseEntity<?> checkQuantity(@RequestBody ExportDetailRequest request) {
+        return ResponseEntity.ok(exportDetailService.checkInventoryQuantityForUpdate(request));
+    }
+
     @PutMapping("/list-update")
     public ResponseEntity<?> updateExportDetail(@RequestBody List<ExportDetailUpdateRequest> request) {
         return ResponseEntity.ok(exportDetailService.updateExportDetail(request));
@@ -71,7 +76,8 @@ public class ExportDetailController {
     @PostMapping("/update-and-add")
     public ResponseEntity<?> updateAndAddExportDetails(
             @RequestBody List<ExportDetailRequest> requests,
-            @RequestParam Integer exportId) {
+            @RequestParam Integer exportId
+    ) {
         return ResponseEntity.ok(exportDetailService.updateAndAddExportDetails(requests, exportId));
     }
 }

@@ -17,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +60,41 @@ public class ExportDetailService {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get all export details", null);
         }
     }
+
+        public ResponseObject<?> checkInventoryQuantityForUpdate(ExportDetailRequest request) {
+            System.out.println("Zone:" + request.getZoneId() + "Product: "+ request.getProductId() + "expiredAt"+request.getExpiredAt());
+            try {
+                ExportDetail exportDetail = exportDetailRepository.findById(request.getExportId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
+                int originalQuantity = exportDetail.getQuantity();
+                int newQuantity = request.getQuantity();
+                int quantityDifference = originalQuantity - newQuantity;
+
+                Inventory inventory;
+                if (request.getExpiredAt() == null) {
+                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAtIsNull(
+                                    request.getProductId(), request.getZoneId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                } else {
+                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                                    request.getProductId(), request.getZoneId(), request.getExpiredAt())
+                            .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                }
+
+                System.out.println(inventory);
+
+                if (inventory.getQuantity() + quantityDifference < 0) {
+                    throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY);
+                }
+
+                return new ResponseObject<>(HttpStatus.OK.value(), "Sufficient inventory", null);
+            } catch (CustomException e) {
+                return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+            } catch (Exception e) {
+                return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to check inventory quantity", null);
+            }
+        }
+
 
     public ResponseObject<?> getExportDetailById(Integer id) {
         try {
@@ -116,7 +155,34 @@ public class ExportDetailService {
             for (ExportDetailUpdateRequest req : request) {
                 ExportDetail exportDetail = exportDetailRepository.findById(req.getExportDetailId())
                         .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
-                exportDetail.setQuantity(req.getQuantity());
+                int originalQuantity = exportDetail.getQuantity();
+                int newQuantity = req.getQuantity();
+                int quantityDifference = originalQuantity - newQuantity;
+
+                // Adjust inventory
+                Inventory inventory;
+                if (exportDetail.getExpiredAt() == null) {
+                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAtIsNull(
+                            exportDetail.getProduct().getId(),
+                            exportDetail.getZone().getId()
+                    ).orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                } else {
+                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                            exportDetail.getProduct().getId(),
+                            exportDetail.getZone().getId(),
+                            exportDetail.getExpiredAt()
+                    ).orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                }
+
+                // Check if the inventory quantity is sufficient
+                if (inventory.getQuantity() + quantityDifference < 0) {
+                    throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY);
+                }
+
+                inventory.setQuantity(inventory.getQuantity() + quantityDifference);
+                inventoryRepository.save(inventory);
+
+                exportDetail.setQuantity(newQuantity);
                 exportDetailRepository.save(exportDetail);
             }
             return new ResponseObject<>(HttpStatus.OK.value(), "Export detail updated successfully", null);
@@ -124,6 +190,42 @@ public class ExportDetailService {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export detail", null);
+        }
+    }
+
+    @Transactional
+    public ResponseObject<?> deleteExportDetail(List<Integer> exportDetailIds) {
+        try {
+            for (Integer exportDetailId : exportDetailIds) {
+                ExportDetail exportDetail = exportDetailRepository.findById(exportDetailId)
+                        .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
+
+                // Adjust inventory
+                Inventory inventory;
+                if (exportDetail.getExpiredAt() == null) {
+                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAtIsNull(
+                            exportDetail.getProduct().getId(),
+                            exportDetail.getZone().getId()
+                    ).orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                } else {
+                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                            exportDetail.getProduct().getId(),
+                            exportDetail.getZone().getId(),
+                            exportDetail.getExpiredAt()
+                    ).orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                }
+
+                inventory.setQuantity(inventory.getQuantity() + exportDetail.getQuantity());
+                inventoryRepository.save(inventory);
+
+                // Delete export detail
+                exportDetailRepository.delete(exportDetail);
+            }
+            return new ResponseObject<>(HttpStatus.OK.value(), "Export detail deleted successfully", null);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete export detail", null);
         }
     }
 
@@ -156,20 +258,6 @@ public class ExportDetailService {
                     .toList();
         } catch (Exception e) {
             return null;
-        }
-    }
-
-    @Transactional
-    public ResponseObject<?> deleteExportDetail(List<Integer> ids) {
-        try {
-            for (Integer id : ids) {
-                exportDetailRepository.deleteById(id);
-            }
-            return new ResponseObject<>(HttpStatus.OK.value(), "Export detail deleted successfully", null);
-        } catch (CustomException e) {
-            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
-        } catch (Exception e) {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to delete export detail", null);
         }
     }
 

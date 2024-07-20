@@ -129,7 +129,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
     List<Inventory> findByZoneWarehouseId(Integer warehouseId);
 
-    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.id = :zoneId AND i.expiredAt = :expiredAt")
+    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.id = :zoneId AND (:expiredAt is null or i.expiredAt = :expiredAt)")
     Optional<Inventory> findByProductIdAndZoneIdAndExpiredAt(@Param("productId") Integer productId, @Param("zoneId") Integer zoneId, @Param("expiredAt") Date expiredAt);
 
 
@@ -137,5 +137,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     Inventory findByExportDetail(@Param("productName") String productName,
             @Param("expiredAt") Date expiredAt,
             @Param("zoneId") Integer zoneId);
+
+    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.warehouse.id = :warehouseId")
+    List<Inventory> findByProductIdandWarehouseId(Integer productId, Integer warehouseId);
+
+    @Query("SELECT i FROM Inventory i WHERE i.product.id = :productId AND i.zone.id = :zoneId AND i.expiredAt IS NULL")
+    Optional<Inventory> findByProductIdAndZoneIdAndExpiredAtIsNull(@Param("productId") Integer productId, @Param("zoneId") Integer zoneId);
 
 }
