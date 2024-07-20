@@ -298,312 +298,306 @@ const StaffAddImport = () => {
   )
     return <Error500 />;
 
-  return (
-    <div>
-      <Breadcrumbs />
-      <div className="MainDash relative">
-        <h1 className="font-bold text-3xl py-4">New Import</h1>
-        <Steps
-          current={currentStep}
-          onChange={handleStepChange}
-          labelPlacement="vertical"
-          style={{ marginBottom: 24, maxWidth: "800px", margin: "auto" }}
-        >
-          <Step description="Import Information" />
-          <Step description="Select Products" />
-          <Step description="Review and Confirm" />
-        </Steps>
-        {currentStep === 0 && (
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={formData}
-            onValuesChange={handleFormChange}
-            style={{ width: "800px", margin: "auto", marginTop: "20px" }}
-          >
-            <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
-              Import Information
-            </h2>
-            <Form.Item
-              label="Description"
-              name="description"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input the import description!",
-                },
-              ]}
-            >
-              <Input placeholder="Product Description" />
-            </Form.Item>
-            <Form.Item
-              label="Import Type"
-              name="importType"
-              rules={[
-                { required: true, message: "Please select import type!" },
-              ]}
-            >
-              <Input value="CUSTOMER" readOnly />
-            </Form.Item>
-            <Button type="primary" onClick={handleNext}>
-              Next
-            </Button>
-          </Form>
-        )}
-        {currentStep === 1 && (
-          <div
-            style={{
-              maxWidth: "800px",
-              margin: "auto",
-              border: "1px solid black",
-              padding: "20px",
-              borderRadius: "8px",
-            }}
-          >
-            <div className="sticky top-0 z-10">
-              <Button
-                type="primary"
-                onClick={handleAddProduct}
-                style={{
-                  display: "block",
-                  margin: "0 auto 20px auto",
-                  width: "700px",
-                }}
+    return (
+      <div>
+        <Breadcrumbs />
+        <div className=" relative">
+          <h1 className="font-bold text-3xl text-center py-4">New Import</h1>
+          <Row justify="center">
+            <Col xs={24} md={20} lg={16}>
+              <Steps
+                current={currentStep}
+                onChange={handleStepChange}
+                labelPlacement="vertical"
+                style={{ marginBottom: 24 }}
               >
-                Add Product
-              </Button>
-            </div>
-            <div
-              style={{
-                maxHeight: "400px",
-                overflowY: "auto",
-              }}
-            >
-              {selectedProducts.map((product, productIndex) => (
+                <Step description="Import Information" />
+                <Step description="Select Products" />
+                <Step description="Review and Confirm" />
+              </Steps>
+              {currentStep === 0 && (
+                <Form
+                  form={form}
+                  layout="vertical"
+                  initialValues={formData}
+                  onValuesChange={handleFormChange}
+                  style={{ margin: "0 auto", marginTop: "20px" }}
+                >
+                  <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
+                    Import Information
+                  </h2>
+                  <Form.Item
+                    label="Description"
+                    name="description"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please input the import description!",
+                      },
+                    ]}
+                  >
+                    <Input placeholder="Product Description" />
+                  </Form.Item>
+                  <Form.Item
+                    label="Import Type"
+                    name="importType"
+                    rules={[
+                      { required: true, message: "Please select import type!" },
+                    ]}
+                  >
+                    <Input value="CUSTOMER" readOnly />
+                  </Form.Item>
+                  <Button type="primary" onClick={handleNext} block>
+                    Next
+                  </Button>
+                </Form>
+              )}
+              {currentStep === 1 && (
                 <div
-                  key={productIndex}
                   style={{
-                    marginBottom: "20px",
                     border: "1px solid black",
-                    padding: "10px",
+                    padding: "20px",
                     borderRadius: "8px",
-                    width: "700px",
+                    marginTop: "20px",
                   }}
                 >
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item label="Product Name">
-                        <Select
-                          placeholder="Select product"
-                          value={product.name}
-                          onChange={(value) =>
-                            handleProductSelectChange(value, productIndex)
-                          }
-                          style={{ width: "100%" }}
-                        >
-                          {getAvailableProducts().map((p) => (
-                            <Option key={p.id} value={p.id}>
-                              {p.name}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item label="Expired At">
-                        <Input
-                          type="date"
-                          value={product.expiredAt}
-                          onChange={(e) => {
-                            const newSelectedProducts = [...selectedProducts];
-                            newSelectedProducts[productIndex].expiredAt =
-                              e.target.value;
-                            setSelectedProducts(newSelectedProducts);
-                          }}
-                          style={{ width: "100%" }}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  <Row gutter={16}>
-                    <Col span={24}>
-                      {productZones[productIndex]?.map((zone, zoneIndex) => (
-                        <Row gutter={8} key={zoneIndex}>
-                          <Col span={10}>
-                            <Form.Item
-                              label={`Zone ${zoneIndex + 1}`}
-                              labelCol={{ span: 10 }}
-                              wrapperCol={{ span: 14 }}
-                            >
+                  <Button
+                    type="primary"
+                    onClick={handleAddProduct}
+                    block
+                    style={{ marginBottom: "20px" }}
+                  >
+                    Add Product
+                  </Button>
+                  <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                    {selectedProducts.map((product, productIndex) => (
+                      <div
+                        key={productIndex}
+                        style={{
+                          marginBottom: "20px",
+                          border: "1px solid black",
+                          padding: "10px",
+                          borderRadius: "8px",
+                        }}
+                      >
+                        <Row gutter={16}>
+                          <Col span={12}>
+                            <Form.Item label="Product Name">
                               <Select
-                                placeholder="Select zone"
-                                value={zone.zoneId}
+                                placeholder="Select product"
+                                value={product.name}
                                 onChange={(value) =>
-                                  handleZoneAllocationChange(
-                                    productIndex,
-                                    zoneIndex,
-                                    "zoneId",
-                                    value
-                                  )
+                                  handleProductSelectChange(value, productIndex)
                                 }
                                 style={{ width: "100%" }}
                               >
-                                {getAvailableZones(productIndex).map((zone) => (
-                                  <Option key={zone.id} value={zone.id}>
-                                    {zone.name}
+                                {getAvailableProducts().map((p) => (
+                                  <Option key={p.id} value={p.id}>
+                                    {p.name}
                                   </Option>
                                 ))}
                               </Select>
                             </Form.Item>
                           </Col>
-                          <Col span={10}>
-                            <Form.Item
-                              label="Quantity"
-                              labelCol={{ span: 10 }}
-                              wrapperCol={{ span: 14 }}
-                            >
-                              <InputNumber
-                                min={1}
-                                value={zone.quantity}
-                                onChange={(value) =>
-                                  handleZoneAllocationChange(
-                                    productIndex,
-                                    zoneIndex,
-                                    "quantity",
-                                    value
-                                  )
-                                }
+                          <Col span={12}>
+                            <Form.Item label="Expired At">
+                              <Input
+                                type="date"
+                                value={product.expiredAt}
+                                onChange={(e) => {
+                                  const newSelectedProducts = [...selectedProducts];
+                                  newSelectedProducts[productIndex].expiredAt =
+                                    e.target.value;
+                                  setSelectedProducts(newSelectedProducts);
+                                }}
                                 style={{ width: "100%" }}
                               />
                             </Form.Item>
                           </Col>
-                          <Col span={4}>
-                            <Button
-                              type="danger"
-                              icon={<MinusCircleOutlined />}
-                              onClick={() =>
-                                handleRemoveZone(productIndex, zoneIndex)
-                              }
-                              style={{ width: "100%" }}
-                            />
+                        </Row>
+                        <Row gutter={16}>
+                          <Col span={24}>
+                            {productZones[productIndex]?.map((zone, zoneIndex) => (
+                              <Row gutter={8} key={zoneIndex}>
+                                <Col span={10}>
+                                  <Form.Item
+                                    label={`Zone ${zoneIndex + 1}`}
+                                    labelCol={{ span: 10 }}
+                                    wrapperCol={{ span: 14 }}
+                                  >
+                                    <Select
+                                      placeholder="Select zone"
+                                      value={zone.zoneId}
+                                      onChange={(value) =>
+                                        handleZoneAllocationChange(
+                                          productIndex,
+                                          zoneIndex,
+                                          "zoneId",
+                                          value
+                                        )
+                                      }
+                                      style={{ width: "100%" }}
+                                    >
+                                      {getAvailableZones(productIndex).map((zone) => (
+                                        <Option key={zone.id} value={zone.id}>
+                                          {zone.name}
+                                        </Option>
+                                      ))}
+                                    </Select>
+                                  </Form.Item>
+                                </Col>
+                                <Col span={10}>
+                                  <Form.Item
+                                    label="Quantity"
+                                    labelCol={{ span: 10 }}
+                                    wrapperCol={{ span: 14 }}
+                                  >
+                                    <InputNumber
+                                      min={1}
+                                      value={zone.quantity}
+                                      onChange={(value) =>
+                                        handleZoneAllocationChange(
+                                          productIndex,
+                                          zoneIndex,
+                                          "quantity",
+                                          value
+                                        )
+                                      }
+                                      style={{ width: "100%" }}
+                                    />
+                                  </Form.Item>
+                                </Col>
+                                <Col span={4}>
+                                  <Button
+                                    type="danger"
+                                    icon={<MinusCircleOutlined />}
+                                    onClick={() =>
+                                      handleRemoveZone(productIndex, zoneIndex)
+                                    }
+                                    style={{ width: "100%" }}
+                                  />
+                                </Col>
+                              </Row>
+                            ))}
                           </Col>
                         </Row>
-                      ))}
-                    </Col>
-                  </Row>
-                  <Button
-                    type="dashed"
-                    onClick={() => handleAddZone(productIndex)}
-                    style={{ width: "100%", marginTop: "10px" }}
-                  >
-                    <PlusOutlined /> Add Zone
-                  </Button>
-                  <Button
-                    type="link"
-                    danger
-                    onClick={() => handleRemoveProduct(productIndex)}
-                    style={{ marginTop: "10px" }}
-                  >
-                    Remove Product
-                  </Button>
+                        <Button
+                          type="dashed"
+                          onClick={() => handleAddZone(productIndex)}
+                          style={{ width: "100%", marginTop: "10px" }}
+                        >
+                          <PlusOutlined /> Add Zone
+                        </Button>
+                        <Button
+                          type="link"
+                          danger
+                          onClick={() => handleRemoveProduct(productIndex)}
+                          style={{ marginTop: "10px" }}
+                        >
+                          Remove Product
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end mt-4" style={{ width: "100%" }}>
+                    <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                      Previous
+                    </Button>
+                    <Button type="primary" onClick={handleNext} block>
+                      Next
+                    </Button>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-end mt-4" style={{ width: "100%" }}>
-              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
-                Previous
-              </Button>
-              <Button type="primary" onClick={handleNext}>
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
-        {currentStep === 2 && (
-          <div
-            style={{ maxWidth: "800px", margin: "auto", minHeight: "600px" }}
-          >
-            <h1
-              style={{
-                textAlign: "center",
-                textTransform: "uppercase",
-                marginBottom: "10px",
-              }}
-            >
-              Review and Confirm
-            </h1>
-            <Form layout="vertical">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item label="Description">
-                    <Input value={formData.description} readOnly />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item label="Import Type">
-                    <Input value={formData.importType} readOnly />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form>
-            <h3
-              style={{
-                textAlign: "center",
-                textTransform: "uppercase",
-                marginBottom: "10px",
-              }}
-            >
-              Selected Products
-            </h3>
-            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-              <Table
-                columns={[
-                  { title: "Product Name", dataIndex: "name", key: "name" },
-                  {
-                    title: "Expired At",
-                    dataIndex: "expiredAt",
-                    key: "expiredAt",
-                  },
-                  {
-                    title: "Zone",
-                    dataIndex: "zoneId",
-                    key: "zoneId",
-                    render: (zoneId) => {
-                      const zone = zonesData.find((z) => z.id === zoneId);
-                      return zone ? zone.name : "N/A";
-                    },
-                  },
-                  {
-                    title: "Quantity",
-                    dataIndex: "quantity",
-                    key: "quantity",
-                  },
-                ]}
-                dataSource={selectedProducts.flatMap((product, productIndex) =>
-                  productZones[productIndex].map((zone, zoneIndex) => ({
-                    key: `${productIndex}-${zoneIndex}`,
-                    name: product.name,
-                    expiredAt: product.expiredAt,
-                    zoneId: zone.zoneId,
-                    quantity: zone.quantity,
-                  }))
-                )}
-                pagination={{ pageSize: 5, position: ["bottomCenter"] }}
-              />
-            </div>
-            <div className="flex justify-end mt-4" style={{ width: "100%" }}>
-              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
-                Previous
-              </Button>
-              <Button type="primary" onClick={handleCreateImport}>
-                Done
-              </Button>
-            </div>
-          </div>
-        )}
+              )}
+              {currentStep === 2 && (
+                <div
+                  style={{ border: "1px solid black", padding: "20px", borderRadius: "8px", marginTop: "20px" }}
+                >
+                  <h1
+                    style={{
+                      textAlign: "center",
+                      textTransform: "uppercase",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    Review and Confirm
+                  </h1>
+                  <Form layout="vertical">
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label="Description">
+                          <Input value={formData.description} readOnly />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="Import Type">
+                          <Input value={formData.importType} readOnly />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Form>
+                  <h3
+                    style={{
+                      textAlign: "center",
+                      textTransform: "uppercase",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    Selected Products
+                  </h3>
+                  <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                    <Table
+                      columns={[
+                        { title: "Product Name", dataIndex: "name", key: "name" },
+                        {
+                          title: "Expired At",
+                          dataIndex: "expiredAt",
+                          key: "expiredAt",
+                        },
+                        {
+                          title: "Zone",
+                          dataIndex: "zoneId",
+                          key: "zoneId",
+                          render: (zoneId) => {
+                            const zone = zonesData.find((z) => z.id === zoneId);
+                            return zone ? zone.name : "N/A";
+                          },
+                        },
+                        {
+                          title: "Quantity",
+                          dataIndex: "quantity",
+                          key: "quantity",
+                        },
+                      ]}
+                      dataSource={selectedProducts.flatMap((product, productIndex) =>
+                        productZones[productIndex].map((zone, zoneIndex) => ({
+                          key: `${productIndex}-${zoneIndex}`,
+                          name: product.name,
+                          expiredAt: product.expiredAt,
+                          zoneId: zone.zoneId,
+                          quantity: zone.quantity,
+                        }))
+                      )}
+                      pagination={{ pageSize: 5, position: ["bottomCenter"] }}
+                    />
+                  </div>
+                  <div className="flex justify-end mt-4" style={{ width: "100%" }}>
+                    <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                      Previous
+                    </Button>
+                    <Button type="primary" onClick={handleCreateImport} block>
+                      Done
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Col>
+          </Row>
+        </div>
       </div>
-    </div>
-  );
+    );
+    
+    
 };
 
 export default StaffAddImport;

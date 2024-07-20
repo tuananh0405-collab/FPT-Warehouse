@@ -386,372 +386,385 @@ const StaffAddExport = () => {
     <div>
       <Breadcrumbs />
       <div className="MainDash relative">
-        <h1 className="font-bold text-3xl py-4">New Export</h1>
-        <Steps
-          current={currentStep}
-          onChange={handleStepChange}
-          labelPlacement="vertical"
-          style={{ marginBottom: 24, maxWidth: "800px", margin: "auto" }}
-        >
-          <Step description="Export Information" />
-          <Step description="Select Products" />
-          <Step description="Review and Confirm" />
-        </Steps>
-        {currentStep === 0 && (
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={formData}
-            onValuesChange={handleFormChange}
-            style={{ width: "800px", margin: "auto" }}
-          >
-            <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
-              Export Information
-            </h2>
-            <Form.Item
-              label="Description"
-              name="description"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input the export description!",
-                },
-              ]}
+        <h1 className="font-bold text-3xl text-center py-4">New Export</h1>
+        <Row justify="center">
+          <Col xs={24} md={20} lg={16}>
+            <Steps
+              current={currentStep}
+              onChange={handleStepChange}
+              labelPlacement="vertical"
+              style={{ marginBottom: 24 }}
             >
-              <Input placeholder="Product Description" />
-            </Form.Item>
-            <Form.Item
-              label="Export Type"
-              name="exportType"
-              rules={[
-                { required: true, message: "Please select export type!" },
-              ]}
-            >
-              <Select placeholder="Select export type...">
-                <Option value="CUSTOMER">CUSTOMER</Option>
-                <Option value="WAREHOUSE">WAREHOUSE</Option>
-                <Option value="WASTE">WASTE</Option>
-              </Select>
-            </Form.Item>
-            {formData.exportType === "CUSTOMER" && (
-              <Form.Item
-                label="Customer"
-                name="customerId"
-                rules={[{ required: true, message: "Please select customer!" }]}
+              <Step description="Export Information" />
+              <Step description="Select Products" />
+              <Step description="Review and Confirm" />
+            </Steps>
+            {currentStep === 0 && (
+              <Form
+                form={form}
+                layout="vertical"
+                initialValues={formData}
+                onValuesChange={handleFormChange}
               >
-                <Select placeholder="Select customer...">
-                  {customersData.map((customer) => (
-                    <Option key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            )}
-            {formData.exportType === "WAREHOUSE" && (
-              <Form.Item
-                label="To:"
-                name="warehouseIdTo"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select warehouse to transfer!",
-                  },
-                ]}
-              >
-                <Select placeholder="Select warehouse to...">
-                  {warehousesData
-                    .filter(
-                      (warehouse) => warehouse.id !== formData.warehouseIdFrom
-                    )
-                    .map((warehouse) => (
-                      <Option key={warehouse.id} value={warehouse.id}>
-                        {warehouse.name}
-                      </Option>
-                    ))}
-                </Select>
-              </Form.Item>
-            )}
-            <Form.Item
-              label="Export Date"
-              name="exportDate"
-              rules={[
-                { required: true, message: "Please select export date!" },
-              ]}
-            >
-              <Input type="date" />
-            </Form.Item>
-            <Button type="primary" onClick={handleNext}>
-              Next
-            </Button>
-          </Form>
-        )}
-        {currentStep === 1 && (
-          <div
-            style={{
-              maxWidth: "800px",
-              margin: "auto",
-              border: "1px solid black",
-              padding: "20px",
-              borderRadius: "8px",
-            }}
-          >
-            <div className="sticky top-0 z-10">
-              <Button
-                type="primary"
-                onClick={handleAddProduct}
-                style={{
-                  display: "block",
-                  margin: "0 auto 20px auto",
-                  width: "700px",
-                }}
-              >
-                Add Product
-              </Button>
-            </div>
-            <div
-              style={{
-                maxHeight: "400px", // You can adjust this value as needed
-                overflowY: "auto",
-              }}
-            >
-              {selectedProducts.map((product, index) => {
-                const uniqueZones = getUniqueZones(product.id);
-                const uniqueExpiredAt = getUniqueExpiredAt(
-                  product.id,
-                  product.zoneId
-                );
-
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      marginBottom: "20px",
-                      border: "1px solid black",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      width: "700px",
-                    }}
-                  >
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Form.Item label="Product Name">
-                          <Select
-                            placeholder="Select product"
-                            value={product.id}
-                            onChange={(value) =>
-                              handleDropdownChange(value, index, "product")
-                            }
-                            style={{ width: "100%" }}
-                          >
-                            {filteredProducts.map((p) => (
-                              <Option key={p.id} value={p.id}>
-                                {p.name}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item label="Zone">
-                          <Select
-                            placeholder="Select zone"
-                            value={product.zoneId}
-                            onChange={(value) =>
-                              handleDropdownChange(value, index, "zone")
-                            }
-                            style={{ width: "100%" }}
-                            disabled={!product.id}
-                          >
-                            {uniqueZones.map((zone) => (
-                              <Option key={zone.id} value={zone.id}>
-                                {zone.name}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Form.Item label="Expired Date">
-                      <Select
-                        placeholder="Select expired date"
-                        value={product.expiredAt}
-                        onChange={(value) =>
-                          handleDropdownChange(value, index, "expiredAt")
-                        }
-                        style={{ width: "100%" }}
-                        disabled={!product.zoneId}
-                      >
-                        {uniqueExpiredAt.map((expiredAt) => (
-                          <Option key={expiredAt} value={expiredAt}>
-                            {expiredAt}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Form.Item label="Quantity">
-                          <InputNumber
-                            min={1}
-                            max={
-                              inventoriesData.find(
-                                (inv) =>
-                                  inv.product.id === product.id &&
-                                  inv.zone.id === product.zoneId &&
-                                  inv.expiredAt === product.expiredAt
-                              )?.quantity || 1
-                            }
-                            value={product.quantity}
-                            onChange={(value) =>
-                              handleQuantityChange(value, index)
-                            }
-                            style={{ width: "100%" }}
-                            disabled={
-                              !product.id ||
-                              !product.zoneId ||
-                              !product.expiredAt
-                            }
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item label="Inventory Quantity">
-                          <Input
-                            value={
-                              inventoriesData.find(
-                                (inv) =>
-                                  inv.product.id === product.id &&
-                                  inv.zone.id === product.zoneId &&
-                                  inv.expiredAt === product.expiredAt
-                              )?.quantity || 0
-                            }
-                            readOnly
-                            style={{ width: "100%" }}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Button
-                      type="link"
-                      danger
-                      onClick={() => handleRemoveProduct(index)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex justify-end mt-4" style={{ width: "100%" }}>
-              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
-                Previous
-              </Button>
-              <Button type="primary" onClick={handleNext}>
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
-        {currentStep === 2 && (
-          <div style={{ maxWidth: "800px", margin: "auto" }}>
-            <h1
-              style={{
-                textAlign: "center",
-                textTransform: "uppercase",
-                marginBottom: "10px",
-              }}
-            >
-              Review and Confirm
-            </h1>
-            <Form layout="vertical">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item label="Description">
-                    <Input value={formData.description} readOnly />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item label="Export Type">
-                    <Input value={formData.exportType} readOnly />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item label="Export Date">
-                    <Input value={formData.exportDate} readOnly />
-                  </Form.Item>
-                </Col>
+                <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
+                  Export Information
+                </h2>
+                <Form.Item
+                  label="Description"
+                  name="description"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the export description!",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Product Description" />
+                </Form.Item>
+                <Form.Item
+                  label="Export Type"
+                  name="exportType"
+                  rules={[
+                    { required: true, message: "Please select export type!" },
+                  ]}
+                >
+                  <Select placeholder="Select export type...">
+                    <Option value="CUSTOMER">CUSTOMER</Option>
+                    <Option value="WAREHOUSE">WAREHOUSE</Option>
+                    <Option value="WASTE">WASTE</Option>
+                  </Select>
+                </Form.Item>
                 {formData.exportType === "CUSTOMER" && (
-                  <Col span={12}>
-                    <Form.Item label="Customer">
-                      <Input
-                        value={
-                          customersData.find(
-                            (customer) => customer.id === formData.customerId
-                          )?.name
-                        }
-                        readOnly
-                      />
-                    </Form.Item>
-                  </Col>
+                  <Form.Item
+                    label="Customer"
+                    name="customerId"
+                    rules={[
+                      { required: true, message: "Please select customer!" },
+                    ]}
+                  >
+                    <Select placeholder="Select customer...">
+                      {customersData.map((customer) => (
+                        <Option key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
                 )}
                 {formData.exportType === "WAREHOUSE" && (
-                  <Col span={12}>
-                    <Form.Item label="To">
-                      <Input
-                        value={
-                          warehousesData.find(
-                            (warehouse) =>
-                              warehouse.id === formData.warehouseIdTo
-                          )?.name
-                        }
-                        readOnly
-                      />
-                    </Form.Item>
-                  </Col>
+                  <Form.Item
+                    label="To:"
+                    name="warehouseIdTo"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select warehouse to transfer!",
+                      },
+                    ]}
+                  >
+                    <Select placeholder="Select warehouse to...">
+                      {warehousesData
+                        .filter(
+                          (warehouse) =>
+                            warehouse.id !== formData.warehouseIdFrom
+                        )
+                        .map((warehouse) => (
+                          <Option key={warehouse.id} value={warehouse.id}>
+                            {warehouse.name}
+                          </Option>
+                        ))}
+                    </Select>
+                  </Form.Item>
                 )}
-              </Row>
-            </Form>
-            <h3
-              style={{
-                textAlign: "center",
-                textTransform: "uppercase",
-                marginBottom: "10px",
-              }}
-            >
-              Selected Products
-            </h3>
-            <div
-              style={{
-                maxHeight: "600px",
-                overflowY: dataSource.length > 5 ? "scroll" : "auto",
-              }}
-            >
-              <Table
-                columns={columns}
-                dataSource={paginatedDataSource}
-                pagination={false}
-              />
-            </div>
-            <Pagination
-              current={currentPage}
-              total={dataSource.length}
-              pageSize={5}
-              onChange={(page) => setCurrentPage(page)}
-              style={{ marginTop: "20px", textAlign: "center" }}
-            />
-            <div className="flex justify-end mt-4" style={{ width: "100%" }}>
-              <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
-                Previous
-              </Button>
-              <Button type="primary" onClick={handleCreateExport}>
-                Done
-              </Button>
-            </div>
-          </div>
-        )}
+                <Form.Item
+                  label="Export Date"
+                  name="exportDate"
+                  rules={[
+                    { required: true, message: "Please select export date!" },
+                  ]}
+                >
+                  <Input type="date" />
+                </Form.Item>
+                <Button type="primary" onClick={handleNext} block>
+                  Next
+                </Button>
+              </Form>
+            )}
+            {currentStep === 1 && (
+              <div
+                style={{
+                  border: "1px solid black",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  marginTop: "20px",
+                }}
+              >
+                <Button
+                  type="primary"
+                  onClick={handleAddProduct}
+                  block
+                  style={{ marginBottom: "20px" }}
+                >
+                  Add Product
+                </Button>
+                <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                  {selectedProducts.map((product, index) => {
+                    const uniqueZones = getUniqueZones(product.id);
+                    const uniqueExpiredAt = getUniqueExpiredAt(
+                      product.id,
+                      product.zoneId
+                    );
+
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          marginBottom: "20px",
+                          border: "1px solid black",
+                          padding: "10px",
+                          borderRadius: "8px",
+                        }}
+                      >
+                        <Row gutter={16}>
+                          <Col span={12}>
+                            <Form.Item label="Product Name">
+                              <Select
+                                placeholder="Select product"
+                                value={product.id}
+                                onChange={(value) =>
+                                  handleDropdownChange(value, index, "product")
+                                }
+                                style={{ width: "100%" }}
+                              >
+                                {filteredProducts.map((p) => (
+                                  <Option key={p.id} value={p.id}>
+                                    {p.name}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item label="Zone">
+                              <Select
+                                placeholder="Select zone"
+                                value={product.zoneId}
+                                onChange={(value) =>
+                                  handleDropdownChange(value, index, "zone")
+                                }
+                                style={{ width: "100%" }}
+                                disabled={!product.id}
+                              >
+                                {uniqueZones.map((zone) => (
+                                  <Option key={zone.id} value={zone.id}>
+                                    {zone.name}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                        <Form.Item label="Expired Date">
+                          <Select
+                            placeholder="Select expired date"
+                            value={product.expiredAt}
+                            onChange={(value) =>
+                              handleDropdownChange(value, index, "expiredAt")
+                            }
+                            style={{ width: "100%" }}
+                            disabled={!product.zoneId}
+                          >
+                            {uniqueExpiredAt.map((expiredAt) => (
+                              <Option key={expiredAt} value={expiredAt}>
+                                {expiredAt}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                        <Row gutter={16}>
+                          <Col span={12}>
+                            <Form.Item label="Quantity">
+                              <InputNumber
+                                min={1}
+                                max={
+                                  inventoriesData.find(
+                                    (inv) =>
+                                      inv.product.id === product.id &&
+                                      inv.zone.id === product.zoneId &&
+                                      inv.expiredAt === product.expiredAt
+                                  )?.quantity || 1
+                                }
+                                value={product.quantity}
+                                onChange={(value) =>
+                                  handleQuantityChange(value, index)
+                                }
+                                style={{ width: "100%" }}
+                                disabled={
+                                  !product.id ||
+                                  !product.zoneId ||
+                                  !product.expiredAt
+                                }
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item label="Inventory Quantity">
+                              <Input
+                                value={
+                                  inventoriesData.find(
+                                    (inv) =>
+                                      inv.product.id === product.id &&
+                                      inv.zone.id === product.zoneId &&
+                                      inv.expiredAt === product.expiredAt
+                                  )?.quantity || 0
+                                }
+                                readOnly
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                        <Button
+                          type="link"
+                          danger
+                          onClick={() => handleRemoveProduct(index)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div
+                  className="flex justify-end mt-4"
+                  style={{ width: "100%" }}
+                >
+                  <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                    Previous
+                  </Button>
+                  <Button type="primary" onClick={handleNext} block>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+            {currentStep === 2 && (
+              <div
+                style={{
+                  border: "1px solid black",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  marginTop: "20px",
+                }}
+              >
+                <h1
+                  style={{
+                    textAlign: "center",
+                    textTransform: "uppercase",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Review and Confirm
+                </h1>
+                <Form layout="vertical">
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item label="Description">
+                        <Input value={formData.description} readOnly />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label="Export Type">
+                        <Input value={formData.exportType} readOnly />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item label="Export Date">
+                        <Input value={formData.exportDate} readOnly />
+                      </Form.Item>
+                    </Col>
+                    {formData.exportType === "CUSTOMER" && (
+                      <Col span={12}>
+                        <Form.Item label="Customer">
+                          <Input
+                            value={
+                              customersData.find(
+                                (customer) =>
+                                  customer.id === formData.customerId
+                              )?.name
+                            }
+                            readOnly
+                          />
+                        </Form.Item>
+                      </Col>
+                    )}
+                    {formData.exportType === "WAREHOUSE" && (
+                      <Col span={12}>
+                        <Form.Item label="To">
+                          <Input
+                            value={
+                              warehousesData.find(
+                                (warehouse) =>
+                                  warehouse.id === formData.warehouseIdTo
+                              )?.name
+                            }
+                            readOnly
+                          />
+                        </Form.Item>
+                      </Col>
+                    )}
+                  </Row>
+                </Form>
+                <h3
+                  style={{
+                    textAlign: "center",
+                    textTransform: "uppercase",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Selected Products
+                </h3>
+                <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                  <Table
+                    columns={[
+                      { title: "Product Name", dataIndex: "name", key: "name" },
+                      {
+                        title: "Zone",
+                        dataIndex: "zone",
+                        key: "zone",
+                      },
+                      {
+                        title: "Expired At",
+                        dataIndex: "expiredAt",
+                        key: "expiredAt",
+                      },
+                      {
+                        title: "Quantity",
+                        dataIndex: "quantity",
+                        key: "quantity",
+                      },
+                    ]}
+                    dataSource={dataSource}
+                    pagination={false}
+                  />
+                </div>
+                <div
+                  className="flex justify-end mt-4"
+                  style={{ width: "100%" }}
+                >
+                  <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                    Previous
+                  </Button>
+                  <Button type="primary" onClick={handleCreateExport} block>
+                    Done
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Col>
+        </Row>
       </div>
     </div>
   );

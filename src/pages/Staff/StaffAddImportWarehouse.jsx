@@ -13,6 +13,7 @@ import {
   Table,
   List,
   Card,
+  Grid,
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import Breadcrumbs from "../../utils/Breadcumbs";
@@ -35,6 +36,7 @@ import { useCreateImportDetailsMutation } from "../../redux/api/importDetailApiS
 
 const { Option } = Select;
 const { Step } = Steps;
+const { useBreakpoint } = Grid;
 
 const generateRandomString = (length = 8) => {
   const characters =
@@ -346,6 +348,8 @@ const StaffAddImportWarehouse = () => {
     return zonesData.filter((zone) => !selectedZoneIds.includes(zone.id));
   };
 
+  const screens = useBreakpoint();
+
   if (
     isWarehouseLoading ||
     isZoneLoading ||
@@ -372,13 +376,18 @@ const StaffAddImportWarehouse = () => {
       <Breadcrumbs />
       <div className="MainDash relative">
         <Row gutter={16}>
-          <Col span={18}>
-            <h1 className="font-bold text-3xl py-4">Import from Warehouse</h1>
+          <Col xs={24} lg={16}>
+            <h1
+              className="font-bold text-3xl py-4"
+              style={{ textAlign: "center" }}
+            >
+              Import from Warehouse
+            </h1>
             <Steps
               current={currentStep}
               onChange={handleStepChange}
               labelPlacement="vertical"
-              style={{ marginBottom: 24, maxWidth: "800px", margin: "auto" }}
+              style={{ marginBottom: 24, maxWidth: "80%", margin: "0 auto" }}
             >
               <Step description="Import Information" />
               <Step description="Select Products" />
@@ -390,7 +399,7 @@ const StaffAddImportWarehouse = () => {
                 layout="vertical"
                 initialValues={formData}
                 onValuesChange={handleFormChange}
-                style={{ width: "800px", margin: "auto", marginTop: "20px" }}
+                style={{ maxWidth: "80%", margin: "0 auto", marginTop: "20px" }}
               >
                 <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
                   Import Information
@@ -416,7 +425,11 @@ const StaffAddImportWarehouse = () => {
                 >
                   <Input value="WAREHOUSE" readOnly />
                 </Form.Item>
-                <Button type="primary" onClick={handleNext}>
+                <Button
+                  type="primary"
+                  onClick={handleNext}
+                  style={{ width: "100%" }}
+                >
                   Next
                 </Button>
               </Form>
@@ -424,8 +437,8 @@ const StaffAddImportWarehouse = () => {
             {currentStep === 1 && (
               <div
                 style={{
-                  maxWidth: "800px",
-                  margin: "auto",
+                  maxWidth: "80%",
+                  margin: "0 auto",
                   border: "1px solid black",
                   padding: "20px",
                   borderRadius: "8px",
@@ -445,7 +458,6 @@ const StaffAddImportWarehouse = () => {
                         border: "1px solid black",
                         padding: "10px",
                         borderRadius: "8px",
-                        width: "700px",
                       }}
                     >
                       <Row gutter={16}>
@@ -559,7 +571,11 @@ const StaffAddImportWarehouse = () => {
                   <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
                     Previous
                   </Button>
-                  <Button type="primary" onClick={handleNext}>
+                  <Button
+                    type="primary"
+                    onClick={handleNext}
+                    style={{ width: "100%" }}
+                  >
                     Next
                   </Button>
                 </div>
@@ -568,8 +584,8 @@ const StaffAddImportWarehouse = () => {
             {currentStep === 2 && (
               <div
                 style={{
-                  maxWidth: "800px",
-                  margin: "auto",
+                  maxWidth: "80%",
+                  margin: "0 auto",
                   minHeight: "600px",
                 }}
               >
@@ -649,15 +665,19 @@ const StaffAddImportWarehouse = () => {
                   <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
                     Previous
                   </Button>
-                  <Button type="primary" onClick={handleCreateImport}>
+                  <Button
+                    type="primary"
+                    onClick={handleCreateImport}
+                    style={{ width: "100%" }}
+                  >
                     Done
                   </Button>
                 </div>
               </div>
             )}
           </Col>
-          <Col span={6}>
-            <h2>Available Exports</h2>
+          <Col xs={24} lg={8}>
+            <h2 style={{ textAlign: "center" }}>Available Exports</h2>
             <List
               itemLayout="horizontal"
               dataSource={filteredExports}
