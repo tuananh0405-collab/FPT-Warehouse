@@ -17,11 +17,11 @@ const StaffSidebar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const divRef = useRef(null);
   const handleOutsideClick = () => {
-    console.log('Clicked outside the div!');
+    console.log("Clicked outside the div!");
     setDropdownOpen(false);
-};
+  };
 
-useOutsideClick(divRef, handleOutsideClick);
+  useOutsideClick(divRef, handleOutsideClick);
 
   const [warehouseId, setWarehouseId] = useState(null);
 
@@ -56,7 +56,7 @@ useOutsideClick(divRef, handleOutsideClick);
   };
 
   const handleMenuItemClick = (link) => {
-    setDropdownOpen(false)
+    setDropdownOpen(false);
     navigate(link);
   };
   const handleSubMenuItemClick = (link) => {
@@ -110,7 +110,8 @@ useOutsideClick(divRef, handleOutsideClick);
             <>
               <div
                 className={
-                  location.pathname.startsWith(item.link) || dropdownOpen && item.subItems
+                  location.pathname.startsWith(item.link) ||
+                  (dropdownOpen && item.subItems)
                     ? "menuItem active"
                     : "menuItem"
                 }
@@ -120,7 +121,6 @@ useOutsideClick(divRef, handleOutsideClick);
                     ? handleDropdownClick()
                     : handleMenuItemClick(item.link)
                 }
-                
               >
                 <item.icon />
                 <span>{item.heading}</span>

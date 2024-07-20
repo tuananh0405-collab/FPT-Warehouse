@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../assets/styles/MainDash.css";
 import Logo from "../../assets/images/FPT_logo_2010.png";
@@ -7,13 +7,20 @@ import { SidebarData } from "../../Data/Data";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/features/auth/authSlice";
+import useOutsideClick from "../../utils/useOutsideClick";
 
 const Sidebar = () => {
   const [expanded, setExpaned] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const divRef = useRef(null);
+  const handleOutsideClick = () => {
+    console.log("Clicked outside the div!");
+    setDropdownOpen(false);
+  };
 
+  useOutsideClick(divRef, handleOutsideClick);
   const sidebarVariants = {
     true: {
       left: "0",
@@ -24,6 +31,10 @@ const Sidebar = () => {
   };
 
   const handleMenuItemClick = (link) => {
+    setDropdownOpen(false)
+    navigate(link);
+  };
+  const handleSubMenuItemClick = (link) => {
     navigate(link);
   };
   const handleDropdownClick = () => {
@@ -91,7 +102,7 @@ const Sidebar = () => {
                           ? "subMenuItem activesub"
                           : "subMenuItem"
                       }
-                      onClick={() => handleMenuItemClick(subItem.link)}
+                      onClick={() => handleSubMenuItemClick(subItem.link)}
                     >
                       <subItem.icon/>
                       <span>{subItem.heading}</span>
