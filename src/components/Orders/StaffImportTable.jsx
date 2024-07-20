@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import { Button, Table } from "antd";
-import {
-  useGetAllImportsByWarehouseIdQuery,
-  useGetTotalImportsByWarehouseIdQuery,
-} from "../../redux/api/importApiSlice";
+import { Button, Input, Table, Space, Result } from "antd";
+import { useGetAllImportsByWarehouseIdQuery, useGetTotalImportsByWarehouseIdQuery } from "../../redux/api/importApiSlice";
 import { FormatTime } from "../../utils/FormatTime";
 import { useNavigate } from "react-router-dom";
+import { SearchOutlined } from "@ant-design/icons";
+import Highlighter from "react-highlight-words";
+
+const { Search } = Input;
 
 function StaffImportTable({ searchValue }) {
   const userInfo = useSelector((state) => state.auth.userInfo);
@@ -17,7 +18,9 @@ function StaffImportTable({ searchValue }) {
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [search, setSearch] = useState(searchValue);
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef(null);
 
   const {
     data: importsData = {},
@@ -30,19 +33,19 @@ function StaffImportTable({ searchValue }) {
     sortBy: sortField,
     direction: sortOrder,
     status: filterStatus,
-    search: search,
+    search: searchText,
   });
   const totalImportItemData = useGetTotalImportsByWarehouseIdQuery({
     warehouseId,
     authToken,
     status: filterStatus,
-    search: search,
+    search: searchText,
   });
   const imports = importsData.data || [];
   const totalImportItem = totalImportItemData.data || 0;
 
   useEffect(() => {
-    setSearch(searchValue);
+    setSearchText(searchValue);
   }, [searchValue]);
 
   const navigate = useNavigate();
@@ -64,48 +67,163 @@ function StaffImportTable({ searchValue }) {
     }
   };
 
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText("");
+  };
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close,
+    }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: "block",
+          }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              confirm({
+                closeDropdown: false,
+              });
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn(dataIndex);
+            }}
+          >
+            Filter
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? "#1677ff" : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex]
+        ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+        : "",
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{
+            backgroundColor: "#ffc069",
+            padding: 0,
+          }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
+
   const columns = [
     {
       title: "Description",
       dataIndex: "description",
       key: "description",
-      sorter: true,
-      width: 250,
+      sorter: (a, b) => a.description.localeCompare(b.description),
       ellipsis: true,
-      responsive: ["lg"],
+      width: 200,
+      ...getColumnSearchProps("description"),
     },
     {
       title: "Received Date",
       dataIndex: "receivedDate",
       key: "receivedDate",
-      sorter: true,
-      width: 180,
+      sorter: (a, b) => new Date(a.receivedDate) - new Date(b.receivedDate),
       ellipsis: true,
+      width: 150,
       render: (text) => FormatTime(text),
-      responsive: ["md"],
+      ...getColumnSearchProps("receivedDate"),
     },
     {
       title: "Customer Name",
-      dataIndex: ["customer", "name"],
+      dataIndex: "customerName",
       key: "customerName",
-      width: 120,
-      render: (_, record) => (record.customer ? record.customer.name : "N/A"),
-      responsive: ["lg"],
+      width: 200,
+      render: (_, record) => record.customer ? record.customer.name : "N/A",
+      ...getColumnSearchProps("customerName"),
     },
     {
       title: "From",
-      dataIndex: ["warehouseFrom", "name"],
-      width: 200,
+      dataIndex: "fromAddress",
+      key: "fromAddress",
       ellipsis: true,
+      width: 250,
       render: (_, record) => {
-        if (record.importType === "CUSTOMER") {
-          return record.customer ? record.customer.address : "N/A";
-        } else if (record.importType === "WAREHOUSE") {
+        if (record.importType === "WAREHOUSE") {
           return record.warehouseFrom ? record.warehouseFrom.address : "N/A";
         }
-        return "N/A";
+        return record.customer ? record.customer.address : "N/A";
       },
-      responsive: ["md"],
+      ...getColumnSearchProps("fromAddress"),
     },
     {
       title: "Status",
@@ -117,42 +235,77 @@ function StaffImportTable({ searchValue }) {
         { text: "Succeed", value: "SUCCEED" },
         { text: "Cancel", value: "CANCEL" },
       ],
-      width: 120,
       filterMultiple: false,
+      width: 120,
       onFilter: (value, record) => record.status === value,
-      responsive: ["sm"],
     },
     {
       title: "Action",
       key: "action",
+      width: 100,
       render: (_, record) => (
-        <Button>
-          <a onClick={() => navigate(`/staff/import/detail/${record.id}`)}>
+        <Space size="middle">
+          <a
+            className="text-blue-500 no-underline bg-transparent cursor-pointer transition duration-300"
+            onClick={() => navigate(`/staff/import/detail/${record.id}`)}
+          >
             View
           </a>
-        </Button>
+        </Space>
       ),
-      responsive: ["xs"],
     },
   ];
 
   if (importsLoading) return <div>Loading...</div>;
-  if (importsError) return <div>Error loading data</div>;
+  if (importsError) return (
+    <Result
+      status="error"
+      title="There are some problems with your operation."
+      extra={
+        <Button
+          type="primary"
+          key="console"
+          onClick={() => navigate(`/staff/dashboard`)}
+        >
+          Go Dashboard
+        </Button>
+      }
+    />
+  );
+
+  // Transform data to include customerName and fromAddress for search
+  const transformedData = imports?.map((item) => ({
+    ...item,
+    customerName: item.customer ? item.customer.name : "N/A",
+    fromAddress:
+      item.importType === "WAREHOUSE"
+        ? item.warehouseFrom?.address
+        : item.customer?.address,
+  }));
+
+  // Apply search filtering
+  const filteredData = transformedData.filter(
+    (item) =>
+      item.description.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.customerName?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.fromAddress?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.receivedDate.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   return (
     <Table
       className="no-select"
       columns={columns}
-      dataSource={imports}
+      dataSource={filteredData}
       rowKey="id"
       pagination={{
         current: pageNo,
-        pageSize: 5,
+        pageSize: 10,
         total: totalImportItem,
         position: ["bottomCenter"],
       }}
       onChange={handleTableChange}
-      scroll={{ x: "max-content" }}
+      loading={importsLoading}
     />
   );
 }
