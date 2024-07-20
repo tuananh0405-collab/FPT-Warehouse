@@ -45,14 +45,14 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
       keepUnusedDataFor: 5,
     }),
     deleteExportDetails: builder.mutation({
-      query: ({ ids, authToken }) => ({
+      query: ({ data, authToken }) => ({
         url: `${EXPORT_DETAIL_URL}/list-delete`,
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${authToken}`,
           "Content-Type": "application/json",
         },
-        body: ids,
+        body: data,
       }),
       invalidatesTags: ["ExportDetail"],
     }),
@@ -64,6 +64,7 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
           Authorization: `Bearer ${authToken}`,
           "Content-Type": "application/json",
         },
+        method: "PUT",
         body: data,
       }),
       invalidatesTags: ["ExportDetail"],
@@ -91,6 +92,16 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["ExportDetail"],
     }),
+    checkQuantityForUpdate: builder.mutation({
+      query: ({ authToken, data }) => ({
+        url: `${EXPORT_DETAIL_URL}/check-quantity`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -103,4 +114,5 @@ export const {
   useUpdateAndAddExportDetailsMutation,
   useCheckAvailableQuantityMutation,
   useGetExportDetailsByExportIdQuery,
+  useCheckQuantityForUpdateMutation,
 } = exportDetailApiSlice;

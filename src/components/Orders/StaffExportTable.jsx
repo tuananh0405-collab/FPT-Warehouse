@@ -24,6 +24,8 @@ function StaffExportTable() {
     const { data: exportData, isLoading: exportDataLoading, error: exportDataError } = useGetAllExportsByWarehouseidQuery({ warehouseId: wid, authToken: authToken });
     const exports = exportData?.data;
 
+    const sortedExports = exports ? [...exports].sort((a, b) => b.id - a.id) : [];
+
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
@@ -221,7 +223,7 @@ function StaffExportTable() {
     );
 
     // Transform data to include customerName and toAddress for search
-    const transformedData = exports?.map((item) => ({
+    const transformedData = sortedExports?.map((item) => ({
         ...item,
         customerName: item.exportType === 'WAREHOUSE' ? item.warehouseTo?.name : item.customer?.name,
         toAddress: item.exportType === 'WAREHOUSE' ? item.warehouseTo?.address : item.customer?.address,
