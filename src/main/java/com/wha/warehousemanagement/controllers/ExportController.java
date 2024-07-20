@@ -114,4 +114,11 @@ public class ExportController {
     ) {
         return ResponseEntity.ok(exportService.confirmShippedSuccessfully(exportId));
     }
+
+    @GetMapping("/by-warehouse/get-latest/{warehouseId}")
+    public ResponseEntity<?> getLatestExportByWarehouseId(
+            @PathVariable("warehouseId") Integer warehouseId
+    ) {
+        return ResponseEntity.ok(exportService.getLatestExportByWarehouseId(warehouseId));
+    }
 }

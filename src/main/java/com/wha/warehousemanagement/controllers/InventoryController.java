@@ -200,4 +200,12 @@ public class InventoryController {
         List<Inventory> inventories = inventoryService.getInventoryByWarehouseId(warehouseId);
         return ResponseEntity.ok(inventories);
     }
+
+    @GetMapping("/by-product/{productId}/{warehouseId}")
+    public ResponseEntity<?> getInventoryByProductId(
+            @PathVariable Integer productId,
+            @PathVariable Integer warehouseId
+    ) {
+        return ResponseEntity.ok(new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", inventoryService.getInventoryByProductId(productId, warehouseId)));
+    }
 }

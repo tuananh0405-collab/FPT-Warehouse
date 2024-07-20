@@ -365,4 +365,14 @@ public class InventoryService {
     public List<Inventory> getInventoryByWarehouseId(Integer warehouseId) {
         return inventoryRepository.findByZoneWarehouseId(warehouseId);
     }
+
+    public ResponseObject<?> getInventoryByProductId(Integer productId, Integer warehouseId) {
+        try {
+            List<Inventory> inventories = inventoryRepository.findByProductIdandWarehouseId(productId, warehouseId);
+            List<InventoryResponse> response = inventories.stream().map(inventoryMapper::toDto).toList();
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get inventories", null);
+        }
+    }
 }

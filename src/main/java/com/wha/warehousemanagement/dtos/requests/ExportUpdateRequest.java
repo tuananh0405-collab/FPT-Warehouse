@@ -18,19 +18,11 @@ public class ExportUpdateRequest {
 
         private String description;
 
-        private String status;
+        private String type;
 
         private Date exportDate;
 
         private Integer warehouseIdTo;
 
         private Integer customerId;
-
-        private String customerName;
-
-        private String customerAddress;
-
-        private String customerPhone;
-
-        private String customerEmail;
 }
