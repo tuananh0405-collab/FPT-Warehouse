@@ -45,7 +45,8 @@ const StaffsComponent = () => {
   const handleOk = async () => {
     const values = await form.validateFields();
     const data = { ...values, trackingId: selectedStaff.id };
-    await updateUser({ data, authToken });
+    const res = await updateUser({ data, authToken });
+    console.log(res);
     setIsModalVisible(false);
   };
 

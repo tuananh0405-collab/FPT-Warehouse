@@ -60,9 +60,11 @@ const DataCustomers = () => {
 
   const handleDelete = async () => {
     try {
-      await deleteCustomer({ customerId: selectedCustomer.id, authToken });
+      const response = await deleteCustomer({ customerId: selectedCustomer.id, authToken });
       setIsModalVisible(false);
-      message.success("Customer deleted successfully");
+      // message.success("Customer deleted successfully");
+      message.info(response.data.message);
+
     } catch (error) {
       console.log(error.message);
     }

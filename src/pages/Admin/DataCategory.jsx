@@ -40,8 +40,12 @@ const DataCategory = () => {
 
   const handleOk = async () => {
     const values = await form.validateFields();
+    console.log(values);
     const data = { ...values, id: selectedCategory.id };
-    await updateCategory({ categoryId: selectedCategory.id, updatedCategory: data, authToken });
+    console.log(selectedCategory.id);
+    const response = await updateCategory({ categoryId: selectedCategory.id, updatedCategory: values, authToken });
+    console.log(response);
+    message.info(response.data.message)
     setIsModalVisible(false);
   };
 
@@ -52,9 +56,10 @@ const DataCategory = () => {
 
   const handleDelete = async () => {
     try {
-      await deleteCategory({ categoryId: selectedCategory.id, authToken });
+      const response = await deleteCategory({ categoryId: selectedCategory.id, authToken });
       setIsModalVisible(false);
-      message.success("Category deleted successfully");
+      // message.success("Category deleted successfully");
+      message.info(response.data.message);
     } catch (error) {
       console.log(error.message);
     }

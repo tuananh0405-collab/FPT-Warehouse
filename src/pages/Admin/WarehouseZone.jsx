@@ -44,9 +44,10 @@ const WarehouseZone = () => {
     };
 
     const handleDelete = async () => {
-        await deleteZone({ id: selectedZone.id, authToken });
+        const response = await deleteZone({ id: selectedZone.id, authToken });
         setIsModalVisible(false);
-        message.success("Zone deleted successfully");
+        // message.success("Zone deleted successfully");
+        message.info(response.data.message);
     };
 
     const handleOkAdd = async () => {
