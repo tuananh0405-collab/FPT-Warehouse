@@ -25,16 +25,16 @@ import { useAddExportMutation } from "../../redux/api/exportApiSlice";
 import { useAddCustomerMutation } from "../../redux/api/customersApiSlice";
 import { useCreateExportDetailsMutation } from "../../redux/api/exportDetailApiSlice";
 import AutoSelectModal from "../../components/Orders/AutoSelectModal";
-import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined';
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import AutorenewOutlinedIcon from "@mui/icons-material/AutorenewOutlined";
 import moment from "moment";
 
 const { Option } = Select;
 const { Step } = Steps;
 
 export const FormatTime = (time) => {
-  return moment(time).format('YYYY-MM-DD HH:mm:ss'); // Format như ví dụ, bạn có thể thay đổi theo ý muốn
-}
+  return moment(time).format("YYYY-MM-DD HH:mm:ss"); // Format như ví dụ, bạn có thể thay đổi theo ý muốn
+};
 
 const StaffAddExport = () => {
   const navigate = useNavigate();
@@ -130,6 +130,30 @@ const StaffAddExport = () => {
     }));
   };
 
+  // const handleStepChange = async (current) => {
+  //   if (currentStep === 0 && current === 1) {
+  //     try {
+  //       await form.validateFields();
+  //       const currentDate = new Date().toISOString().split("T")[0];
+  //       if (formData.exportDate < currentDate) {
+  //         message.error("Export date must be today or later.");
+  //         return;
+  //       }
+  //       setCurrentStep(current);
+  //     } catch (error) {
+  //       message.error("Please fill out all required fields.");
+  //     }
+  //   } else if (currentStep === 1 && current === 2) {
+  //     if (selectedProducts.length === 0) {
+  //       message.error("Please add at least one product.");
+  //     } else {
+  //       setCurrentStep(current);
+  //     }
+  //   } else {
+  //     setCurrentStep(current);
+  //   }
+  // };
+
   const handleStepChange = async (current) => {
     if (currentStep === 0 && current === 1) {
       try {
@@ -147,7 +171,24 @@ const StaffAddExport = () => {
       if (selectedProducts.length === 0) {
         message.error("Please add at least one product.");
       } else {
-        setCurrentStep(current);
+        let isValid = true;
+        for (let i = 0; i < selectedProducts.length; i++) {
+          const product = selectedProducts[i];
+          if (
+            !product.id ||
+            !product.zoneId ||
+            !product.expiredAt ||
+            !product.quantity
+          ) {
+            isValid = false;
+            break;
+          }
+        }
+        if (isValid) {
+          setCurrentStep(current);
+        } else {
+          message.error("Please fill out all product fields.");
+        }
       }
     } else {
       setCurrentStep(current);
@@ -263,11 +304,14 @@ const StaffAddExport = () => {
   const getUniqueZones = (productId) => {
     // Lấy tất cả các zone cho productId không kiểm tra đã chọn
     return zonesData.filter((zone) =>
-      inventoriesData.some((inv) =>
-        inv.product.id === productId &&
-        inv.zone.id === zone.id &&
-        zone.warehouseId === warehouseId &&
-        !selectedProducts.some(sp => sp.zoneId === zone.id && sp.expiredAt === inv.expiredAt)
+      inventoriesData.some(
+        (inv) =>
+          inv.product.id === productId &&
+          inv.zone.id === zone.id &&
+          zone.warehouseId === warehouseId &&
+          !selectedProducts.some(
+            (sp) => sp.zoneId === zone.id && sp.expiredAt === inv.expiredAt
+          )
       )
     );
   };
@@ -277,7 +321,12 @@ const StaffAddExport = () => {
     return inventoriesData
       .filter((inv) => inv.product.id === productId && inv.zone.id === zoneId)
       .map((inv) => inv.expiredAt)
-      .filter(expiredAt => !selectedProducts.some(sp => sp.zoneId === zoneId && sp.expiredAt === expiredAt));
+      .filter(
+        (expiredAt) =>
+          !selectedProducts.some(
+            (sp) => sp.zoneId === zoneId && sp.expiredAt === expiredAt
+          )
+      );
   };
 
   if (
@@ -431,8 +480,8 @@ const StaffAddExport = () => {
                     type="default"
                     size="large"
                     style={{
-                      backgroundColor: '#2A2A2A',
-                      color: '#ffffff',
+                      backgroundColor: "#2A2A2A",
+                      color: "#ffffff",
                     }}
                     onClick={() => setIsModalOpen(true)}
                   >
@@ -476,10 +525,14 @@ const StaffAddExport = () => {
                                 showSearch
                                 placeholder="Select product"
                                 value={product.id}
-                                onChange={(value) => handleDropdownChange(value, index, "product")}
+                                onChange={(value) =>
+                                  handleDropdownChange(value, index, "product")
+                                }
                                 style={{ width: "100%" }}
                                 filterOption={(input, option) =>
-                                  option.children.toLowerCase().includes(input.toLowerCase())
+                                  option.children
+                                    .toLowerCase()
+                                    .includes(input.toLowerCase())
                                 }
                                 optionFilterProp="children"
                               >
@@ -582,9 +635,7 @@ const StaffAddExport = () => {
                     );
                   })}
                 </div>
-                <div
-                  className="flex justify-end mt-4 items-center gap-2"
-                >
+                <div className="flex justify-end mt-4 items-center gap-2">
                   <Button size="large" onClick={handlePrev}>
                     Previous
                   </Button>
@@ -628,7 +679,10 @@ const StaffAddExport = () => {
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item label="Export Date">
-                        <Input value={FormatTime(formData.exportDate)} readOnly />
+                        <Input
+                          value={FormatTime(formData.exportDate)}
+                          readOnly
+                        />
                       </Form.Item>
                     </Col>
                     {formData.exportType === "CUSTOMER" && (
@@ -685,7 +739,7 @@ const StaffAddExport = () => {
                         title: "Expired At",
                         dataIndex: "expiredAt",
                         key: "expiredAt",
-                        render: (text) => <span>{FormatTime(text)}</span>
+                        render: (text) => <span>{FormatTime(text)}</span>,
                       },
                       {
                         title: "Quantity",
