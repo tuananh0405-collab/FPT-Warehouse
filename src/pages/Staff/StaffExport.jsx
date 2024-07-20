@@ -1,37 +1,46 @@
 import "../../assets/styles/MainDash.css";
 import Breadcrumbs from "../../utils/Breadcumbs";
-import { Button } from "antd";
-import AddIcon from '@mui/icons-material/Add';
+import { Button, Input } from "antd";
+import AddIcon from "@mui/icons-material/Add";
 import { Link } from "react-router-dom";
 import StaffExportTable from "../../components/Orders/StaffExportTable";
+import { useState } from "react";
+import useDebounce from "../../utils/useDebounce";
 
-function StaffExpport() {
-    return (
-        <div>
-            <div className="MainDash">
-                <Breadcrumbs />
-                <h1 className="font-bold text-3xl py-4">Export</h1>
-                <div className="staff-button-flex">
-                    <Button
-                        type="primary"
-                        className="w-1/8 flex justify-center items-center mb-4"
-                    >
-                        <Link
-                            to="/staff/export/new"
-                            style={{ color: "white", display: "flex", alignItems: "center", justifyContent: 'center', width: '100%', textDecoration: 'none' }}
-                        >
-                            <AddIcon
-                                style={{ display: "flex", alignItems: "center" }}
-                                sx={{ fontSize: 18 }}
-                            />
-                            New Export
-                        </Link>
-                    </Button>
-                </div>
-                <StaffExportTable />
-            </div>
+const { Search } = Input;
+
+function StaffExportPage() {
+  const [searchValue, setSearchValue] = useState("");
+  const debouncedSearchTerm = useDebounce(searchValue, 500);
+
+  return (
+    <div>
+      <Breadcrumbs />
+      <div className="p-5">
+        <h1 className="font-bold text-3xl text-center mb-4">Export</h1>
+        <div className="flex flex-col sm:flex-row items-center mb-4 justify-between w-full">
+          <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <Button className="w-full sm:w-auto bg-black text-white flex items-center justify-center">
+              <Link
+                to="/staff/export/new"
+                className="text-white flex items-center"
+              >
+                <AddIcon className="mr-2" sx={{ fontSize: 18 }} />
+                New Export
+              </Link>
+            </Button>
+          </div>
+          <Search
+            className="w-full sm:w-auto max-w-xs ml-auto"
+            placeholder="Search export..."
+            onChange={(e) => setSearchValue(e.target.value)}
+            enterButton
+          />
         </div>
-    );
+        <StaffExportTable searchValue={debouncedSearchTerm} />
+      </div>
+    </div>
+  );
 }
 
-export default StaffExpport;
+export default StaffExportPage;
