@@ -12,6 +12,7 @@ import {
   Steps,
   Table,
   Pagination,
+  Modal
 } from "antd";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import Loading from "../../utils/Loading";
@@ -25,6 +26,9 @@ import { useSelector } from "react-redux";
 import { useAddExportMutation } from "../../redux/api/exportApiSlice";
 import { useAddCustomerMutation } from "../../redux/api/customersApiSlice";
 import { useCreateExportDetailsMutation } from "../../redux/api/exportDetailApiSlice";
+import AutoSelectModal from "../../components/Orders/AutoSelectModal";
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined';
 
 const { Option } = Select;
 const { Step } = Steps;
@@ -40,6 +44,8 @@ const StaffAddExport = () => {
     useAddCustomerMutation();
   const [createExportDetails, { isLoading: isExportDetailsCreating }] =
     useCreateExportDetailsMutation();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const {
     data: warehouses,
@@ -92,7 +98,6 @@ const StaffAddExport = () => {
     customerId: null,
   });
 
-  // New state for filtered products
   const [filteredProducts, setFilteredProducts] = useState([]);
 
   useEffect(() => {
@@ -104,7 +109,6 @@ const StaffAddExport = () => {
       );
       setFilteredInventories(filteredInventories);
 
-      // Filter products based on inventories in the current warehouse
       const productIdsInInventory = new Set(
         filteredInventories.map((inv) => inv.product.id)
       );
@@ -132,23 +136,16 @@ const StaffAddExport = () => {
     setCurrentPage(pagination.current);
   };
 
-  const handleProductSelectChange = (value, index) => {
-    const product = productsData.find((p) => p.id === value);
-    const newSelectedProducts = [...selectedProducts];
-    newSelectedProducts[index].id = product.id;
-    newSelectedProducts[index].name = product.name;
-    newSelectedProducts[index].zoneId = null;
-    newSelectedProducts[index].expiredAt = null;
-    newSelectedProducts[index].quantity = 1;
+  const handleProductSelectChange = (autoSelectedProducts) => {
+    const newSelectedProducts = autoSelectedProducts.map((product) => ({
+      id: product.product.id,
+      name: product.product.name,
+      zoneId: product.zoneId,
+      expiredAt: product.expiredAt,
+      quantity: product.quantity,
+    }));
+    console.log(newSelectedProducts);
     setSelectedProducts(newSelectedProducts);
-    const filteredInventories = inventoriesData.filter(
-      (inv) =>
-        inv.product.id === product.id &&
-        zonesData.find(
-          (zone) => zone.id === inv.zone.id && zone.warehouseId === warehouseId
-        )
-    );
-    setFilteredInventories(filteredInventories);
   };
 
   const handleZoneChange = (value, index) => {
@@ -179,7 +176,6 @@ const StaffAddExport = () => {
           message.error("Export date must be today or later.");
           return;
         }
-        console.log("Form Data:", formData);
         setCurrentStep(current);
       } catch (error) {
         message.error("Please fill out all required fields.");
@@ -188,7 +184,6 @@ const StaffAddExport = () => {
       if (selectedProducts.length === 0) {
         message.error("Please add at least one product.");
       } else {
-        console.log("Selected Products:", selectedProducts);
         setCurrentStep(current);
       }
     } else {
@@ -221,12 +216,10 @@ const StaffAddExport = () => {
         authToken,
       }).unwrap();
       message.success("Export created successfully!");
-      console.log("Export data:", response.data);
       const exportId = response.data.id;
       await handleCreateExportDetails(exportId);
       navigate("/staff/order/export");
     } catch (error) {
-      console.error("Error creating export:", error);
       message.error("Failed to create export. Please try again.");
     }
   };
@@ -252,10 +245,12 @@ const StaffAddExport = () => {
         data: selectedProductDetails,
         authToken,
       }).unwrap();
+
+      console.log(selectedProductDetails);
+
       message.success("Export details created successfully!");
       setSelectedProducts([]);
     } catch (error) {
-      console.error("Error creating export details:", error);
       message.error("Failed to create export details. Please try again.");
     }
   };
@@ -499,14 +494,31 @@ const StaffAddExport = () => {
                   marginTop: "20px",
                 }}
               >
-                <Button
-                  type="primary"
-                  onClick={handleAddProduct}
-                  block
-                  style={{ marginBottom: "20px" }}
-                >
-                  Add Product
-                </Button>
+                <div className="flex justify-start gap-1 mt-4">
+                  <Button
+                    type="default"
+                    size="large"
+                    style={{
+                      backgroundColor: '#2A2A2A',
+                      color: '#ffffff',
+                    }}
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    <AutorenewOutlinedIcon /> Auto Select
+                  </Button>
+                  <Button
+                    size="large"
+                    type="primary"
+                    onClick={handleAddProduct}
+                  >
+                    <AddOutlinedIcon /> Product
+                  </Button>
+                  <AutoSelectModal
+                    isModalOpen={isModalOpen}
+                    setIsModalOpen={setIsModalOpen}
+                    onProductSelect={handleProductSelectChange}
+                  />
+                </div>
                 <div style={{ maxHeight: "400px", overflowY: "auto" }}>
                   {selectedProducts.map((product, index) => {
                     const uniqueZones = getUniqueZones(product.id);
@@ -529,12 +541,15 @@ const StaffAddExport = () => {
                           <Col span={12}>
                             <Form.Item label="Product Name">
                               <Select
+                                showSearch
                                 placeholder="Select product"
                                 value={product.id}
-                                onChange={(value) =>
-                                  handleDropdownChange(value, index, "product")
-                                }
+                                onChange={(value) => handleDropdownChange(value, index, "product")}
                                 style={{ width: "100%" }}
+                                filterOption={(input, option) =>
+                                  option.children.toLowerCase().includes(input.toLowerCase())
+                                }
+                                optionFilterProp="children"
                               >
                                 {filteredProducts.map((p) => (
                                   <Option key={p.id} value={p.id}>
@@ -636,13 +651,12 @@ const StaffAddExport = () => {
                   })}
                 </div>
                 <div
-                  className="flex justify-end mt-4"
-                  style={{ width: "100%" }}
+                  className="flex justify-end mt-4 items-center gap-2"
                 >
-                  <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                  <Button size="large" onClick={handlePrev}>
                     Previous
                   </Button>
-                  <Button type="primary" onClick={handleNext} block>
+                  <Button size="large" type="primary" onClick={handleNext}>
                     Next
                   </Button>
                 </div>

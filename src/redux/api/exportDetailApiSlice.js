@@ -102,6 +102,17 @@ export const exportDetailApiSlice = apiSlice.injectEndpoints({
         body: data,
       }),
     }),
+    autoGetProductFromWarehouse: builder.mutation({
+      query: ({ authToken, data }) => ({
+        url: `${EXPORT_DETAIL_URL}/suggest`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: data
+      }),
+    })
   }),
 });
 
@@ -115,4 +126,5 @@ export const {
   useCheckAvailableQuantityMutation,
   useGetExportDetailsByExportIdQuery,
   useCheckQuantityForUpdateMutation,
+  useAutoGetProductFromWarehouseMutation
 } = exportDetailApiSlice;

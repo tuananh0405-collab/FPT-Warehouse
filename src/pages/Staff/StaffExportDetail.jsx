@@ -204,17 +204,17 @@ function StaffExportDetail() {
         detailFormData.map((item) =>
           item.id === recordId
             ? {
-                ...item,
-                product: {
-                  ...item.product,
-                  name: value,
-                  description: selectedProduct?.description || "",
-                  category: {
-                    ...item.product.category,
-                    name: selectedProduct?.category?.name || "",
-                  },
+              ...item,
+              product: {
+                ...item.product,
+                name: value,
+                description: selectedProduct?.description || "",
+                category: {
+                  ...item.product.category,
+                  name: selectedProduct?.category?.name || "",
                 },
-              }
+              },
+            }
             : item
         )
       );
@@ -454,12 +454,12 @@ function StaffExportDetail() {
       detailFormData.map((item) =>
         item.id === recordId
           ? {
-              ...item,
-              quantity: initialDetailData.find(
-                (initialItem) => initialItem.id === recordId
-              ).quantity,
-              showSaveCancel: false,
-            }
+            ...item,
+            quantity: initialDetailData.find(
+              (initialItem) => initialItem.id === recordId
+            ).quantity,
+            showSaveCancel: false,
+          }
           : item
       )
     );
@@ -818,7 +818,7 @@ function StaffExportDetail() {
                 disabled={
                   JSON.stringify(formData) === JSON.stringify(initialData) &&
                   JSON.stringify(detailFormData) ===
-                    JSON.stringify(initialDetailData)
+                  JSON.stringify(initialDetailData)
                 }
               >
                 Save
