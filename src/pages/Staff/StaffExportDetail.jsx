@@ -771,7 +771,7 @@ function StaffExportDetail() {
   return (
     <div>
       <Breadcrumbs />
-      <h1 className="font-bold text-3xl p-4">Export {id}</h1>
+      {/* <h1 className="font-bold text-3xl p-4">Export {id}</h1> */}
       <div className="px-4 overflow-auto">
         <div className="flex justify-end gap-2">
           {!isEditing ? (

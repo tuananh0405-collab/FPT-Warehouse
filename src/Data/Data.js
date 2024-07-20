@@ -7,8 +7,9 @@ import {
   UilChart,
   UilSignOutAlt,
   UilFile,
-  UilExchange
+  UilExchange,UilImport, UilExport
 } from "@iconscout/react-unicons";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 // Analytics Cards imports
 import { UilUsdSquare, UilMoneyWithdrawal } from "@iconscout/react-unicons";
@@ -34,6 +35,18 @@ export const SidebarData = [
     icon: UilClipboardAlt,
     heading: "Orders",
     link: "/orders",
+    subItems: [
+      {
+        link: "/order/import",
+        heading: "Imports",
+        icon: UilImport
+      },
+      {
+        link: "/order/export",
+        heading: "Exports",
+        icon: UilExport
+      },
+    ],
   },
   {
     icon: UilUsersAlt,
@@ -67,8 +80,19 @@ export const StaffSidebarData = [
     icon: UilClipboardAlt,
     heading: "Orders",
     link: "/staff/orders",
+    subItems: [
+      {
+        link: "/staff/order/import",
+        heading: "Imports",
+        icon: UilImport
+      },
+      {
+        link: "/staff/order/export",
+        heading: "Exports",
+        icon: UilExport
+      },
+    ],
   },
-
 ];
 // // Analytics Cards Data
 export const cardsData = [

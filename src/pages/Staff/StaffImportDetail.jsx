@@ -105,7 +105,8 @@ function StaffImportDetail() {
   return (
     <div className="p-4">
       <Breadcrumbs />
-      <h1 className="text-3xl font-bold mb-4">Import {id}</h1>
+      <h1 className="text-3xl font-bold mb-4"></h1>
+      <br></br>
       <div className="flex flex-wrap gap-4">
         <div className="flex-1 min-w-[300px]">
           <h2 className="font-bold text-xl mb-2">Import Invoice:</h2>

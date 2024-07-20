@@ -301,7 +301,7 @@ const StaffAddImport = () => {
     return (
       <div>
         <Breadcrumbs />
-        <div className=" relative">
+        <div className="relative">
           <h1 className="font-bold text-3xl text-center py-4">New Import</h1>
           <Row justify="center">
             <Col xs={24} md={20} lg={16}>

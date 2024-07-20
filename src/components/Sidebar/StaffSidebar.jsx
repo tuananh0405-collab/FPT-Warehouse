@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
-import '../../assets/styles/MainDash.css'
+import "../../assets/styles/MainDash.css";
 import Logo from "../../assets/images/FPT_logo_2010.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
 import { StaffSidebarData } from "../../Data/Data";
@@ -13,12 +13,13 @@ const StaffSidebar = () => {
   const [expanded, setExpaned] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [warehouseId, setWarehouseId] = useState(null);
 
   const userInfo = useSelector((state) => state.auth);
   if (!userInfo) {
-    return <Navigate to={'/'} replace />;
+    return <Navigate to={"/"} replace />;
   }
   let authToken;
   let wid;
@@ -48,6 +49,10 @@ const StaffSidebar = () => {
 
   const handleMenuItemClick = (link) => {
     navigate(link);
+  };
+
+  const handleDropdownClick = () => {
+    setDropdownOpen(!dropdownOpen);
   };
 
   const dispatch = useDispatch();
@@ -89,20 +94,45 @@ const StaffSidebar = () => {
         )}
 
         <div className="menu">
-          {StaffSidebarData.map((item, index) => {
-            return (
+          {StaffSidebarData.map((item, index) => (
+            <>
               <div
                 className={
-                  location.pathname.startsWith(item.link) ? "menuItem active" : "menuItem"
+                  location.pathname.startsWith(item.link) || dropdownOpen && item.subItems
+                    ? "menuItem active"
+                    : "menuItem"
                 }
                 key={index}
-                onClick={() => handleMenuItemClick(item.link)}
+                onClick={() =>
+                  item.subItems
+                    ? handleDropdownClick()
+                    : handleMenuItemClick(item.link)
+                }
               >
                 <item.icon />
                 <span>{item.heading}</span>
               </div>
-            );
-          })}
+              
+              {item.subItems && dropdownOpen && (
+                <div className="dropdownMenu">
+                  {item.subItems.map((subItem, subIndex) => (
+                    <div
+                      key={subIndex}
+                      className={
+                        location.pathname.startsWith(subItem.link)
+                          ? "subMenuItem activesub"
+                          : "subMenuItem"
+                      }
+                      onClick={() => handleMenuItemClick(subItem.link)}
+                    >
+                      <subItem.icon/>
+                      <span>{subItem.heading}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ))}
           {/* signoutIcon */}
           <div className="menuItem logout">
             <UilSignOutAlt onClick={handleLogout} />
