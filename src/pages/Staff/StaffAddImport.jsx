@@ -85,6 +85,7 @@ const StaffAddImport = () => {
     transferKey: "",
     warehouseIdFrom: null,
     warehouseIdTo: warehouseId,
+    customerId: null, // Thêm trường customerId vào formData
   });
 
   const handleFormChange = (changedValues) => {
@@ -173,20 +174,33 @@ const StaffAddImport = () => {
         message.error("Please fill out all required fields.");
       }
     } else if (currentStep === 1 && (current === 2 || current === 0)) {
-      if (selectedProducts.length === 0 && current === 2) {
-        message.error("Please add at least one product.");
-      } else if (
-        current === 2 &&
-        selectedProducts.some(
-          (product, index) =>
-            !productZones[index] || productZones[index].length === 0
-        )
-      ) {
-        message.error("Each product must have at least one zone.");
-      } else {
-        console.log("Selected Products:", selectedProducts);
-        console.log("Product Zones:", productZones);
+      let isValid = true;
+      for (let i = 0; i < selectedProducts.length; i++) {
+        const product = selectedProducts[i];
+        if (!product.productId || !product.expiredAt) {
+          isValid = false;
+          break;
+        }
+        const zones = productZones[i] || [];
+        if (zones.length === 0) {
+          isValid = false;
+          break;
+        }
+        for (let j = 0; j < zones.length; j++) {
+          const zone = zones[j];
+          if (!zone.zoneId || !zone.quantity) {
+            isValid = false;
+            break;
+          }
+        }
+      }
+
+      if (isValid) {
         setCurrentStep(current);
+      } else {
+        message.error(
+          "Please fill out all product fields and add at least one zone for each product."
+        );
       }
     } else {
       setCurrentStep(current);
@@ -210,6 +224,7 @@ const StaffAddImport = () => {
         transferKey: formData.transferKey || null,
         warehouseIdFrom: formData.warehouseIdFrom || null,
         warehouseIdTo: formData.warehouseIdTo,
+        customerId: formData.customerId, // Thêm customerId vào dữ liệu import
       };
 
       console.log("Import Data to be sent:", importData);
@@ -298,130 +313,148 @@ const StaffAddImport = () => {
   )
     return <Error500 />;
 
-    return (
-      <div>
-        <Breadcrumbs />
-        <div className="relative">
-          <h1 className="font-bold text-3xl text-center py-4">New Import</h1>
-          <Row justify="center">
-            <Col xs={24} md={20} lg={16}>
-              <Steps
-                current={currentStep}
-                onChange={handleStepChange}
-                labelPlacement="vertical"
-                style={{ marginBottom: 24 }}
+  return (
+    <div>
+      <Breadcrumbs />
+      <div className="relative">
+        <h1 className="font-bold text-3xl text-center py-4">New Import</h1>
+        <Row justify="center">
+          <Col xs={24} md={20} lg={16}>
+            <Steps
+              current={currentStep}
+              onChange={handleStepChange}
+              labelPlacement="vertical"
+              style={{ marginBottom: 24 }}
+            >
+              <Step description="Import Information" />
+              <Step description="Select Products" />
+              <Step description="Review and Confirm" />
+            </Steps>
+            {currentStep === 0 && (
+              <Form
+                form={form}
+                layout="vertical"
+                initialValues={formData}
+                onValuesChange={handleFormChange}
+                style={{ margin: "0 auto", marginTop: "20px" }}
               >
-                <Step description="Import Information" />
-                <Step description="Select Products" />
-                <Step description="Review and Confirm" />
-              </Steps>
-              {currentStep === 0 && (
-                <Form
-                  form={form}
-                  layout="vertical"
-                  initialValues={formData}
-                  onValuesChange={handleFormChange}
-                  style={{ margin: "0 auto", marginTop: "20px" }}
+                <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
+                  Import Information
+                </h2>
+                <Form.Item
+                  label="Description"
+                  name="description"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the import description!",
+                    },
+                  ]}
                 >
-                  <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
-                    Import Information
-                  </h2>
-                  <Form.Item
-                    label="Description"
-                    name="description"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please input the import description!",
-                      },
-                    ]}
-                  >
-                    <Input placeholder="Product Description" />
-                  </Form.Item>
-                  <Form.Item
-                    label="Import Type"
-                    name="importType"
-                    rules={[
-                      { required: true, message: "Please select import type!" },
-                    ]}
-                  >
-                    <Input value="CUSTOMER" readOnly />
-                  </Form.Item>
-                  <Button type="primary" onClick={handleNext} block>
-                    Next
-                  </Button>
-                </Form>
-              )}
-              {currentStep === 1 && (
-                <div
-                  style={{
-                    border: "1px solid black",
-                    padding: "20px",
-                    borderRadius: "8px",
-                    marginTop: "20px",
-                  }}
+                  <Input placeholder="Product Description" />
+                </Form.Item>
+                <Form.Item
+                  label="Import Type"
+                  name="importType"
+                  rules={[
+                    { required: true, message: "Please select import type!" },
+                  ]}
                 >
-                  <Button
-                    type="primary"
-                    onClick={handleAddProduct}
-                    block
-                    style={{ marginBottom: "20px" }}
-                  >
-                    Add Product
-                  </Button>
-                  <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-                    {selectedProducts.map((product, productIndex) => (
-                      <div
-                        key={productIndex}
-                        style={{
-                          marginBottom: "20px",
-                          border: "1px solid black",
-                          padding: "10px",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <Row gutter={16}>
-                          <Col span={12}>
-                            <Form.Item label="Product Name">
-                              <Select
-                                placeholder="Select product"
-                                value={product.name}
-                                onChange={(value) =>
-                                  handleProductSelectChange(value, productIndex)
-                                }
-                                style={{ width: "100%" }}
-                              >
-                                {getAvailableProducts().map((p) => (
-                                  <Option key={p.id} value={p.id}>
-                                    {p.name}
-                                  </Option>
-                                ))}
-                              </Select>
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item label="Expired At">
-                              <Input
-                                type="date"
-                                value={product.expiredAt}
-                                onChange={(e) => {
-                                  const newSelectedProducts = [...selectedProducts];
-                                  newSelectedProducts[productIndex].expiredAt =
-                                    e.target.value;
-                                  setSelectedProducts(newSelectedProducts);
-                                }}
-                                style={{ width: "100%" }}
-                              />
-                            </Form.Item>
-                          </Col>
-                        </Row>
-                        <Row gutter={16}>
-                          <Col span={24}>
-                            {productZones[productIndex]?.map((zone, zoneIndex) => (
+                  <Input value="CUSTOMER" readOnly />
+                </Form.Item>
+                <Form.Item
+                  label="Customer"
+                  name="customerId"
+                  rules={[
+                    { required: true, message: "Please select a customer!" },
+                  ]}
+                >
+                  <Select placeholder="Select customer...">
+                    {customersData.map((customer) => (
+                      <Option key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Button type="primary" onClick={handleNext} block>
+                  Next
+                </Button>
+              </Form>
+            )}
+            {currentStep === 1 && (
+              <div
+                style={{
+                  border: "1px solid black",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  marginTop: "20px",
+                }}
+              >
+                <Button
+                  type="primary"
+                  onClick={handleAddProduct}
+                  block
+                  style={{ marginBottom: "20px" }}
+                >
+                  Add Product
+                </Button>
+                <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                  {selectedProducts.map((product, productIndex) => (
+                    <div
+                      key={productIndex}
+                      style={{
+                        marginBottom: "20px",
+                        border: "1px solid black",
+                        padding: "10px",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <Form.Item label="Product Name">
+                            <Select
+                              placeholder="Select product"
+                              value={product.name}
+                              onChange={(value) =>
+                                handleProductSelectChange(value, productIndex)
+                              }
+                              style={{ width: "100%" }}
+                            >
+                              {getAvailableProducts().map((p) => (
+                                <Option key={p.id} value={p.id}>
+                                  {p.name}
+                                </Option>
+                              ))}
+                            </Select>
+                          </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                          <Form.Item label="Expired At">
+                            <Input
+                              type="date"
+                              value={product.expiredAt}
+                              onChange={(e) => {
+                                const newSelectedProducts = [
+                                  ...selectedProducts,
+                                ];
+                                newSelectedProducts[productIndex].expiredAt =
+                                  e.target.value;
+                                setSelectedProducts(newSelectedProducts);
+                              }}
+                              style={{ width: "100%" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={16}>
+                        <Col span={24}>
+                          {productZones[productIndex]?.map(
+                            (zone, zoneIndex) => (
                               <Row gutter={8} key={zoneIndex}>
                                 <Col span={10}>
                                   <Form.Item
-                                    label={`Zone ${zoneIndex + 1}`}
+                                    label={`Zone`}
                                     labelCol={{ span: 10 }}
                                     wrapperCol={{ span: 14 }}
                                   >
@@ -438,7 +471,7 @@ const StaffAddImport = () => {
                                       }
                                       style={{ width: "100%" }}
                                     >
-                                      {getAvailableZones(productIndex).map((zone) => (
+                                      {zonesData.map((zone) => (
                                         <Option key={zone.id} value={zone.id}>
                                           {zone.name}
                                         </Option>
@@ -478,98 +511,120 @@ const StaffAddImport = () => {
                                   />
                                 </Col>
                               </Row>
-                            ))}
-                          </Col>
-                        </Row>
-                        <Button
-                          type="dashed"
-                          onClick={() => handleAddZone(productIndex)}
-                          style={{ width: "100%", marginTop: "10px" }}
-                        >
-                          <PlusOutlined /> Add Zone
-                        </Button>
-                        <Button
-                          type="link"
-                          danger
-                          onClick={() => handleRemoveProduct(productIndex)}
-                          style={{ marginTop: "10px" }}
-                        >
-                          Remove Product
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-end mt-4" style={{ width: "100%" }}>
-                    <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
-                      Previous
-                    </Button>
-                    <Button type="primary" onClick={handleNext} block>
-                      Next
-                    </Button>
-                  </div>
+                            )
+                          )}
+                        </Col>
+                      </Row>
+                      <Button
+                        type="dashed"
+                        onClick={() => handleAddZone(productIndex)}
+                        style={{ width: "100%", marginTop: "10px" }}
+                      >
+                        <PlusOutlined /> Add Zone
+                      </Button>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => handleRemoveProduct(productIndex)}
+                        style={{ marginTop: "10px" }}
+                      >
+                        Remove Product
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              )}
-              {currentStep === 2 && (
                 <div
-                  style={{ border: "1px solid black", padding: "20px", borderRadius: "8px", marginTop: "20px" }}
+                  className="flex justify-end mt-4"
+                  style={{ width: "100%" }}
                 >
-                  <h1
-                    style={{
-                      textAlign: "center",
-                      textTransform: "uppercase",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    Review and Confirm
-                  </h1>
-                  <Form layout="vertical">
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Form.Item label="Description">
-                          <Input value={formData.description} readOnly />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item label="Import Type">
-                          <Input value={formData.importType} readOnly />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Form>
-                  <h3
-                    style={{
-                      textAlign: "center",
-                      textTransform: "uppercase",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    Selected Products
-                  </h3>
-                  <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-                    <Table
-                      columns={[
-                        { title: "Product Name", dataIndex: "name", key: "name" },
-                        {
-                          title: "Expired At",
-                          dataIndex: "expiredAt",
-                          key: "expiredAt",
+                  <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                    Previous
+                  </Button>
+                  <Button type="primary" onClick={handleNext} block>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+            {currentStep === 2 && (
+              <div
+                style={{
+                  border: "1px solid black",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  marginTop: "20px",
+                }}
+              >
+                <h1
+                  style={{
+                    textAlign: "center",
+                    textTransform: "uppercase",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Review and Confirm
+                </h1>
+                <Form layout="vertical">
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item label="Description">
+                        <Input value={formData.description} readOnly />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label="Import Type">
+                        <Input value={formData.importType} readOnly />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label="Customer">
+                        <Input
+                          value={
+                            customersData.find(
+                              (customer) => customer.id === formData.customerId
+                            )?.name
+                          }
+                          readOnly
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Form>
+                <h3
+                  style={{
+                    textAlign: "center",
+                    textTransform: "uppercase",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Selected Products
+                </h3>
+                <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                  <Table
+                    columns={[
+                      { title: "Product Name", dataIndex: "name", key: "name" },
+                      {
+                        title: "Expired At",
+                        dataIndex: "expiredAt",
+                        key: "expiredAt",
+                      },
+                      {
+                        title: "Zone",
+                        dataIndex: "zoneId",
+                        key: "zoneId",
+                        render: (zoneId) => {
+                          const zone = zonesData.find((z) => z.id === zoneId);
+                          return zone ? zone.name : "N/A";
                         },
-                        {
-                          title: "Zone",
-                          dataIndex: "zoneId",
-                          key: "zoneId",
-                          render: (zoneId) => {
-                            const zone = zonesData.find((z) => z.id === zoneId);
-                            return zone ? zone.name : "N/A";
-                          },
-                        },
-                        {
-                          title: "Quantity",
-                          dataIndex: "quantity",
-                          key: "quantity",
-                        },
-                      ]}
-                      dataSource={selectedProducts.flatMap((product, productIndex) =>
+                      },
+                      {
+                        title: "Quantity",
+                        dataIndex: "quantity",
+                        key: "quantity",
+                      },
+                    ]}
+                    dataSource={selectedProducts.flatMap(
+                      (product, productIndex) =>
                         productZones[productIndex].map((zone, zoneIndex) => ({
                           key: `${productIndex}-${zoneIndex}`,
                           name: product.name,
@@ -577,27 +632,28 @@ const StaffAddImport = () => {
                           zoneId: zone.zoneId,
                           quantity: zone.quantity,
                         }))
-                      )}
-                      pagination={{ pageSize: 5, position: ["bottomCenter"] }}
-                    />
-                  </div>
-                  <div className="flex justify-end mt-4" style={{ width: "100%" }}>
-                    <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
-                      Previous
-                    </Button>
-                    <Button type="primary" onClick={handleCreateImport} block>
-                      Done
-                    </Button>
-                  </div>
+                    )}
+                    pagination={{ pageSize: 5, position: ["bottomCenter"] }}
+                  />
                 </div>
-              )}
-            </Col>
-          </Row>
-        </div>
+                <div
+                  className="flex justify-end mt-4"
+                  style={{ width: "100%" }}
+                >
+                  <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
+                    Previous
+                  </Button>
+                  <Button type="primary" onClick={handleCreateImport} block>
+                    Done
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Col>
+        </Row>
       </div>
-    );
-    
-    
+    </div>
+  );
 };
 
 export default StaffAddImport;

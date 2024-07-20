@@ -491,13 +491,13 @@ const StaffAddImportWarehouse = () => {
                               <Row gutter={8} key={zoneIndex}>
                                 <Col span={10}>
                                   <Form.Item
-                                    label={`Zone ${zoneIndex + 1}`}
+                                    label={`Zone`}
                                     labelCol={{ span: 10 }}
                                     wrapperCol={{ span: 14 }}
                                   >
                                     <Select
                                       placeholder="Select zone"
-                                      value={zone.zoneId}
+                                      value={zone.name}
                                       onChange={(value) =>
                                         handleZoneAllocationChange(
                                           productIndex,
