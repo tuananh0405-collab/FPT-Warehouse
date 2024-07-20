@@ -3,6 +3,7 @@ import {
   useGetExportByIdQuery,
   useGetLatestExportQuery,
   useUpdateExportByIdMutation,
+  useDeleteExportMutation
 } from "../../redux/api/exportApiSlice";
 import {
   useGetAllExportDetailsByExportIdQuery,
@@ -76,6 +77,8 @@ function StaffExportDetail() {
   const { data: productResponse } = useGetAllProductsQuery(authToken);
   const { data: inventoryResponse } = useGetAllInventoriesQuery(authToken);
 
+
+  const [deleteExport, { isLoading: isDeleting }] = useDeleteExportMutation();
   const [updateExport] = useUpdateExportByIdMutation();
   const [checkQuantityForUpdate] = useCheckQuantityForUpdateMutation();
   const [updateAndAddExportDetails] = useUpdateAndAddExportDetailsMutation();
@@ -289,8 +292,31 @@ function StaffExportDetail() {
     });
   };
 
-  const handleDelete = () => {
-    // Handle delete logic here
+  const handleDelete = async () => {
+    try {
+      const detailIdsToDelete = exportDetailData.map(detail => detail.id);
+
+      const deletedDetailsResult = await deleteExportDetails({
+        data: detailIdsToDelete,
+        authToken,
+      });
+
+      if (deletedDetailsResult.error) {
+        throw new Error('Failed to delete export details');
+      }
+
+      const result = await deleteExport({ exportId: id, authToken });
+
+      if (result?.data) {
+        message.success('Export deleted successfully!');
+        navigate('/staff/order/export');
+      } else {
+        throw new Error('Deletion failed');
+      }
+    } catch (error) {
+      console.error('Deletion error:', error);
+      message.error('Failed to delete export: ' + error.message);
+    }
   };
 
   const handleUpdateExport = async () => {
@@ -314,6 +340,16 @@ function StaffExportDetail() {
         exportId: id,
         authToken,
       });
+
+      if (deletedDetails.length > 0) {
+        const deletedDetailsResult = await deleteExportDetails({
+          data: deletedDetails,
+          authToken
+        });
+        if (deletedDetailsResult.error) {
+          throw new Error('Failed to delete export details');
+        }
+      }
 
       if (result?.data) {
         message.success("Export updated successfully!");
@@ -664,7 +700,10 @@ function StaffExportDetail() {
           text
         ),
     },
-    {
+  ];
+
+  if (isEditing) {
+    columns.push({
       title: "Actions",
       key: "actions",
       width: 150,
@@ -680,8 +719,8 @@ function StaffExportDetail() {
             </Button>
           </span>
         ) : null,
-    },
-  ];
+    });
+  }
 
   const generatePDFData = () => {
     const doc = new jsPDF();
@@ -799,6 +838,7 @@ function StaffExportDetail() {
                 type="primary"
                 danger
                 onClick={handleConfirmDelete}
+                disabled={isDeleting}
               >
                 Delete
               </Button>
@@ -984,73 +1024,75 @@ function StaffExportDetail() {
                 </tr>
               </table>
             ) : (
-              <table>
-                <td>
-                  <p className="mt-3 font-bold text-xl">Customer:</p>
-                </td>
-                <tr>
+              isEditing && formData?.exportType === "CUSTOMER" && (
+                <table>
                   <td>
-                    <p className="font-medium">Name:</p>
+                    <p className="mt-3 font-bold text-xl">Customer:</p>
                   </td>
-                  <td className="w-full">
-                    <Select
-                      className="w-full mb-2"
-                      size="large"
-                      showSearch
-                      value={formData.customerName}
-                      onChange={(value) =>
-                        handleSelectChange(value, "customer", "customerName")
-                      }
-                      disabled={!isEditing}
-                    >
-                      {customerResponse?.data.map((customer) => (
-                        <Select.Option key={customer.id} value={customer.name}>
-                          {customer.name}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <p className="font-medium">Email:</p>
-                  </td>
-                  <td className="w-full">
-                    <Input
-                      className="mb-2"
-                      size="large"
-                      value={formData?.customerEmail}
-                      disabled
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <p className="font-medium">Phone:</p>
-                  </td>
-                  <td className="w-full">
-                    <Input
-                      className="mb-2"
-                      size="large"
-                      value={formData?.customerPhone}
-                      disabled
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <p className="font-medium">Address:</p>
-                  </td>
-                  <td className="w-full">
-                    <Input
-                      className="mb-2"
-                      size="large"
-                      value={formData?.customerAddress}
-                      disabled
-                    />
-                  </td>
-                </tr>
-              </table>
+                  <tr>
+                    <td>
+                      <p className="font-medium">Name:</p>
+                    </td>
+                    <td className="w-full">
+                      <Select
+                        className="w-full mb-2"
+                        size="large"
+                        showSearch
+                        value={formData.customerName}
+                        onChange={(value) =>
+                          handleSelectChange(value, "customer", "customerName")
+                        }
+                        disabled={!isEditing}
+                      >
+                        {customerResponse?.data.map((customer) => (
+                          <Select.Option key={customer.id} value={customer.name}>
+                            {customer.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <p className="font-medium">Email:</p>
+                    </td>
+                    <td className="w-full">
+                      <Input
+                        className="mb-2"
+                        size="large"
+                        value={formData?.customerEmail}
+                        disabled
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <p className="font-medium">Phone:</p>
+                    </td>
+                    <td className="w-full">
+                      <Input
+                        className="mb-2"
+                        size="large"
+                        value={formData?.customerPhone}
+                        disabled
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <p className="font-medium">Address:</p>
+                    </td>
+                    <td className="w-full">
+                      <Input
+                        className="mb-2"
+                        size="large"
+                        value={formData?.customerAddress}
+                        disabled
+                      />
+                    </td>
+                  </tr>
+                </table>
+              )
             )}
           </div>
         </div>
