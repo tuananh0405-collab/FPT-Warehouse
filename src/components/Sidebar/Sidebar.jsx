@@ -1,6 +1,6 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import '../../assets/styles/MainDash.css'
+import "../../assets/styles/MainDash.css";
 import Logo from "../../assets/images/FPT_logo_2010.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
 import { SidebarData } from "../../Data/Data";
@@ -12,6 +12,7 @@ const Sidebar = () => {
   const [expanded, setExpaned] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const sidebarVariants = {
     true: {
@@ -25,7 +26,9 @@ const Sidebar = () => {
   const handleMenuItemClick = (link) => {
     navigate(link);
   };
-
+  const handleDropdownClick = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
   const dispatch = useDispatch();
   const handleLogout = async () => {
     try {
@@ -59,20 +62,45 @@ const Sidebar = () => {
         </div>
 
         <div className="menu">
-          {SidebarData.map((item, index) => {
-            return (
+          {SidebarData.map((item, index) => (
+            <>
               <div
                 className={
-                  location.pathname.startsWith(item.link) ? "menuItem active" : "menuItem"
+                  location.pathname.startsWith(item.link) ||
+                  (dropdownOpen && item.subItems)
+                    ? "menuItem active"
+                    : "menuItem"
                 }
                 key={index}
-                onClick={() => handleMenuItemClick(item.link)}
+                onClick={() =>
+                  item.subItems
+                    ? handleDropdownClick()
+                    : handleMenuItemClick(item.link)
+                }
               >
                 <item.icon />
                 <span>{item.heading}</span>
               </div>
-            );
-          })}
+              {item.subItems && dropdownOpen && (
+                <div className="dropdownMenu">
+                  {item.subItems.map((subItem, subIndex) => (
+                    <div
+                      key={subIndex}
+                      className={
+                        location.pathname.startsWith(subItem.link)
+                          ? "subMenuItem activesub"
+                          : "subMenuItem"
+                      }
+                      onClick={() => handleMenuItemClick(subItem.link)}
+                    >
+                      <subItem.icon/>
+                      <span>{subItem.heading}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ))}
           {/* signoutIcon */}
           <div className="menuItem">
             <UilSignOutAlt onClick={handleLogout} />

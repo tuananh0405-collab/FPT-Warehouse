@@ -58,7 +58,6 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
             authToken,
         });
         message.info(res.error.data)
-        console.log(res);
         setTransfers([{ productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }]);
         onTransferSuccess();
     } catch (err) {
