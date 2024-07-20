@@ -7,7 +7,7 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
       query: (authToken) => ({
         url: `${INVENTORY_URL}`,
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
       }),
       providesTags: ["Inventory"],
@@ -76,13 +76,23 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
     //   invalidatesTags: ["Inventory"],
     //   keepUnusedDataFor: 5,
     // }),
+    getInventoriesByWarehouseId: builder.query({
+      query: ({ warehouseId, authToken }) => ({
+        url: `${INVENTORY_URL}/allByWarehouseId/${warehouseId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }),
+      providesTags: ["Inventory"],
+      keepUnusedDataFor: 5,
+    }),
     transferProduct: builder.mutation({
       query: ({ transferRequests, authToken }) => ({
         url: `${INVENTORY_URL}/transfer`,
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(transferRequests),
       }),
@@ -105,6 +115,7 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
 export const {
   useGetAllInventoriesQuery,
   useGetInventoryByIdQuery,
+  useGetInventoriesByWarehouseIdQuery,
   useAddInventoryMutation,
   useDeleteInventoryMutation,
   useUpdateInventoryMutation,

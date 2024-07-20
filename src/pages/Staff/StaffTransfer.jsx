@@ -12,14 +12,21 @@ import {
   Grid,
   IconButton,
 } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { message } from "antd";
 import { useGetZoneByWarehouseIdQuery } from "../../redux/api/zoneApiSlice";
 import { useGetInventoriesByWarehouseIdQuery } from "../../redux/api/inventoryApiSlice";
 
 const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
   const [transfers, setTransfers] = useState([
-    { productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt, quantityError: '' }
+    {
+      productId: initialInventory.product.id,
+      fromZoneId: initialInventory.zone.id,
+      toZoneId: "",
+      quantity: "",
+      expiredAt: initialInventory.expiredAt,
+      quantityError: "",
+    },
   ]);
   const [isFormDisabled, setIsFormDisabled] = useState(true);
 
@@ -31,9 +38,23 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
     }
   }, [initialInventory]);
 
-  const { data: zones, isLoading: isLoadingZones, error: errorZones } = useGetZoneByWarehouseIdQuery({ id: initialInventory?.zone?.warehouse?.id, authToken });
+  const {
+    data: zones,
+    isLoading: isLoadingZones,
+    error: errorZones,
+  } = useGetZoneByWarehouseIdQuery({
+    id: initialInventory?.zone?.warehouse?.id,
+    authToken,
+  });
 
-  const { data: inventories, error: inventoriesError, isLoading: inventoriesLoading } = useGetInventoriesByWarehouseIdQuery({ warehouseId: initialInventory?.zone?.warehouse?.id, authToken });
+  const {
+    data: inventories,
+    error: inventoriesError,
+    isLoading: inventoriesLoading,
+  } = useGetInventoriesByWarehouseIdQuery({
+    warehouseId: initialInventory?.zone?.warehouse?.id,
+    authToken,
+  });
 
   const [transferProduct, { isLoading }] = useTransferProductMutation();
 
@@ -45,27 +66,46 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
       return;
     }
     try {
-        const transferRequests = transfers.map((transfer) => ({
-            productId: parseInt(transfer.productId, 10),
-            fromZoneId: parseInt(transfer.fromZoneId, 10),
-            toZoneId: parseInt(transfer.toZoneId, 10),
-            quantity: parseInt(transfer.quantity, 10),
-            expiredAt: transfer.expiredAt,
-        }));
-        await transferProduct({
-            transferRequests,
-            authToken,
-        });
-        setTransfers([{ productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt, quantityError: '' }]);
-        message.success("Transfers successfully");
-        onTransferSuccess();
+      const transferRequests = transfers.map((transfer) => ({
+        productId: parseInt(transfer.productId, 10),
+        fromZoneId: parseInt(transfer.fromZoneId, 10),
+        toZoneId: parseInt(transfer.toZoneId, 10),
+        quantity: parseInt(transfer.quantity, 10),
+        expiredAt: transfer.expiredAt,
+      }));
+      await transferProduct({
+        transferRequests,
+        authToken,
+      });
+      setTransfers([
+        {
+          productId: initialInventory.product.id,
+          fromZoneId: initialInventory.zone.id,
+          toZoneId: "",
+          quantity: "",
+          expiredAt: initialInventory.expiredAt,
+          quantityError: "",
+        },
+      ]);
+      message.success("Transfers successfully");
+      onTransferSuccess();
     } catch (err) {
-        message.error("Transfers unsuccessfully");
+      message.error("Transfers unsuccessfully");
     }
   };
 
   const handleAddTransfer = () => {
-    setTransfers([...transfers, { productId: '', fromZoneId: '', toZoneId: '', quantity: '', expiredAt: '', quantityError: '' }]);
+    setTransfers([
+      ...transfers,
+      {
+        productId: "",
+        fromZoneId: "",
+        toZoneId: "",
+        quantity: "",
+        expiredAt: "",
+        quantityError: "",
+      },
+    ]);
   };
 
   const handleRemoveTransfer = (index) => {
@@ -76,43 +116,69 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
   const handleTransferChange = (index, field, value) => {
     const newTransfers = [...transfers];
     newTransfers[index][field] = value;
-    if (field === 'quantity') {
+    if (field === "quantity") {
       const selectedProductInventories = inventories
-        ? inventories.filter((inventory) => inventory.product.id === newTransfers[index].productId && inventory.zone.id === newTransfers[index].fromZoneId && inventory.expiredAt === newTransfers[index].expiredAt)
+        ? inventories.filter(
+            (inventory) =>
+              inventory.product.id === newTransfers[index].productId &&
+              inventory.zone.id === newTransfers[index].fromZoneId &&
+              inventory.expiredAt === newTransfers[index].expiredAt
+          )
         : [];
-      const availableQuantity = selectedProductInventories.length > 0 ? selectedProductInventories[0].quantity : 0;
+      const availableQuantity =
+        selectedProductInventories.length > 0
+          ? selectedProductInventories[0].quantity
+          : 0;
       if (value <= 0 || value > availableQuantity) {
-        newTransfers[index].quantityError = `Quantity must be greater than 0 and less than or equal to ${availableQuantity}`;
+        newTransfers[
+          index
+        ].quantityError = `Quantity must be greater than 0 and less than or equal to ${availableQuantity}`;
       } else {
-        newTransfers[index].quantityError = '';
+        newTransfers[index].quantityError = "";
       }
     }
     setTransfers(newTransfers);
   };
 
   const uniqueProducts = inventories
-    ? Array.from(new Set(inventories.map((inventory) => inventory.product.id)))
-        .map((productId) => inventories.find((inventory) => inventory.product.id === productId).product)
+    ? Array.from(
+        new Set(inventories.map((inventory) => inventory.product.id))
+      ).map(
+        (productId) =>
+          inventories.find((inventory) => inventory.product.id === productId)
+            .product
+      )
     : [];
 
   return (
     <Box component="form" onSubmit={handleTransfer} sx={{ mt: 2 }}>
       {transfers.map((transfer, index) => {
         const selectedProductInventories = inventories
-          ? inventories.filter((inventory) => inventory.product.id === transfer.productId)
+          ? inventories.filter(
+              (inventory) => inventory.product.id === transfer.productId
+            )
           : [];
 
-        const selectedZoneInventories = selectedProductInventories.filter((inventory) => inventory.zone.id === transfer.fromZoneId);
+        const selectedZoneInventories = selectedProductInventories.filter(
+          (inventory) => inventory.zone.id === transfer.fromZoneId
+        );
 
         return (
           <Grid container spacing={2} key={index}>
             <Grid item xs={2}>
-              <FormControl fullWidth variant="outlined" margin="normal" required>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                required
+              >
                 <InputLabel id={`product-label-${index}`}>Product</InputLabel>
                 <Select
                   labelId={`product-label-${index}`}
                   value={transfer.productId}
-                  onChange={(e) => handleTransferChange(index, 'productId', e.target.value)}
+                  onChange={(e) =>
+                    handleTransferChange(index, "productId", e.target.value)
+                  }
                   label="Product"
                   disabled={isFormDisabled}
                 >
@@ -125,12 +191,21 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
               </FormControl>
             </Grid>
             <Grid item xs={2}>
-              <FormControl fullWidth variant="outlined" margin="normal" required>
-                <InputLabel id={`from-zone-label-${index}`}>From Zone</InputLabel>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                required
+              >
+                <InputLabel id={`from-zone-label-${index}`}>
+                  From Zone
+                </InputLabel>
                 <Select
                   labelId={`from-zone-label-${index}`}
                   value={transfer.fromZoneId}
-                  onChange={(e) => handleTransferChange(index, 'fromZoneId', e.target.value)}
+                  onChange={(e) =>
+                    handleTransferChange(index, "fromZoneId", e.target.value)
+                  }
                   label="From Zone"
                   disabled={isFormDisabled || !transfer.productId}
                 >
@@ -143,22 +218,39 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
               </FormControl>
               {transfer.fromZoneId && (
                 <Typography variant="body2">
-                  Available Quantity: {selectedZoneInventories.find((inventory) => inventory.zone.id === transfer.fromZoneId && inventory.expiredAt === transfer.expiredAt)?.quantity || 0}
+                  Available Quantity:{" "}
+                  {selectedZoneInventories.find(
+                    (inventory) =>
+                      inventory.zone.id === transfer.fromZoneId &&
+                      inventory.expiredAt === transfer.expiredAt
+                  )?.quantity || 0}
                 </Typography>
               )}
             </Grid>
             <Grid item xs={2}>
-              <FormControl fullWidth variant="outlined" margin="normal" required>
-                <InputLabel id={`expired-at-label-${index}`}>Expired At</InputLabel>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                required
+              >
+                <InputLabel id={`expired-at-label-${index}`}>
+                  Expired At
+                </InputLabel>
                 <Select
                   labelId={`expired-at-label-${index}`}
                   value={transfer.expiredAt}
-                  onChange={(e) => handleTransferChange(index, 'expiredAt', e.target.value)}
+                  onChange={(e) =>
+                    handleTransferChange(index, "expiredAt", e.target.value)
+                  }
                   label="Expired At"
                   disabled={isFormDisabled || !transfer.fromZoneId}
                 >
                   {selectedZoneInventories.map((inventory) => (
-                    <MenuItem key={inventory.expiredAt} value={inventory.expiredAt}>
+                    <MenuItem
+                      key={inventory.expiredAt}
+                      value={inventory.expiredAt}
+                    >
                       {new Date(inventory.expiredAt).toLocaleDateString()}
                     </MenuItem>
                   ))}
@@ -172,7 +264,9 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
                 margin="normal"
                 label="Quantity"
                 value={transfer.quantity}
-                onChange={(e) => handleTransferChange(index, 'quantity', e.target.value)}
+                onChange={(e) =>
+                  handleTransferChange(index, "quantity", e.target.value)
+                }
                 required
                 type="number"
                 error={!!transfer.quantityError}
@@ -180,15 +274,31 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
                 disabled={isFormDisabled}
               />
             </Grid>
-            <Grid item xs={1} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <IconButton onClick={() => handleRemoveTransfer(index)} disabled={transfers.length === 1}>
+            <Grid
+              item
+              xs={1}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconButton
+                onClick={() => handleRemoveTransfer(index)}
+                disabled={transfers.length === 1}
+              >
                 <DeleteIcon />
               </IconButton>
             </Grid>
           </Grid>
         );
       })}
-      <Button onClick={handleAddTransfer} startIcon={<AddIcon />} sx={{ mt: 2 }} disabled={isLoading || isFormDisabled}>
+      <Button
+        onClick={handleAddTransfer}
+        startIcon={<AddIcon />}
+        sx={{ mt: 2 }}
+        disabled={isLoading || isFormDisabled}
+      >
         Add Transfer
       </Button>
       <Box sx={{ my: 2 }}>

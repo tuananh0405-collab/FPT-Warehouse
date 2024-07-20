@@ -17,10 +17,7 @@ export const exportApiSlice = apiSlice.injectEndpoints({
       keepUnusedDataFor: 5,
     }),
     getAllExportsByWarehouseid: builder.query({
-      query: ({
-        warehouseId,
-        authToken,
-      }) => ({
+      query: ({ warehouseId, authToken }) => ({
         url: `${EXPORT_URL}/by-warehouse/${warehouseId}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -37,7 +34,7 @@ export const exportApiSlice = apiSlice.injectEndpoints({
         },
         params: {
           status,
-          search
+          search,
         },
       }),
     }),
@@ -103,6 +100,16 @@ export const exportApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Export"],
     }),
+    getLatestExport: builder.query({
+      query: ({ authToken, warehouseId }) => ({
+        url: `${EXPORT_URL}/by-warehouse/get-latest/${warehouseId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }),
+      providesTags: ["Export"],
+      keepUnusedDataFor: 5,
+    }),
   }),
 });
 
@@ -115,5 +122,6 @@ export const {
   useDeleteExportMutation,
   useGetExportByIdQuery,
   useUpdateExportByIdMutation,
-  useUpdateExportWithRequestMutation
+  useUpdateExportWithRequestMutation,
+  useGetLatestExportQuery,
 } = exportApiSlice;
