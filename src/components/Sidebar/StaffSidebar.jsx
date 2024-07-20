@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import "../../assets/styles/MainDash.css";
 import Logo from "../../assets/images/FPT_logo_2010.png";
@@ -8,12 +8,20 @@ import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/features/auth/authSlice";
 import { useGetWarehouseByIdQuery } from "../../redux/api/warehousesApiSlice";
+import useOutsideClick from "../../utils/useOutsideClick";
 
 const StaffSidebar = () => {
   const [expanded, setExpaned] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const divRef = useRef(null);
+  const handleOutsideClick = () => {
+    console.log('Clicked outside the div!');
+    setDropdownOpen(false);
+};
+
+useOutsideClick(divRef, handleOutsideClick);
 
   const [warehouseId, setWarehouseId] = useState(null);
 
@@ -48,6 +56,10 @@ const StaffSidebar = () => {
   };
 
   const handleMenuItemClick = (link) => {
+    setDropdownOpen(false)
+    navigate(link);
+  };
+  const handleSubMenuItemClick = (link) => {
     navigate(link);
   };
 
@@ -108,6 +120,7 @@ const StaffSidebar = () => {
                     ? handleDropdownClick()
                     : handleMenuItemClick(item.link)
                 }
+                
               >
                 <item.icon />
                 <span>{item.heading}</span>
@@ -123,7 +136,7 @@ const StaffSidebar = () => {
                           ? "subMenuItem activesub"
                           : "subMenuItem"
                       }
-                      onClick={() => handleMenuItemClick(subItem.link)}
+                      onClick={() => handleSubMenuItemClick(subItem.link)}
                     >
                       <subItem.icon />
                       <span>{subItem.heading}</span>
