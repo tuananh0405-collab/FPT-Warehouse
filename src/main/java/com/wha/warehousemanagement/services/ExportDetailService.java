@@ -199,20 +199,11 @@ public class ExportDetailService {
                 ExportDetail exportDetail = exportDetailRepository.findById(exportDetailId)
                         .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
 
-                // Adjust inventory
-                Inventory inventory;
-                if (exportDetail.getExpiredAt() == null) {
-                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAtIsNull(
-                            exportDetail.getProduct().getId(),
-                            exportDetail.getZone().getId()
-                    ).orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
-                } else {
-                    inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
                             exportDetail.getProduct().getId(),
                             exportDetail.getZone().getId(),
                             exportDetail.getExpiredAt()
                     ).orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
-                }
 
                 inventory.setQuantity(inventory.getQuantity() + exportDetail.getQuantity());
                 inventoryRepository.save(inventory);
