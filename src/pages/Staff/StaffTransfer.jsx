@@ -18,7 +18,7 @@ import { useGetZoneByWarehouseIdQuery } from "../../redux/api/zoneApiSlice";
 import { useGetInventoriesByWarehouseIdQuery } from "../../redux/api/inventoryApiSlice";
 
 const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
-  console.log(initialInventory);
+  // console.log(initialInventory);
   const [transfers, setTransfers] = useState([
     { productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }
   ]);
@@ -53,15 +53,16 @@ const StaffTransfer = ({ initialInventory, authToken, onTransferSuccess }) => {
             quantity: parseInt(transfer.quantity, 10),
             expiredAt: transfer.expiredAt,
         }));
-        await transferProduct({
+        const res = await transferProduct({
             transferRequests,
             authToken,
         });
+        message.info(res.error.data)
+        console.log(res);
         setTransfers([{ productId: initialInventory.product.id, fromZoneId: initialInventory.zone.id, toZoneId: '', quantity: '', expiredAt: initialInventory.expiredAt }]);
-        message.success("Transfers successfully");
         onTransferSuccess();
     } catch (err) {
-        message.error("Transfers unsuccessfully");
+        console.log(err);
     }
   };
 
