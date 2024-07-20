@@ -8,7 +8,7 @@ import StaffExportTable from "../../components/Orders/StaffExportTable";
 function StaffExpport() {
     return (
         <div>
-            <div className="MainDash">
+            <div className="">
                 <Breadcrumbs />
                 <h1 className="font-bold text-3xl py-4">Export</h1>
                 <div className="staff-button-flex">

@@ -17,7 +17,7 @@ function StaffImportPage() {
   return (
     <div>
       <Breadcrumbs />
-      <div className="MainDash">
+      <div className="">
         <h1 className="font-bold text-3xl py-4">Import</h1>
         <div className="staff-button-flex">
           <Button

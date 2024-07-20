@@ -13,6 +13,9 @@ import { Table, Input, Button, Modal, Select, message, DatePicker } from 'antd';
 import { EditTwoTone } from '@mui/icons-material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import moment from 'moment/moment';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import logo from '../../assets/images/FPT_logo_2010.png'
 
 const { TextArea } = Input;
 
@@ -37,6 +40,8 @@ function StaffExportDetail() {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [editedDetails, setEditedDetails] = useState([]);
   const [deletedDetails, setDeletedDetails] = useState([]); // Mảng lưu trữ các ID export detail bị xoá
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [pdfData, setPdfData] = useState(null);
 
   const { data: exportResponse } = useGetExportByIdQuery({ exportId: id, authToken });
   const { data: exportDetailResponse, isLoading: exportDetailResponseLoading } = useGetAllExportDetailsByExportIdQuery({ authToken, exportId: id });
@@ -465,6 +470,73 @@ function StaffExportDetail() {
       )
     });
   }
+  console.log(formData);
+
+  
+
+  const generatePDFData = () => {
+    const doc = new jsPDF();
+  
+    // Add company logo
+  
+    // Add invoice title and number
+    doc.setFontSize(20);
+    doc.text('EXPORT INVOICE', 105, 30, null, null, 'center');
+    doc.setFontSize(10);
+    doc.text(`No. ${formData.id}`, 180, 20);
+  
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Date: ${moment().format('DD MMMM, YYYY')}`, 10, 50);
+  
+    // Add billed to and from information
+    doc.setFontSize(10);
+    doc.text('To:', 10, 60);
+    if(formData.exportType === 'WAREHOUSE'){
+      doc.text(formData.warehouseToName || 'N/A', 10, 65);
+      doc.text(formData.warehouseToAddress || 'N/A', 10, 70);
+      doc.text(formData.warehouseToDescription || 'N/A', 10, 75);
+    }else if(formData.exportType === 'CUSTOMER'){
+      doc.text(formData.customerName || 'N/A', 10, 65);
+      doc.text(formData.customerAddress || 'N/A', 10, 70);
+      doc.text(formData.customerEmail || 'N/A', 10, 75);
+      doc.text(formData.customerPhone || 'N/A', 10, 80);
+    }
+  
+    doc.text('From:', 105, 60);
+    doc.text(formData.warehouseFromName || 'N/A', 105, 65);
+    doc.text(formData.warehouseFromAddress || 'N/A', 105, 70);
+    doc.text(formData.warehouseFromDescription || 'N/A', 105, 75);
+  
+    // Add table
+    doc.autoTable({
+      head: [['Product Name', 'Description', 'Category', 'Expiration Date', 'Zone', 'Quantity']],
+      body: detailFormData.map(item => [
+        item.product.name,
+        item.product.description,
+        item.product.category.name,
+        item.expiredAt ? moment(item.expiredAt).format('YYYY-MM-DD') : 'None',
+        item.zone.name,
+        item.quantity,
+      ]),
+      startY: 90,
+    });
+
+    // Add footer
+    doc.setFontSize(10);
+    // doc.text('Payment method: Cash', 10, doc.lastAutoTable.finalY + 30);
+    doc.text('Note: Thank you for choosing us!', 10, doc.lastAutoTable.finalY + 35);
+  
+    setPdfData(doc.output('datauristring'));
+    setIsModalVisible(true);
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.fromDataURL(pdfData);
+    doc.save(`Export_${id}.pdf`);
+    setIsModalVisible(false);
+  };
 
   return (
     <div>
@@ -474,7 +546,7 @@ function StaffExportDetail() {
         <div className='flex justify-end gap-2'>
           {!isEditing ? (
             <>
-              <Button size="large" style={{ backgroundColor: '#ff4d4f', color: '#fff', borderColor: '#ff4d4f' }}>
+              <Button size="large" style={{ backgroundColor: '#ff4d4f', color: '#fff', borderColor: '#ff4d4f' }} onClick={generatePDFData}>
                 <PictureAsPdfIcon /> Preview
               </Button>
               {exportData?.id === latestExportData?.id && (
@@ -641,6 +713,27 @@ function StaffExportDetail() {
             pagination={false}
           />
         </div>
+        <Modal
+          title="PDF Preview"
+          visible={isModalVisible}
+          onCancel={() => setIsModalVisible(false)}
+          footer={[
+            <Button key="cancel" onClick={() => setIsModalVisible(false)}>
+              Cancel
+            </Button>,
+            <Button key="download" type="primary" onClick={() => downloadPDF()}>
+              Download
+            </Button>,
+          ]}
+          width={"80%"}
+        >
+          <iframe
+            src={pdfData}
+            width="100%"
+            height="700px"
+            style={{ border: 'none' }}
+          ></iframe>
+        </Modal>
       </div >
     </div >
   );
