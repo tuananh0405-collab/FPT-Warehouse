@@ -1,9 +1,6 @@
 package com.wha.warehousemanagement.services;
 
-import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
-import com.wha.warehousemanagement.dtos.requests.TransferProductRequest;
-import com.wha.warehousemanagement.dtos.requests.TransferRequest;
-import com.wha.warehousemanagement.dtos.requests.checkAvailableProductRequest;
+import com.wha.warehousemanagement.dtos.requests.*;
 import com.wha.warehousemanagement.dtos.responses.InventoriesByAdminViewResponse;
 import com.wha.warehousemanagement.dtos.responses.InventoryResponse;
 import com.wha.warehousemanagement.exceptions.CustomException;
@@ -334,14 +331,7 @@ public class InventoryService {
 
     // This function should be called to check when Admin input a product with quantiy for export
     public Integer getAvailableQuantityOfProduct(Integer warehouseId, Integer productId) {
-
-        // Find total quantity of this product (by inventories) in this warehouse
-        int totalQuantity = inventoryRepository.findTotalQuantityByWarehouseAndProductId(warehouseId, productId);
-
-        // Find total quanity held by pending exports
-        int totalHeldQuantity = exportDetailRepository.findTotalPendingQuantityByWarehouseAndProduct(warehouseId, productId);
-
-        return totalQuantity - totalHeldQuantity;
+        return inventoryRepository.findTotalQuantityByWarehouseAndProductId(warehouseId, productId);
     }
 
     public ResponseObject<?> checkAvailableQuantity(checkAvailableProductRequest request) {
@@ -373,6 +363,25 @@ public class InventoryService {
             return new ResponseObject<>(HttpStatus.OK.value(), "Inventories retrieved successfully", response);
         } catch (Exception e) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get inventories", null);
+        }
+    }
+
+    public ResponseObject<?> getInventoryByProductIdAndZoneIdAndExpiredAt(InventoryByProductZoneExpiredDateReq request) {
+        try {
+            Inventory inventory;
+            if (request.getExpiredAt() == null) {
+                inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAtIsNull(
+                                request.getProductId(), request.getZoneId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+            } else {
+                inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
+                                request.getProductId(), request.getZoneId(), request.getExpiredAt())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+            }
+            InventoryResponse response = inventoryMapper.toDto(inventory);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", response);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to get inventory", null);
         }
     }
 }

@@ -20,13 +20,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             "JOIN p.inventories i " +
             "JOIN i.zone z " +
             "JOIN z.warehouse w " +
-            "WHERE w.id = :warehouseId " +
-            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
-            "AND (:search IS NULL OR p.name LIKE %:search%)")
-    Page<Product> getAllProductsByWarehouseIdWithFilters(Pageable pageable,
-                                                           @Param("warehouseId") Integer warehouseId,
-                                                           @Param("categoryId") Integer categoryId,
-                                                           @Param("search") String search);
+            "WHERE w.id = :warehouseId ")
+    List<Product> getAllProductsByWarehouseIdWithFilters(@Param("warehouseId") Integer warehouseId);
 
     @Query("SELECT COUNT(p) FROM Product p " +
             "JOIN p.category c " +

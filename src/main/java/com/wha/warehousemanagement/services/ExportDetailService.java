@@ -62,7 +62,6 @@ public class ExportDetailService {
     }
 
         public ResponseObject<?> checkInventoryQuantityForUpdate(ExportDetailRequest request) {
-            System.out.println("Zone:" + request.getZoneId() + "Product: "+ request.getProductId() + "expiredAt"+request.getExpiredAt());
             try {
                 ExportDetail exportDetail = exportDetailRepository.findById(request.getExportId())
                         .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_DETAIL_NOT_FOUND));
@@ -328,7 +327,7 @@ public class ExportDetailService {
                                 product,
                                 quantityToExport,
                                 inventory.getExpiredAt(),
-                                inventory.getZone().getName()
+                                inventory.getZone().getId()
                         ));
                         // Giảm số lượng inventory cần xuất
                         //inventory.setQuantity(inventory.getQuantity() - quantityToExport);
@@ -341,7 +340,7 @@ public class ExportDetailService {
                                 product,
                                 inventory.getQuantity(),
                                 inventory.getExpiredAt(),
-                                inventory.getZone().getName()
+                                inventory.getZone().getId()
                         ));
                         quantityToExport -= inventory.getQuantity();
                     }

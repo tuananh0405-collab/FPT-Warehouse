@@ -144,15 +144,12 @@ public class ProductService {
     // This function is for Admin choose products to export
     // This func also has available quantity of each product in a warehouse then we can check if Admin choose more than available quantity in front end
     public ResponseObject<List<ProductListForExportResponse>> getAllProductsByWarehouseId(
-            Integer warehouseId, Integer pageNo, Integer limit, String sortBy, String direction, Integer categoryId, String search
+            Integer warehouseId
     ) {
         // Get all product by warehouseId
         // Get available quanity of each product by (available quantity = total quantity - quantity in export)
         try {
-            Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-            Pageable pageable = PageRequest.of(pageNo, limit, sortDirection, sortBy);
-
-            Page<Product> products = productRepository.getAllProductsByWarehouseIdWithFilters(pageable, warehouseId, categoryId, search);
+            List<Product> products = productRepository.getAllProductsByWarehouseIdWithFilters(warehouseId);
 
             List<ProductListForExportResponse> responses = products.stream().map(
                     product -> {

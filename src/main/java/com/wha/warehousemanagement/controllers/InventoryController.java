@@ -1,5 +1,6 @@
 package com.wha.warehousemanagement.controllers;
 
+import com.wha.warehousemanagement.dtos.requests.InventoryByProductZoneExpiredDateReq;
 import com.wha.warehousemanagement.dtos.requests.InventoryRequest;
 import com.wha.warehousemanagement.dtos.requests.TransferProductRequest;
 import com.wha.warehousemanagement.dtos.requests.TransferRequest;
@@ -207,5 +208,12 @@ public class InventoryController {
             @PathVariable Integer warehouseId
     ) {
         return ResponseEntity.ok(new ResponseObject<>(HttpStatus.OK.value(), "Inventory retrieved successfully", inventoryService.getInventoryByProductId(productId, warehouseId)));
+    }
+
+    @PostMapping("/by-product/by-zone/by-expired-at")
+    public ResponseEntity<?> getInventoryByProductIdAndZoneIdAndExpiredAt(
+            @RequestBody InventoryByProductZoneExpiredDateReq request
+    ) {
+        return ResponseEntity.ok(inventoryService.getInventoryByProductIdAndZoneIdAndExpiredAt(request));
     }
 }

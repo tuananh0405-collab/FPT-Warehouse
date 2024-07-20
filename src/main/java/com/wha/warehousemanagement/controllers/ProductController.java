@@ -50,23 +50,9 @@ public class ProductController {
     //localhost:6060/product/product-list-for-export/1?page=1&sortBy=id&search=product:1
     @GetMapping("/product-list-for-auto-select/{warehouseId}")
     public ResponseEntity<ResponseObject<List<ProductListForExportResponse>>> getProductListForExport(
-            @PathVariable("warehouseId") Integer warehouseId,
-            @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
-            @RequestParam(value = "direction", defaultValue = "asc") String direction,
-            @RequestParam(value = "categoryId", required = false) Integer categoryId,
-            @RequestParam(value = "search", required = false) String search
+            @PathVariable("warehouseId") Integer warehouseId
     ) {
-        int limit = 10;
-        pageNo = pageNo - 1;
-
-        if (categoryId != null && categoryId == 0) {
-            categoryId = null;
-        }
-        if (search != null && search.isBlank()) {
-            search = null;
-        }
-        return ResponseEntity.ok(productService.getAllProductsByWarehouseId(warehouseId, pageNo, limit, sortBy, direction, categoryId, search));
+        return ResponseEntity.ok(productService.getAllProductsByWarehouseId(warehouseId));
     }
 
     @GetMapping("/product-list-for-auto-select/total/{warehouseId}")
