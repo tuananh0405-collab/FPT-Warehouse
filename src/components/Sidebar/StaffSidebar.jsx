@@ -112,7 +112,7 @@ const StaffSidebar = () => {
                 <item.icon />
                 <span>{item.heading}</span>
               </div>
-              
+
               {item.subItems && dropdownOpen && (
                 <div className="dropdownMenu">
                   {item.subItems.map((subItem, subIndex) => (
@@ -125,7 +125,7 @@ const StaffSidebar = () => {
                       }
                       onClick={() => handleMenuItemClick(subItem.link)}
                     >
-                      <subItem.icon/>
+                      <subItem.icon />
                       <span>{subItem.heading}</span>
                     </div>
                   ))}

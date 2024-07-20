@@ -11,8 +11,6 @@ import {
   InputNumber,
   Steps,
   Table,
-  Pagination,
-  Modal
 } from "antd";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import Loading from "../../utils/Loading";
@@ -29,9 +27,14 @@ import { useCreateExportDetailsMutation } from "../../redux/api/exportDetailApiS
 import AutoSelectModal from "../../components/Orders/AutoSelectModal";
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined';
+import moment from "moment";
 
 const { Option } = Select;
 const { Step } = Steps;
+
+export const FormatTime = (time) => {
+  return moment(time).format('YYYY-MM-DD HH:mm:ss'); // Format như ví dụ, bạn có thể thay đổi theo ý muốn
+}
 
 const StaffAddExport = () => {
   const navigate = useNavigate();
@@ -74,12 +77,7 @@ const StaffAddExport = () => {
   } = useGetAllInventoriesQuery(authToken);
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [filterType, setFilterType] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [zoneFilter, setZoneFilter] = useState(null);
-  const [expiredAtFilter, setExpiredAtFilter] = useState(null);
   const [filteredInventories, setFilteredInventories] = useState([]);
 
   const warehousesData = warehouses?.data || [];
@@ -130,41 +128,6 @@ const StaffAddExport = () => {
       ...prevFormData,
       ...changedValues,
     }));
-  };
-
-  const handleTableChange = (pagination) => {
-    setCurrentPage(pagination.current);
-  };
-
-  const handleProductSelectChange = (autoSelectedProducts) => {
-    const newSelectedProducts = autoSelectedProducts.map((product) => ({
-      id: product.product.id,
-      name: product.product.name,
-      zoneId: product.zoneId,
-      expiredAt: product.expiredAt,
-      quantity: product.quantity,
-    }));
-    console.log(newSelectedProducts);
-    setSelectedProducts(newSelectedProducts);
-  };
-
-  const handleZoneChange = (value, index) => {
-    const newSelectedProducts = [...selectedProducts];
-    newSelectedProducts[index].zoneId = value;
-    newSelectedProducts[index].expiredAt = null;
-    setSelectedProducts(newSelectedProducts);
-  };
-
-  const handleExpiredAtChange = (value, index) => {
-    const newSelectedProducts = [...selectedProducts];
-    newSelectedProducts[index].expiredAt = value;
-    setSelectedProducts(newSelectedProducts);
-  };
-
-  const handleQuantityChange = (value, index) => {
-    const newSelectedProducts = [...selectedProducts];
-    newSelectedProducts[index].quantity = value;
-    setSelectedProducts(newSelectedProducts);
   };
 
   const handleStepChange = async (current) => {
@@ -241,12 +204,10 @@ const StaffAddExport = () => {
           zoneId: item.zone.id,
         };
       });
-      const response = await createExportDetails({
+      await createExportDetails({
         data: selectedProductDetails,
         authToken,
       }).unwrap();
-
-      console.log(selectedProductDetails);
 
       message.success("Export details created successfully!");
       setSelectedProducts([]);
@@ -288,36 +249,35 @@ const StaffAddExport = () => {
     setSelectedProducts(newSelectedProducts);
   };
 
+  const handleProductSelectChange = (autoSelectedProducts) => {
+    const newSelectedProducts = autoSelectedProducts.map((product) => ({
+      id: product.product.id,
+      name: product.product.name,
+      zoneId: product.zoneId,
+      expiredAt: product.expiredAt,
+      quantity: product.quantity,
+    }));
+    setSelectedProducts(newSelectedProducts);
+  };
+
   const getUniqueZones = (productId) => {
-    const filteredZones = [
-      ...new Set(
-        inventoriesData
-          .filter(
-            (inv) =>
-              inv.product.id === productId &&
-              zonesData.find(
-                (zone) =>
-                  zone.id === inv.zone.id && zone.warehouseId === warehouseId
-              )
-          )
-          .map((inv) => inv.zone.id)
-      ),
-    ];
-    return filteredZones.map((zoneId) =>
-      zonesData.find((z) => z.id === zoneId)
+    // Lấy tất cả các zone cho productId không kiểm tra đã chọn
+    return zonesData.filter((zone) =>
+      inventoriesData.some((inv) =>
+        inv.product.id === productId &&
+        inv.zone.id === zone.id &&
+        zone.warehouseId === warehouseId &&
+        !selectedProducts.some(sp => sp.zoneId === zone.id && sp.expiredAt === inv.expiredAt)
+      )
     );
   };
 
   const getUniqueExpiredAt = (productId, zoneId) => {
-    return [
-      ...new Set(
-        inventoriesData
-          .filter(
-            (inv) => inv.product.id === productId && inv.zone.id === zoneId
-          )
-          .map((inv) => inv.expiredAt)
-      ),
-    ];
+    // Chỉ trả về những ngày hết hạn không đã được chọn cho productId và zoneId này
+    return inventoriesData
+      .filter((inv) => inv.product.id === productId && inv.zone.id === zoneId)
+      .map((inv) => inv.expiredAt)
+      .filter(expiredAt => !selectedProducts.some(sp => sp.zoneId === zoneId && sp.expiredAt === expiredAt));
   };
 
   if (
@@ -337,29 +297,6 @@ const StaffAddExport = () => {
   )
     return <Error500 />;
 
-  const columns = [
-    {
-      title: "Product Name",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Zone",
-      dataIndex: "zone",
-      key: "zone",
-    },
-    {
-      title: "Expired At",
-      dataIndex: "expiredAt",
-      key: "expiredAt",
-    },
-    {
-      title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
-    },
-  ];
-
   const dataSource = selectedProducts.map((product, index) => {
     const productItem = productsData.find((p) => p.id === product.id);
     const zoneItem = zonesData.find((z) => z.id === product.zoneId);
@@ -367,15 +304,10 @@ const StaffAddExport = () => {
       key: index,
       name: productItem?.name,
       zone: zoneItem?.name,
-      expiredAt: product.expiredAt,
+      expiredAt: FormatTime(product.expiredAt),
       quantity: product.quantity,
     };
   });
-
-  const paginatedDataSource = dataSource.slice(
-    (currentPage - 1) * 5,
-    currentPage * 5
-  );
 
   return (
     <div>
@@ -582,7 +514,7 @@ const StaffAddExport = () => {
                         <Form.Item label="Expired Date">
                           <Select
                             placeholder="Select expired date"
-                            value={product.expiredAt}
+                            value={FormatTime(product.expiredAt)}
                             onChange={(value) =>
                               handleDropdownChange(value, index, "expiredAt")
                             }
@@ -591,7 +523,7 @@ const StaffAddExport = () => {
                           >
                             {uniqueExpiredAt.map((expiredAt) => (
                               <Option key={expiredAt} value={expiredAt}>
-                                {expiredAt}
+                                {FormatTime(expiredAt)}
                               </Option>
                             ))}
                           </Select>
@@ -611,7 +543,7 @@ const StaffAddExport = () => {
                                 }
                                 value={product.quantity}
                                 onChange={(value) =>
-                                  handleQuantityChange(value, index)
+                                  handleDropdownChange(value, index, "quantity")
                                 }
                                 style={{ width: "100%" }}
                                 disabled={
@@ -696,7 +628,7 @@ const StaffAddExport = () => {
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item label="Export Date">
-                        <Input value={formData.exportDate} readOnly />
+                        <Input value={FormatTime(formData.exportDate)} readOnly />
                       </Form.Item>
                     </Col>
                     {formData.exportType === "CUSTOMER" && (
@@ -753,6 +685,7 @@ const StaffAddExport = () => {
                         title: "Expired At",
                         dataIndex: "expiredAt",
                         key: "expiredAt",
+                        render: (text) => <span>{FormatTime(text)}</span>
                       },
                       {
                         title: "Quantity",
