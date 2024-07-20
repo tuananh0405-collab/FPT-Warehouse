@@ -92,9 +92,9 @@ public class CategoryService {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
             if (request.getName() != null && !request.getName().trim().isEmpty()) {
-                if (categoryRepository.existsByName(request.getName())) {
-                    throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
-                }
+//                if (categoryRepository.existsByName(request.getName())) {
+//                    throw new CustomException(ErrorCode.CATEGORY_ALREADY_EXISTS);
+//                }
                 category.setName(request.getName());
             }
             if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {

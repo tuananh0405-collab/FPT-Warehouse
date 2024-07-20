@@ -98,7 +98,7 @@ public class InventoryController {
     public ResponseEntity<String> transferProducts(@RequestBody List<TransferRequest> transferRequests) {
         try {
             inventoryService.transferProducts(transferRequests);
-            return ResponseEntity.ok("Chuyển sản phẩm thành công");
+            return ResponseEntity.ok("Transfer successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }

@@ -216,10 +216,10 @@ public class InventoryService {
     public void transferProductBetweenZones(int productId, int fromZoneId, int toZoneId, int quantity, Date expiredAt) {
         // Giảm số lượng sản phẩm trong zone xuất phát
         Optional<Inventory> fromInventoryOpt = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(productId, fromZoneId, expiredAt);
-        Inventory fromInventory = fromInventoryOpt.orElseThrow(() -> new RuntimeException("Không đủ số lượng sản phẩm để chuyển"));
+        Inventory fromInventory = fromInventoryOpt.orElseThrow(() -> new RuntimeException("Quantity not available enough!"));
 
         if (fromInventory.getQuantity() < quantity) {
-            throw new RuntimeException("Không đủ số lượng sản phẩm để chuyển");
+            throw new RuntimeException("Quantity not available enough!");
         }
         fromInventory.setQuantity(fromInventory.getQuantity() - quantity);
         inventoryRepository.save(fromInventory);
