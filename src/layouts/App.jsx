@@ -8,8 +8,10 @@ const App = () => {
     <div className="App">
       <div className="AppGlass">
         <Sidebar />
+        <div className="MainDash">
+
         <Outlet />
-        <RightSide />
+        </div>
       </div>
     </div>
   );

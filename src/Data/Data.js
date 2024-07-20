@@ -68,11 +68,7 @@ export const StaffSidebarData = [
     heading: "Orders",
     link: "/staff/orders",
   },
-  {
-    icon: UilExchange, // Use an appropriate icon for Transfer
-    heading: "Transfer",
-    link: "/staff/transfer",
-  },
+
 ];
 // // Analytics Cards Data
 export const cardsData = [

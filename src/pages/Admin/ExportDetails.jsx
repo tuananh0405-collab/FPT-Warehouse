@@ -5,8 +5,10 @@ import { Table, Spin, message } from 'antd';
 import { useGetExportDetailsByExportIdQuery } from '../../redux/api/exportDetailApiSlice';
 import Loading from '../../utils/Loading';
 import Error500 from '../../utils/Error500';
+import useDocumentTitle from '../../utils/UseDocumentTitle';
 
 const ExportDetails = () => {
+  useDocumentTitle('Export Details');
   const { id } = useParams();
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo?.userInfo?.data?.token;

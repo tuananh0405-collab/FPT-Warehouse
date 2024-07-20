@@ -7,8 +7,10 @@ import ZoneModal from '../../components/Data/Zone/ZoneModal';
 import ZoneAddModal from '../../components/Data/Zone/ZoneAddModal';
 import { Button, message, Form } from 'antd';
 import { useSelector } from 'react-redux';
+import useDocumentTitle from '../../utils/UseDocumentTitle';
 
 const WarehouseZone = () => {
+    useDocumentTitle('WZ')
     const { id } = useParams();
     const userInfo = useSelector((state) => state.auth);
     const authToken = userInfo.userInfo.data.token;
@@ -73,10 +75,14 @@ const WarehouseZone = () => {
     return (
         <div>
             <Breadcrumbs />
+            <div
+        className="flex justify-between"
+        style={{ paddingLeft: "3rem", paddingTop: "1rem" }}
+      >
             <h1 class="mb-2 text-2xl font-semibold text-dark">Warehouse Zones</h1>
             <Button type="primary" style={{ background: "#40A578" }} onClick={() => setIsAddModalVisible(true)}>
                 Add new zone
-            </Button>
+            </Button></div>
             <ZoneAddModal
                 visible={isAddModalVisible}
                 handleOk={handleOkAdd}

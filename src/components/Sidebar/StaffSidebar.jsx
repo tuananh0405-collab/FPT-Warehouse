@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import '../../assets/styles/MainDash.css'
-// import Logo from "../../assets/images/warehouse-1073.png";
 import Logo from "../../assets/images/FPT_logo_2010.svg.png";
 import { UilSignOutAlt, UilBars } from "@iconscout/react-unicons";
 import { StaffSidebarData } from "../../Data/Data";
@@ -17,16 +16,15 @@ const StaffSidebar = () => {
 
   const [warehouseId, setWarehouseId] = useState(null);
 
-  const userInfo = useSelector((state) => state.auth)
+  const userInfo = useSelector((state) => state.auth);
   if (!userInfo) {
-    return <Navigate to={'/'} replace />
+    return <Navigate to={'/'} replace />;
   }
-  let authToken
-  let wid
+  let authToken;
+  let wid;
   if (userInfo && userInfo.userInfo && userInfo.userInfo.data) {
-
     authToken = userInfo.userInfo.data.token;
-    wid = userInfo.userInfo.data.warehouseId
+    wid = userInfo.userInfo.data.warehouseId;
   }
 
   const {
@@ -35,7 +33,7 @@ const StaffSidebar = () => {
     error: errorWarehouse,
   } = useGetWarehouseByIdQuery({ id: wid, authToken });
   useEffect(() => {
-    const id = userInfo.userInfo.data.warehouseId
+    const id = userInfo.userInfo.data.warehouseId;
     setWarehouseId(id);
   }, []);
 
@@ -106,7 +104,7 @@ const StaffSidebar = () => {
             );
           })}
           {/* signoutIcon */}
-          <div className="menuItem">
+          <div className="menuItem logout">
             <UilSignOutAlt onClick={handleLogout} />
           </div>
         </div>

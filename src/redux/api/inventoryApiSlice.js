@@ -61,18 +61,31 @@ export const inventoryApiSlice = apiSlice.injectEndpoints({
       providesTags: ["Inventory"],
       keepUnusedDataFor: 5,
     }),
+    // transferProduct: builder.mutation({
+    //   query: ({ productId, fromZoneId, toZoneId, quantity, authToken }) => {
+    //     const url = `${INVENTORY_URL}/transfer?productId=${productId}&fromZoneId=${fromZoneId}&toZoneId=${toZoneId}&quantity=${quantity}`;
+    //     console.log('Request URL:', url); // Log the URL
+    //     return {
+    //       url,
+    //       method: 'POST',
+    //       headers: {
+    //         Authorization: `Bearer ${authToken}`,
+    //       },
+    //     };
+    //   },
+    //   invalidatesTags: ["Inventory"],
+    //   keepUnusedDataFor: 5,
+    // }),
     transferProduct: builder.mutation({
-      query: ({ productId, fromZoneId, toZoneId, quantity, authToken }) => {
-        const url = `${INVENTORY_URL}/transfer?productId=${productId}&fromZoneId=${fromZoneId}&toZoneId=${toZoneId}&quantity=${quantity}`;
-        console.log('Request URL:', url); // Log the URL
-        return {
-          url,
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        };
-      },
+      query: ({ transferRequests, authToken }) => ({
+        url: `${INVENTORY_URL}/transfer`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transferRequests),
+      }),
       invalidatesTags: ["Inventory"],
       keepUnusedDataFor: 5,
     }),
