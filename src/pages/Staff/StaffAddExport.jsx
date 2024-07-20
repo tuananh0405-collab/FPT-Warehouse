@@ -92,6 +92,9 @@ const StaffAddExport = () => {
     customerId: null,
   });
 
+  // New state for filtered products
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
   useEffect(() => {
     if (!isInventoryLoading && inventories) {
       const filteredInventories = inventoriesData.filter((inv) =>
@@ -100,8 +103,23 @@ const StaffAddExport = () => {
         )
       );
       setFilteredInventories(filteredInventories);
+
+      // Filter products based on inventories in the current warehouse
+      const productIdsInInventory = new Set(
+        filteredInventories.map((inv) => inv.product.id)
+      );
+      const filteredProductsList = productsData.filter((product) =>
+        productIdsInInventory.has(product.id)
+      );
+      setFilteredProducts(filteredProductsList);
     }
-  }, [isInventoryLoading, inventoriesData, warehouseId, zonesData]);
+  }, [
+    isInventoryLoading,
+    inventoriesData,
+    warehouseId,
+    zonesData,
+    productsData,
+  ]);
 
   const handleFormChange = (changedValues) => {
     setFormData((prevFormData) => ({
@@ -387,6 +405,9 @@ const StaffAddExport = () => {
             onValuesChange={handleFormChange}
             style={{ width: "800px", margin: "auto" }}
           >
+            <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
+              Export Information
+            </h2>
             <Form.Item
               label="Description"
               name="description"
@@ -473,146 +494,155 @@ const StaffAddExport = () => {
               border: "1px solid black",
               padding: "20px",
               borderRadius: "8px",
-              maxHeight: "600px",
-              overflowY: selectedProducts.length > 5 ? "scroll" : "auto",
             }}
           >
-            <Button
-              type="primary"
-              onClick={handleAddProduct}
+            <div className="sticky top-0 z-10">
+              <Button
+                type="primary"
+                onClick={handleAddProduct}
+                style={{
+                  display: "block",
+                  margin: "0 auto 20px auto",
+                  width: "700px",
+                }}
+              >
+                Add Product
+              </Button>
+            </div>
+            <div
               style={{
-                display: "block",
-                margin: "0 auto 20px auto",
-                width: "700px",
+                maxHeight: "400px", // You can adjust this value as needed
+                overflowY: "auto",
               }}
             >
-              Add Product
-            </Button>
-            {selectedProducts.map((product, index) => {
-              const uniqueZones = getUniqueZones(product.id);
-              const uniqueExpiredAt = getUniqueExpiredAt(
-                product.id,
-                product.zoneId
-              );
+              {selectedProducts.map((product, index) => {
+                const uniqueZones = getUniqueZones(product.id);
+                const uniqueExpiredAt = getUniqueExpiredAt(
+                  product.id,
+                  product.zoneId
+                );
 
-              return (
-                <div
-                  key={index}
-                  style={{
-                    marginBottom: "20px",
-                    border: "1px solid black",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    width: "700px",
-                  }}
-                >
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item label="Product Name">
-                        <Select
-                          placeholder="Select product"
-                          value={product.id}
-                          onChange={(value) =>
-                            handleDropdownChange(value, index, "product")
-                          }
-                          style={{ width: "100%" }}
-                        >
-                          {productsData.map((p) => (
-                            <Option key={p.id} value={p.id}>
-                              {p.name}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item label="Zone">
-                        <Select
-                          placeholder="Select zone"
-                          value={product.zoneId}
-                          onChange={(value) =>
-                            handleDropdownChange(value, index, "zone")
-                          }
-                          style={{ width: "100%" }}
-                          disabled={!product.id}
-                        >
-                          {uniqueZones.map((zone) => (
-                            <Option key={zone.id} value={zone.id}>
-                              {zone.name}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  <Form.Item label="Expired Date">
-                    <Select
-                      placeholder="Select expired date"
-                      value={product.expiredAt}
-                      onChange={(value) =>
-                        handleDropdownChange(value, index, "expiredAt")
-                      }
-                      style={{ width: "100%" }}
-                      disabled={!product.zoneId}
-                    >
-                      {uniqueExpiredAt.map((expiredAt) => (
-                        <Option key={expiredAt} value={expiredAt}>
-                          {expiredAt}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item label="Quantity">
-                        <InputNumber
-                          min={1}
-                          max={
-                            inventoriesData.find(
-                              (inv) =>
-                                inv.product.id === product.id &&
-                                inv.zone.id === product.zoneId &&
-                                inv.expiredAt === product.expiredAt
-                            )?.quantity || 1
-                          }
-                          value={product.quantity}
-                          onChange={(value) =>
-                            handleQuantityChange(value, index)
-                          }
-                          style={{ width: "100%" }}
-                          disabled={
-                            !product.id || !product.zoneId || !product.expiredAt
-                          }
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item label="Inventory Quantity">
-                        <Input
-                          value={
-                            inventoriesData.find(
-                              (inv) =>
-                                inv.product.id === product.id &&
-                                inv.zone.id === product.zoneId &&
-                                inv.expiredAt === product.expiredAt
-                            )?.quantity || 0
-                          }
-                          readOnly
-                          style={{ width: "100%" }}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  <Button
-                    type="link"
-                    danger
-                    onClick={() => handleRemoveProduct(index)}
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      marginBottom: "20px",
+                      border: "1px solid black",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      width: "700px",
+                    }}
                   >
-                    Remove
-                  </Button>
-                </div>
-              );
-            })}
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label="Product Name">
+                          <Select
+                            placeholder="Select product"
+                            value={product.id}
+                            onChange={(value) =>
+                              handleDropdownChange(value, index, "product")
+                            }
+                            style={{ width: "100%" }}
+                          >
+                            {filteredProducts.map((p) => (
+                              <Option key={p.id} value={p.id}>
+                                {p.name}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="Zone">
+                          <Select
+                            placeholder="Select zone"
+                            value={product.zoneId}
+                            onChange={(value) =>
+                              handleDropdownChange(value, index, "zone")
+                            }
+                            style={{ width: "100%" }}
+                            disabled={!product.id}
+                          >
+                            {uniqueZones.map((zone) => (
+                              <Option key={zone.id} value={zone.id}>
+                                {zone.name}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Form.Item label="Expired Date">
+                      <Select
+                        placeholder="Select expired date"
+                        value={product.expiredAt}
+                        onChange={(value) =>
+                          handleDropdownChange(value, index, "expiredAt")
+                        }
+                        style={{ width: "100%" }}
+                        disabled={!product.zoneId}
+                      >
+                        {uniqueExpiredAt.map((expiredAt) => (
+                          <Option key={expiredAt} value={expiredAt}>
+                            {expiredAt}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label="Quantity">
+                          <InputNumber
+                            min={1}
+                            max={
+                              inventoriesData.find(
+                                (inv) =>
+                                  inv.product.id === product.id &&
+                                  inv.zone.id === product.zoneId &&
+                                  inv.expiredAt === product.expiredAt
+                              )?.quantity || 1
+                            }
+                            value={product.quantity}
+                            onChange={(value) =>
+                              handleQuantityChange(value, index)
+                            }
+                            style={{ width: "100%" }}
+                            disabled={
+                              !product.id ||
+                              !product.zoneId ||
+                              !product.expiredAt
+                            }
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="Inventory Quantity">
+                          <Input
+                            value={
+                              inventoriesData.find(
+                                (inv) =>
+                                  inv.product.id === product.id &&
+                                  inv.zone.id === product.zoneId &&
+                                  inv.expiredAt === product.expiredAt
+                              )?.quantity || 0
+                            }
+                            readOnly
+                            style={{ width: "100%" }}
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Button
+                      type="link"
+                      danger
+                      onClick={() => handleRemoveProduct(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
             <div className="flex justify-end mt-4" style={{ width: "100%" }}>
               <Button onClick={handlePrev} style={{ marginRight: "8px" }}>
                 Previous
@@ -625,7 +655,15 @@ const StaffAddExport = () => {
         )}
         {currentStep === 2 && (
           <div style={{ maxWidth: "800px", margin: "auto" }}>
-            <h2>Review and Confirm</h2>
+            <h1
+              style={{
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: "10px",
+              }}
+            >
+              Review and Confirm
+            </h1>
             <Form layout="vertical">
               <Row gutter={16}>
                 <Col span={12}>
@@ -676,7 +714,15 @@ const StaffAddExport = () => {
                 )}
               </Row>
             </Form>
-            <h3>Selected Products</h3>
+            <h3
+              style={{
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: "10px",
+              }}
+            >
+              Selected Products
+            </h3>
             <div
               style={{
                 maxHeight: "600px",

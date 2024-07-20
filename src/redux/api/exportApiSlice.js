@@ -92,15 +92,16 @@ export const exportApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Export"],
     }),
-    getLatestExport: builder.query({
-      query: ({ authToken, warehouseId }) => ({
-        url: `${EXPORT_URL}/by-warehouse/get-latest/${warehouseId}`,
+    updateExportWithRequest: builder.mutation({
+      query: ({ data, exportId, authToken }) => ({
+        url: `${EXPORT_URL}/update-export/${exportId}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
+        method: "PUT",
+        body: data,
       }),
-      providesTags: ["Export"],
-      keepUnusedDataFor: 5,
+      invalidatesTags: ["Export"],
     }),
   }),
 });
@@ -114,8 +115,5 @@ export const {
   useDeleteExportMutation,
   useGetExportByIdQuery,
   useUpdateExportByIdMutation,
-  useGetLatestExportQuery,
+  useUpdateExportWithRequestMutation
 } = exportApiSlice;
-
-
-

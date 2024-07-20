@@ -28,4 +28,7 @@ export const importDetailApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const {useGetImportDetailsByImportIdQuery, useCreateImportDetailsMutation } = importDetailApiSlice;
+export const {
+  useGetImportDetailsByImportIdQuery,
+  useCreateImportDetailsMutation,
+} = importDetailApiSlice;
