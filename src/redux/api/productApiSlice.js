@@ -54,6 +54,23 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
+    getProductListsForAutoSelect: builder.query({
+      query: ({ authToken, warehouseId, pageNo, sortBy, direction, categoryId, search }) => ({
+        url: `${PRODUCT_URL}/product-list-for-auto-select/${warehouseId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        params: {
+          pageNo,
+          sortBy,
+          direction,
+          categoryId,
+          search,
+        },
+      }),
+      providesTags: ["Product"],
+      keepUnusedDataFor: 5,
+    }),
   }),
 });
 
@@ -63,4 +80,5 @@ export const {
   useGetProductByIdQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useGetProductListsForAutoSelectQuery
 } = productApiSlice;
