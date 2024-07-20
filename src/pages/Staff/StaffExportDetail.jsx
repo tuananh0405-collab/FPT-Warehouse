@@ -494,7 +494,7 @@ function StaffExportDetail() {
     doc.text('To:', 10, 60);
     if(formData.exportType === 'WAREHOUSE'){
       doc.text(formData.warehouseToName || 'N/A', 10, 65);
-      doc.text(formData.warehouseToAddress || 'N/A', 10, 70);
+      // doc.text(formData.warehouseToAddress || 'N/A', 10, 70);
       doc.text(formData.warehouseToDescription || 'N/A', 10, 75);
     }else if(formData.exportType === 'CUSTOMER'){
       doc.text(formData.customerName || 'N/A', 10, 65);
@@ -505,7 +505,7 @@ function StaffExportDetail() {
   
     doc.text('From:', 105, 60);
     doc.text(formData.warehouseFromName || 'N/A', 105, 65);
-    doc.text(formData.warehouseFromAddress || 'N/A', 105, 70);
+    // doc.text(formData.warehouseFromAddress || 'N/A', 105, 70);
     doc.text(formData.warehouseFromDescription || 'N/A', 105, 75);
   
     // Add table

@@ -107,7 +107,7 @@ const BarChart = () => {
       const warehouseIds = Object.keys(warehouseData);
       console.log(warehouseIds);
       const warehouseNames = warehouseIds.map((id) =>
-        warehouses?.data.map((w) => (w.id == id ? w.name.split(" ")[0] : null))
+        warehouses?.data.map((w) => (w.id == id ? w.name.split(" ")[1] + " " + w.name.split(" ")[2]  : null))
       );
 
       const flattenedWarehouseNames = warehouseNames
