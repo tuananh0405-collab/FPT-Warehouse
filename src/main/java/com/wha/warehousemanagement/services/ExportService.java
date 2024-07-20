@@ -166,6 +166,49 @@ public class ExportService {
         }
     }
 
+    public ResponseObject<?> updateExport(int id, ExportRequest request) {
+        System.out.println("Export request: " + request.toString());
+        try {
+            Export export = exportRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));
+
+            if (request.getDescription() != null && !request.getDescription().trim().isEmpty())
+                export.setDescription(request.getDescription());
+            if (request.getStatus() != null && !request.getStatus().trim().isEmpty())
+                export.setStatus(Status.valueOf(request.getStatus()));
+            if (request.getExportDate() != null)
+                export.setExportDate(java.sql.Date.valueOf(request.getExportDate()));
+            if (request.getTransferKey() != null && !request.getTransferKey().trim().isEmpty())
+                export.setTransferKey(request.getTransferKey());
+
+            if (request.getExportType() != null && !request.getExportType().trim().isEmpty()) {
+                export.setExportType(ImportExportType.valueOf(request.getExportType()));
+
+            }
+            if (request.getWarehouseIdTo()!=null) {
+                Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseIdTo())
+                        .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+
+                export.setWarehouseTo(warehouseTo);
+            }
+if (request.getWarehouseIdFrom()!=null) {
+    Warehouse warehouseFrom = warehouseRepository.findById(request.getWarehouseIdFrom())
+            .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+
+    export.setWarehouseFrom(warehouseFrom);
+}
+
+
+            exportRepository.save(export);
+            return new ResponseObject<>(HttpStatus.OK.value(), "Updated export successfully", null);
+        } catch (CustomException e) {
+            return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export", null);
+        }
+    }
+
+
     public ResponseObject<?> deleteExportById(int id) {
         try {
             Export export = exportRepository.findById(id)

@@ -25,6 +25,4 @@ public class ImportRequest {
     private Integer warehouseIdFrom;
 
     private Integer warehouseIdTo;
-
-    private Integer customerId;
 }

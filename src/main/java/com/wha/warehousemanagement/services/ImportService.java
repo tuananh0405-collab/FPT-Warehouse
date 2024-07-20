@@ -41,8 +41,6 @@ public class ImportService {
 
     public ResponseObject<?> addImport(ImportRequest request) {
         try {
-            Customer customer = customerRepository.findById(request.getCustomerId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND));
             Import anImport = new Import();
             anImport.setDescription(request.getDescription());
             anImport.setStatus(Status.valueOf(request.getStatus()));
@@ -65,11 +63,6 @@ public class ImportService {
                         .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
             }
 
-            // Handle customer
-            if (request.getCustomerId() != null) {
-                anImport.setCustomer(customerRepository.findById(request.getCustomerId())
-                        .orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND)));
-            }
             importRepository.save(anImport);
             ImportResponse response = importMapper.toDto(anImport);
             return new ResponseObject<>(HttpStatus.OK.value(), "Import added successfully", response);
@@ -158,9 +151,6 @@ public class ImportService {
             }
             if (request.getWarehouseIdTo() != null) {
                 anImport.setWarehouseTo(warehouseRepository.findById(request.getWarehouseIdTo()).orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
-            }
-            if (request.getCustomerId() != null) {
-                anImport.setCustomer(customerRepository.findById(request.getCustomerId()).orElseThrow(() -> new CustomException(ErrorCode.PROVIDER_NOT_FOUND)));
             }
             importRepository.save(anImport);
             ImportResponse response = importMapper.toDto(anImport);

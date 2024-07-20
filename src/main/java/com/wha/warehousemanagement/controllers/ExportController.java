@@ -73,6 +73,11 @@ public class ExportController {
         return ResponseEntity.ok(exportService.updateExport(id, request));
     }
 
+    @PutMapping("/update-export/{id}")
+    public ResponseEntity<?> updateExportWithRequest(@PathVariable("id") int id, @RequestBody ExportRequest request) {
+        return ResponseEntity.ok(exportService.updateExport(id, request));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExport(@PathVariable("id") int id) {
         return ResponseEntity.ok(exportService.deleteExportById(id));
