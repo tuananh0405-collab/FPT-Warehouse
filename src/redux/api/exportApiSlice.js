@@ -20,22 +20,10 @@ export const exportApiSlice = apiSlice.injectEndpoints({
       query: ({
         warehouseId,
         authToken,
-        pageNo,
-        sortBy,
-        direction,
-        status,
-        search
       }) => ({
         url: `${EXPORT_URL}/by-warehouse/${warehouseId}`,
         headers: {
           Authorization: `Bearer ${authToken}`,
-        },
-        params: {
-          pageNo,
-          sortBy,
-          direction,
-          status,
-          search
         },
       }),
       providesTags: ["Export"],

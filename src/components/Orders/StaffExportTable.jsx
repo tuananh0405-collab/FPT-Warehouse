@@ -1,83 +1,162 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Table } from 'antd';
-import {
-    useGetAllExportsByWarehouseidQuery,
-    useGetTotalExportsByWarehouseidAndFilterByStatusQuery
-} from '../../redux/api/exportApiSlice';
+import { Button, Table, Space, Result, Skeleton, Input } from 'antd';
+import { useGetAllExportsByWarehouseidQuery } from '../../redux/api/exportApiSlice';
 import { FormatTime } from '../../utils/FormatTime';
 import { useNavigate } from 'react-router-dom';
+import { SearchOutlined } from '@ant-design/icons';
+import Highlighter from 'react-highlight-words';
 
-function StaffExportTable({ searchValue }) {
-    const userInfo = useSelector((state) => state.auth.userInfo);
-    const authToken = userInfo?.data?.token;
-    const warehouseId = userInfo?.data?.warehouseId;
-
-    const [pageNo, setPageNo] = useState(1);
-    const [sortField, setSortField] = useState('');
-    const [sortOrder, setSortOrder] = useState('');
-    const [filterStatus, setFilterStatus] = useState('');
-    const [search, setSearch] = useState(searchValue);
-
-    const { data: exportsData = {}, isLoading: exportsLoading, error: exportsError } = useGetAllExportsByWarehouseidQuery({
-        warehouseId,
-        authToken,
-        pageNo: pageNo,
-        sortBy: sortField,
-        direction: sortOrder,
-        status: filterStatus,
-        search: search,
-    });
-    const totalExportItemData = useGetTotalExportsByWarehouseidAndFilterByStatusQuery({
-        warehouseId, authToken,
-        status: filterStatus,
-        search: search
-    });
-    const exports = exportsData.data || [];
-    const totalExportItem = totalExportItemData.data || 0;
-
-    console.log(exports);
-
-    useEffect(() => {
-        setSearch(searchValue);
-    }, [searchValue]);
-
+function StaffExportTable() {
     const navigate = useNavigate();
 
-    const handleTableChange = (pagination, filters, sorter) => {
-        setPageNo(pagination.current);
-        if (sorter.order === undefined) {
-            setSortField('');
-            setSortOrder('');
-        } else {
-            setSortField(sorter.field);
-            const order = sorter.order === 'ascend' ? 'asc' : 'desc';
-            setSortOrder(order);
-        }
-        if (filters.status && filters.status.length > 0) {
-            setFilterStatus(filters.status[0]);
-        } else {
-            setFilterStatus('');
-        }
+    const userInfo = useSelector((state) => state.auth);
+    if (!userInfo) {
+        return <navigate to={'/'} replace />;
+    }
+    let authToken;
+    let wid;
+    if (userInfo && userInfo.userInfo && userInfo.userInfo.data) {
+        authToken = userInfo.userInfo.data.token;
+        wid = userInfo.userInfo.data.warehouseId;
+    }
+
+    const { data: exportData, isLoading: exportDataLoading, error: exportDataError } = useGetAllExportsByWarehouseidQuery({ warehouseId: wid, authToken: authToken });
+    const exports = exportData?.data;
+
+    const sortedExports = exports ? [...exports].sort((a, b) => b.id - a.id) : [];
+
+    const [searchText, setSearchText] = useState('');
+    const [searchedColumn, setSearchedColumn] = useState('');
+    const searchInput = useRef(null);
+
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+        confirm();
+        setSearchText(selectedKeys[0]);
+        setSearchedColumn(dataIndex);
     };
+
+    const handleReset = (clearFilters) => {
+        clearFilters();
+        setSearchText('');
+    };
+
+    const getColumnSearchProps = (dataIndex) => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+            <div
+                style={{
+                    padding: 8,
+                }}
+                onKeyDown={(e) => e.stopPropagation()}
+            >
+                <Input
+                    ref={searchInput}
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{
+                        marginBottom: 8,
+                        display: 'block',
+                    }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{
+                            width: 90,
+                        }}
+                    >
+                        Search
+                    </Button>
+                    <Button
+                        onClick={() => clearFilters && handleReset(clearFilters)}
+                        size="small"
+                        style={{
+                            width: 90,
+                        }}
+                    >
+                        Reset
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            confirm({
+                                closeDropdown: false,
+                            });
+                            setSearchText(selectedKeys[0]);
+                            setSearchedColumn(dataIndex);
+                        }}
+                    >
+                        Filter
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            close();
+                        }}
+                    >
+                        close
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered) => (
+            <SearchOutlined
+                style={{
+                    color: filtered ? '#1677ff' : undefined,
+                }}
+            />
+        ),
+        onFilter: (value, record) =>
+            record[dataIndex]
+                ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+                : '',
+        onFilterDropdownOpenChange: (visible) => {
+            if (visible) {
+                setTimeout(() => searchInput.current?.select(), 100);
+            }
+        },
+        render: (text) =>
+            searchedColumn === dataIndex ? (
+                <Highlighter
+                    highlightStyle={{
+                        backgroundColor: '#ffc069',
+                        padding: 0,
+                    }}
+                    searchWords={[searchText]}
+                    autoEscape
+                    textToHighlight={text ? text.toString() : ''}
+                />
+            ) : (
+                text
+            ),
+    });
 
     const columns = [
         {
             title: 'Description',
             dataIndex: 'description',
             key: 'description',
-            sorter: true,
-            width: 250,
+            sorter: (a, b) => a.description.localeCompare(b.description),
             ellipsis: true,
+            width: 200, // Adjusted width
+            ...getColumnSearchProps('description'),
         },
         {
             title: 'Export Date',
             dataIndex: 'exportDate',
             key: 'exportDate',
-            sorter: true,
-            width: 180,
+            sorter: (a, b) => new Date(a.exportDate) - new Date(b.exportDate),
             ellipsis: true,
+            width: 150, // Adjusted width
             render: (text) => FormatTime(text),
+            ...getColumnSearchProps('exportDate'),
         },
         {
             title: 'Type',
@@ -88,67 +167,76 @@ function StaffExportTable({ searchValue }) {
                 { text: 'Warehouse', value: 'WAREHOUSE' },
                 { text: 'Waste', value: 'WASTE' },
             ],
-            width: 120,
             filterMultiple: false,
+            width: 120, // Adjusted width
             onFilter: (value, record) => record.exportType === value,
         },
         {
             title: 'Customer Name',
-            dataIndex: ['customer', 'name'],
+            dataIndex: 'customerName',
             key: 'customerName',
-            width: 120,
-            render: (_, record) => record.customer ? record.customer.name : 'N/A',
+            width: 200, // Adjusted width
+            ...getColumnSearchProps('customerName'),
+            render: (_, record) => {
+                if (record.exportType === 'WAREHOUSE') {
+                    return record.warehouseTo ? record.warehouseTo.name : 'N/A';
+                }
+                return record.customer ? record.customer.name : 'N/A';
+            },
         },
         {
             title: 'To',
-            dataIndex: ['warehouseTo', 'name'],
-            width: 200,
+            dataIndex: 'toAddress',
+            key: 'toAddress',
             ellipsis: true,
+            width: 250, // Adjusted width
             render: (_, record) => {
-                if (record.exportType === 'CUSTOMER') {
-                    return record.customer ? record.customer.address : 'N/A';
-                } else if (record.exportType === 'WAREHOUSE') {
+                if (record.exportType === 'WAREHOUSE') {
                     return record.warehouseTo ? record.warehouseTo.address : 'N/A';
                 }
-                return 'N/A';
-            }
-        },
-        {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            filters: [
-                { text: 'Pending', value: 'PENDING' },
-                { text: 'Shipping', value: 'SHIPPING' },
-                { text: 'Succeed', value: 'SUCCEED' },
-                { text: 'Cancel', value: 'CANCEL' },
-            ],
-            width: 120,
-            filterMultiple: false,
-            onFilter: (value, record) => record.status === value,
+                return record.customer ? record.customer.address : 'N/A';
+            },
+            ...getColumnSearchProps('toAddress'),
         },
         {
             title: 'Action',
             key: 'action',
+            width: 100, // Adjusted width
             render: (_, record) => (
-                <Button>
-                    <a onClick={() => navigate(`/staff/export/detail/${record.id}`)}>View detail</a>
-                </Button>
+                <Space size="middle">
+                    <a className='text-blue-500 no-underline bg-transparent cursor-pointer transition duration-300' onClick={() => navigate(`/staff/export/detail/${record.id}`)}>View</a>
+                </Space>
             ),
         },
     ];
 
-    if (exportsLoading) return <div>Loading...</div>;
-    if (exportsError) return <div>Error loading data</div>;
+    if (exportDataError) return (
+        <Result
+            status="error"
+            title="There are some problems with your operation."
+            extra={
+                <Button type="primary" key="console" onClick={() => navigate(`/staff/dashboard`)}>
+                    Go Dashboard
+                </Button>
+            }
+        />
+    );
+
+    // Transform data to include customerName and toAddress for search
+    const transformedData = sortedExports?.map((item) => ({
+        ...item,
+        customerName: item.exportType === 'WAREHOUSE' ? item.warehouseTo?.name : item.customer?.name,
+        toAddress: item.exportType === 'WAREHOUSE' ? item.warehouseTo?.address : item.customer?.address,
+    }));
 
     return (
         <Table
             className="no-select"
             columns={columns}
-            dataSource={exports}
+            dataSource={transformedData}
             rowKey="id"
-            pagination={{ current: pageNo, pageSize: 5, total: totalExportItem }}
-            onChange={handleTableChange}
+            pagination={{ pageSize: 10 }}
+            loading={exportDataLoading}
         />
     );
 }

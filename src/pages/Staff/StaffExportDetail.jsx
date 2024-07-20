@@ -1,873 +1,648 @@
 import React, { useState, useEffect } from 'react';
-import Breadcrumbs from '../../utils/Breadcumbs';
-import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import {
-  useGetExportByIdQuery,
-  useUpdateExportByIdMutation
-} from "../../redux/api/exportApiSlice";
-import {
-  useGetAllExportDetailsByExportIdQuery,
-  useDeleteExportDetailsMutation,
-  useCheckAvailableQuantityMutation,
-  useUpdateExportDetailsMutation,
-  useCreateExportDetailsMutation,
-  useUpdateAndAddExportDetailsMutation
-} from "../../redux/api/exportDetailApiSlice";
-import { useGetAllInventoriesQuery } from "../../redux/api/inventoryApiSlice";
-import ExportStatus from "../../components/Orders/ExportStatus";
-import '../../components/Orders/MainDash.css';
-import { Table, Button, Modal, Input, Select, message, Checkbox, Pagination, Radio } from 'antd';
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import ChecklistIcon from '@mui/icons-material/Checklist';
-import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { useGetExportByIdQuery, useGetLatestExportQuery, useUpdateExportByIdMutation } from "../../redux/api/exportApiSlice";
+import { useGetAllExportDetailsByExportIdQuery, useUpdateExportDetailsMutation, useDeleteExportDetailsMutation, useCheckQuantityForUpdateMutation } from "../../redux/api/exportDetailApiSlice";
+import { useGetAllCustomersQuery } from "../../redux/api/customersApiSlice";
 import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
+import { useGetAllProductsQuery } from '../../redux/api/productApiSlice';
+import { useGetAllInventoriesByWarehouseIdAndProductIdQuery } from '../../redux/api/inventoryApiSlice';
+import { useNavigate } from 'react-router-dom';
+import { useParams } from "react-router-dom";
+import { useSelector } from 'react-redux';
+import Breadcrumbs from "../../utils/Breadcumbs";
+import { Table, Input, Button, Modal, Select, message, DatePicker } from 'antd';
+import { EditTwoTone } from '@mui/icons-material';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import moment from 'moment/moment';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 function StaffExportDetail() {
   const { id } = useParams();
-  const userInfo = useSelector((state) => state.auth.userInfo);
-  const authToken = userInfo?.data?.token;
+  const navigate = useNavigate();
 
-  const { data: exportsDataRes = {}, isLoading: exportsLoading, error: exportsError } = useGetExportByIdQuery({
-    authToken,
-    exportId: id,
-  });
-  const { data: exportProductsData = {}, isLoading: exportProductsLoading, error: exportProductsError } = useGetAllExportDetailsByExportIdQuery({
-    authToken,
-    exportId: id,
-  });
-  const {
-    data: inventoriesData,
-    isFetching: isInventoryLoading,
-    error: inventoryError,
-  } = useGetAllInventoriesQuery(authToken);
+  const userInfo = useSelector((state) => state.auth);
+  if (!userInfo) {
+    navigate('/', { replace: true });
+    return null;
+  }
 
-  const {
-    data: warehouses,
-    isFetching: isWarehouseLoading,
-    error: warehouseError,
-  } = useGetAllWarehousesQuery(authToken);
+  const authToken = userInfo?.userInfo?.data?.token;
+  const wid = userInfo?.userInfo?.data?.warehouseId;
 
-  const exportData = exportsDataRes.data || {};
-  const exportProducts = exportProductsData.data || [];
-  const inventories = inventoriesData?.data || [];
-  const warehousesData = warehouses?.data || [];
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [initialData, setInitialData] = useState({});
+  const [detailFormData, setDetailFormData] = useState([]);
+  const [initialDetailData, setInitialDetailData] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [editedDetails, setEditedDetails] = useState([]);
+  const [deletedDetails, setDeletedDetails] = useState([]); // Mảng lưu trữ các ID export detail bị xoá
 
-  console.log('exportData:', exportData);
+  const { data: exportResponse } = useGetExportByIdQuery({ exportId: id, authToken });
+  const { data: exportDetailResponse, isLoading: exportDetailResponseLoading } = useGetAllExportDetailsByExportIdQuery({ authToken, exportId: id });
+  const { data: latestExportResponse } = useGetLatestExportQuery({ authToken, warehouseId: wid });
+  const { data: customerResponse } = useGetAllCustomersQuery(authToken);
+  const { data: warehouseResponse } = useGetAllWarehousesQuery(authToken);
+  const { data: productResponse } = useGetAllProductsQuery(authToken);
+  const { data: inventoryResponse, refetch: refetchInventories } = useGetAllInventoriesByWarehouseIdAndProductIdQuery({ warehouseId: wid, productId: selectedProductId, authToken }, { skip: !selectedProductId });
 
-  const [isProductListPopupVisible, setIsProductListPopupVisible] = useState(false);
-  const [isConfirmationPopupVisible, setIsConfirmationPopupVisible] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editableData, setEditableData] = useState({});
-  const [confirmationAction, setConfirmationAction] = useState(null);
-  const [selectedProductIds, setSelectedProductIds] = useState([]);
-  const [temporarilyHiddenProductIds, setTemporarilyHiddenProductIds] = useState([]);
-  const [editableRow, setEditableRow] = useState(null);
-  const [editableRowData, setEditableRowData] = useState({});
-  const [localUpdatedQuantities, setLocalUpdatedQuantities] = useState({});
-  const [selectedProducts, setSelectedProducts] = useState([]);
-
-  const [updateExportById, { isLoading: isUpdating }] = useUpdateExportByIdMutation();
-  const [deleteExportDetails, { isLoading: isDeleting }] = useDeleteExportDetailsMutation();
+  const [updateExport] = useUpdateExportByIdMutation();
+  const [checkQuantityForUpdate] = useCheckQuantityForUpdateMutation();
   const [updateExportDetails] = useUpdateExportDetailsMutation();
-  const [addExportDetails] = useCreateExportDetailsMutation();
-  const [updateAndAddExportDetails] = useUpdateAndAddExportDetailsMutation();
-  const [checkAvailableQuantity] = useCheckAvailableQuantityMutation();
+  const [deleteExportDetails] = useDeleteExportDetailsMutation();
 
-  const [isProductModalVisible, setIsProductModalVisible] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchText, setSearchText] = useState("");
-  const [filterType, setFilterType] = useState("all");
+  const exportData = exportResponse?.data;
+  const exportDetailData = exportDetailResponse?.data;
+  const latestExportData = latestExportResponse?.data;
 
   useEffect(() => {
     if (exportData) {
-      setEditableData({
+      const flattenedData = {
         ...exportData,
-        customerName: exportData.customer?.name || '',
-        customerEmail: exportData.customer?.email || '',
-        customerPhone: exportData.customer?.phone || '',
-        customerAddress: exportData.customer?.address || '',
-        warehouseIdTo: exportData.warehouseTo ? exportData.warehouseTo.id : null,
-      });
+        warehouseFromDescription: exportData.warehouseFrom?.description,
+        warehouseFromName: exportData.warehouseFrom?.name,
+        warehouseFromAddress: exportData.warehouseFrom?.address,
+        warehouseToName: exportData.warehouseTo?.name,
+        warehouseToDescription: exportData.warehouseTo?.description,
+        warehouseToAddress: exportData.warehouseTo?.address,
+        customerName: exportData.customer?.name,
+        customerEmail: exportData.customer?.email,
+        customerPhone: exportData.customer?.phone,
+        customerAddress: exportData.customer?.address,
+        customerId: exportData.customer?.id,
+        warehouseIdTo: exportData.warehouseTo?.id,
+      };
+      setFormData(flattenedData);
+      setInitialData(flattenedData);
     }
   }, [exportData]);
 
   useEffect(() => {
-    const selected = exportProducts.map((product) => ({
-      id: product.id,
-      quantity: product.quantity,
-    }));
-    setSelectedProducts(selected);
-  }, [exportProducts]);
+    if (exportDetailData) {
+      const detailsWithKeys = exportDetailData.map((item) => ({
+        ...item,
+        key: item.id,
+      }));
+      setDetailFormData(detailsWithKeys);
+      setInitialDetailData(detailsWithKeys);
+    }
+  }, [exportDetailData]);
 
-  const handleOpenProductListPopup = () => setIsProductListPopupVisible(true);
-  const handleCloseProductListPopup = () => setIsProductListPopupVisible(false);
-
-  const handleOpenConfirmationPopup = (action) => {
-    setConfirmationAction(action);
-    setIsConfirmationPopupVisible(true);
+  const handleInputChange = (e, key) => {
+    setFormData({
+      ...formData,
+      [key]: e.target.value
+    });
   };
 
-  const handleCloseConfirmationPopup = () => setIsConfirmationPopupVisible(false);
-
-  const handleOpenEditMode = () => {
-    setIsEditMode(true);
-    setEditableData({
-      ...exportData,
-      customerName: exportData.customer?.name || '',
-      customerEmail: exportData.customer?.email || '',
-      customerPhone: exportData.customer?.phone || '',
-      customerAddress: exportData.customer?.address || '',
-      warehouseIdTo: exportData.warehouseTo ? exportData.warehouseTo.id : null,
+  const handleDateChange = (date, dateString) => {
+    setFormData({
+      ...formData,
+      exportDate: dateString
     });
+  };
+
+  const handleSelectChange = (value, entity, field) => {
+    const update = { ...formData };
+    update[field] = value;
+
+    // Check for the entity type and update relevant fields
+    const selectedEntity = (entity === 'customer' ? customerResponse : warehouseResponse)?.data.find(item => item.name === value);
+
+    if (selectedEntity) {
+      if (entity === 'customer') {
+        update.customerId = selectedEntity.id; // Ensure customer ID is also updated
+        update.customerEmail = selectedEntity.email || '';
+        update.customerPhone = selectedEntity.phone || '';
+        update.customerAddress = selectedEntity.address || '';
+        if (formData.exportType !== 'WAREHOUSE') {
+          update.warehouseIdTo = null;
+        }
+      } else {
+        if (formData.exportType === 'WAREHOUSE') {
+          update.warehouseIdTo = selectedEntity.id;
+          update.warehouseToDescription = selectedEntity.description || '';
+          update.warehouseToAddress = selectedEntity.address || '';
+        } else {
+          update.warehouseIdTo = null;
+        }
+      }
+    }
+
+    setFormData(update);
+  };
+
+  const handleDetailInputChange = (e, key, recordId) => {
+    setDetailFormData(detailFormData.map(item =>
+      item.id === recordId ? { ...item, [key]: e.target.value } : item
+    ));
+
+    if (key === 'quantity') {
+      setEditedDetails(editedDetails => {
+        const existingIndex = editedDetails.findIndex(detail => detail.id === recordId);
+        const updatedDetails = [...editedDetails];
+        if (existingIndex >= 0) {
+          updatedDetails[existingIndex] = { ...updatedDetails[existingIndex], quantity: e.target.value };
+        } else {
+          updatedDetails.push({ id: recordId, quantity: e.target.value });
+        }
+        return updatedDetails;
+      });
+    }
+  };
+
+  const handleDetailSelectChange = (value, key, recordId) => {
+    if (key === 'productName') {
+      const selectedProduct = productResponse?.data.find(product => product.name === value);
+      const selectedProductId = selectedProduct?.id;
+
+      setSelectedProductId(selectedProductId);
+
+      setDetailFormData(detailFormData.map(item =>
+        item.id === recordId ? {
+          ...item,
+          product: {
+            ...item.product,
+            name: value,
+            description: selectedProduct?.description || '',
+            category: {
+              ...item.product.category,
+              name: selectedProduct?.category?.name || ''
+            }
+          }
+        } : item
+      ));
+
+      refetchInventories();
+    } else if (key === 'zone') {
+      setDetailFormData(detailFormData.map(item =>
+        item.id === recordId ? { ...item, zone: { name: value } } : item
+      ));
+    } else {
+      setDetailFormData(detailFormData.map(item =>
+        item.id === recordId ? { ...item, [key]: value } : item
+      ));
+    }
+  };
+
+  const handleDetailDateChange = (value, key, recordId) => {
+    setDetailFormData(detailFormData.map(item =>
+      item.id === recordId ? { ...item, [key]: value } : item
+    ));
   };
 
   const handleCancelEdit = () => {
-    setConfirmationAction({ type: 'cancelEditMode' });
-    setIsConfirmationPopupVisible(true);
-  };
-
-  const handleSaveRowEdit = async (record) => {
-    const { product, quantity } = editableRowData;
-    const checkResponse = await checkAvailableQuantity({
-      authToken,
-      data: {
-        productId: product.id,
-        quantity,
-        warehouseId: exportData.warehouseFrom.id
-      }
-    }).unwrap();
-    if (checkResponse.status === 200 && checkResponse.message === 'Enough quantity') {
-      setLocalUpdatedQuantities({
-        ...localUpdatedQuantities,
-        [record.id]: { exportDetailId: record.id, quantity },
+    if (JSON.stringify(formData) !== JSON.stringify(initialData) || JSON.stringify(detailFormData) !== JSON.stringify(initialDetailData)) {
+      Modal.confirm({
+        title: 'Unsaved Changes',
+        content: 'You have unsaved changes. Do you really want to cancel?',
+        onOk: () => {
+          setIsEditing(false);
+          setFormData(initialData);
+          setDetailFormData(initialDetailData);
+          setEditedDetails([]); // Reset edited details
+          setDeletedDetails([]); // Reset deleted details
+        }
       });
-      setEditableRow(null);
-      setEditableRowData({});
-      message.success('Quantity update is valid');
     } else {
-      message.error('Not enough quantity in this warehouse');
+      setIsEditing(false);
     }
   };
 
-  const handleSaveEdit = async () => {
-    if (temporarilyHiddenProductIds.length > 0) {
-      try {
-        await deleteExportDetails({ authToken, ids: temporarilyHiddenProductIds }).unwrap();
-        setTemporarilyHiddenProductIds([]);
-      } catch (error) {
-        message.error('Failed to delete selected products');
-        console.error('Delete export details error:', error);
-      }
-    }
-
-    const updateData = {
-      description: editableData.description || '',
-      exportDate: editableData.exportDate ? new Date(editableData.exportDate).toISOString() : null,
-      warehouseIdTo: editableData.warehouseIdTo || null,
-      customerName: editableData.customerName || null,
-      customerAddress: editableData.customerAddress || null,
-      customerPhone: editableData.customerPhone || null,
-      customerEmail: editableData.customerEmail || null,
-    };
-
-    const customerChanged = (
-      editableData.customerName !== exportData.customer?.name ||
-      editableData.customerAddress !== exportData.customer?.address ||
-      editableData.customerPhone !== exportData.customer?.phone ||
-      editableData.customerEmail !== exportData.customer?.email
-    );
-
-    if (customerChanged && exportData.customer?.id) {
-      updateData.customerId = exportData.customer.id;
-    }
-
-    console.log('updateData:', updateData);
-
-    try {
-      await updateExportById({
-        exportId: id,
-        authToken,
-        data: updateData
-      }).unwrap();
-      setIsEditMode(false);
-      handleCloseConfirmationPopup();
-      message.success('Export updated successfully');
-    } catch (error) {
-      message.error('Failed to update export');
-      console.error('Update export error:', error);
-    }
-
-    const updatedExportDetails = Object.values(localUpdatedQuantities).map(detail => ({
-      exportDetailId: detail.exportDetailId,
-      quantity: detail.quantity,
-      warehouseId: exportData.warehouseFrom.id
-    }));
-
-    if (updatedExportDetails.length > 0) {
-      try {
-        await updateExportDetails({
-          data: updatedExportDetails,
-          authToken,
-        }).unwrap();
-        message.success('Product quantities updated successfully');
-      } catch (error) {
-        message.error('Failed to update product quantities');
-        console.error('Update product quantities error:', error);
-      }
-    }
-
-    if (selectedProducts.length > 0) {
-      const newExportDetails = selectedProducts.map((product) => {
-        const item = inventories.find((inv) => inv.id === product.id);
-        return {
-          productId: item.product.id,
-          exportId: id,
-          quantity: product.quantity,
-          expiredAt: new Date(item.expiredAt).toISOString(),
-          zoneId: item.zone.id,
-        };
-      });
-
-      try {
-        await addExportDetails({
-          data: newExportDetails,
-          authToken,
-        }).unwrap();
-        message.success('New products added successfully');
-      } catch (error) {
-        message.error('Failed to add new products');
-        console.error('Add new products error:', error);
-      }
-    }
-
-    setLocalUpdatedQuantities({});
-    setSelectedProducts([]);
-  };
-
-  const handleChange = (field, value) => {
-    setEditableData((prevData) => ({
-      ...prevData,
-      [field]: value
-    }));
+  const handleConfirmDelete = () => {
+    Modal.confirm({
+      title: 'Confirm Delete',
+      content: 'Are you sure you want to delete this export?',
+      onOk: handleDelete
+    });
   };
 
   const handleDelete = () => {
-    setTemporarilyHiddenProductIds([...temporarilyHiddenProductIds, ...selectedProductIds]);
-    setSelectedProductIds([]);
-  };
-
-  const handleConfirmAction = async () => {
-    switch (confirmationAction.type) {
-      case 'deleteProduct':
-        await handleDelete();
-        break;
-      case 'cancelEditMode':
-        setIsEditMode(false);
-        setSelectedProductIds([]);
-        setTemporarilyHiddenProductIds([]);
-        handleCloseConfirmationPopup();
-        break;
-      case 'updateExport':
-        await handleSaveEdit();
-        break;
-      default:
-        break;
+    try {
+      // Handle delete logic here
+    } catch (error) {
+      console.error("handleDelete:", error);
     }
   };
 
-  const handleOpenProductModal = () => {
-    setIsProductModalVisible(true);
-  };
+  const handleUpdateExport = async () => {
+    try {
+      const formattedDate = formData.exportDate ? new Date(formData.exportDate).toISOString() : null;
 
-  const handleCloseProductModal = () => {
-    setIsProductModalVisible(false);
-  };
-
-  const handleUpdate = () => {
-    handleOpenProductModal();
-  };
-
-  const handleDone = async () => {
-    const newExportDetails = selectedProducts.map((product) => {
-      const item = inventories.find((inv) => inv.id === product.id);
-      return {
-        productId: item.product.id,
-        exportId: id,
-        quantity: product.quantity,
-        expiredAt: new Date(item.expiredAt).toISOString(),
-        zoneId: item.zone.id,
+      const updatedData = {
+        description: formData.description,
+        type: formData.exportType,
+        exportDate: formattedDate,
+        warehouseIdTo: formData.exportType === 'WAREHOUSE' ? formData.warehouseIdTo : null,
+        customerId: formData.exportType !== 'WAREHOUSE' ? formData.customerId : null,
       };
+
+      const result = await updateExport({ data: updatedData, exportId: id, authToken });
+
+      if (result?.data) {
+        message.success('Export updated successfully!');
+        setIsEditing(false);
+        setInitialData(formData);
+
+        if (editedDetails.length > 0) {
+          await handleUpdateExportDetails();
+        }
+
+        if (deletedDetails.length > 0) {
+          await handleDeleteExportDetails();
+        }
+      } else {
+        throw new Error('Failed to update export');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      message.error('Failed to update export: ' + error.message);
+    }
+  }
+
+  const handleUpdateExportDetails = async () => {
+    try {
+      const requests = editedDetails.map(detail => ({
+        exportDetailId: detail.id,
+        quantity: detail.quantity,
+      }));
+
+      console.log('Edited Details:', requests);
+
+      const result = await updateExportDetails({ data: requests, authToken });
+
+      if (result?.data) {
+        message.success('Export details updated successfully!');
+        setEditedDetails([]);
+      } else {
+        throw new Error('Failed to update export details');
+      }
+    } catch (error) {
+      console.error('Update details error:', error);
+      message.error('Failed to update export details: ' + error.message);
+    }
+  }
+
+  const handleDeleteExportDetails = async () => {
+    try {
+      const result = await deleteExportDetails({ data: deletedDetails, authToken });
+
+      if (result?.data) {
+        message.success('Export details deleted successfully!');
+        setDeletedDetails([]);
+        setDetailFormData(detailFormData.filter(detail => !deletedDetails.includes(detail.id)));
+      } else {
+        throw new Error('Failed to delete export details');
+      }
+    } catch (error) {
+      console.error('Delete details error:', error);
+      message.error('Failed to delete export details: ' + error.message);
+    }
+  }
+
+  const handleSaveEdit = () => {
+    Modal.confirm({
+      title: 'Confirm Save',
+      content: 'Are you sure you want to save the changes?',
+      onOk: () => {
+        handleUpdateExport();
+        handleUpdateExportDetails();
+        handleDeleteExportDetails();
+      }
+    });
+  };
+
+  const handleSaveDetail = async (record) => {
+    try {
+      const formattedDate = record.expiredAt ? moment(record.expiredAt).utc().format("YYYY-MM-DDTHH:mm:ss.SSSZ") : null;
+
+      const bodyData = {
+        exportId: record.id,
+        productId: record.product.id,
+        zoneId: record.zone.id,
+        expiredAt: formattedDate,
+        quantity: record.quantity,
+      }
+
+      const result = await checkQuantityForUpdate({
+        authToken,
+        data: bodyData
+      });
+
+      if (result?.data.status === 200 && result?.data.message === "Sufficient inventory") {
+        message.success(result?.data?.message);
+        setEditedDetails(editedDetails => {
+          const existingIndex = editedDetails.findIndex(detail => detail.id === record.id);
+          const updatedDetails = [...editedDetails];
+          if (existingIndex >= 0) {
+            updatedDetails[existingIndex] = { ...updatedDetails[existingIndex], quantity: record.quantity };
+          } else {
+            updatedDetails.push({ id: record.id, quantity: record.quantity });
+          }
+          return updatedDetails;
+        });
+        // Hide Save and Cancel buttons, show Delete button
+        setDetailFormData(detailFormData.map(item =>
+          item.id === record.id ? { ...item, showSaveCancel: false } : item
+        ));
+      } else if (result?.data?.status !== 200) {
+        throw new Error(result?.data?.message);
+      }
+    } catch (error) {
+      console.error('Check quantity error:', error);
+      message.error('Failed to check quantity ' + error.message || error);
+      handleCancelDetail(record.id);
+    }
+  }
+
+  const handleCancelDetail = (recordId) => {
+    setDetailFormData(detailFormData.map(item =>
+      item.id === recordId ? { ...item, quantity: initialDetailData.find(initialItem => initialItem.id === recordId).quantity, showSaveCancel: false } : item
+    ));
+    setEditedDetails(editedDetails => editedDetails.filter(detail => detail.id !== recordId));
+  };
+
+  const handleDeleteDetail = (recordId) => {
+    setDeletedDetails([...deletedDetails, recordId]);
+    setDetailFormData(detailFormData.filter(item => item.id !== recordId));
+  }
+
+  const groupInventories = (inventories) => {
+    const groupedInventories = {};
+
+    inventories.forEach((inventory) => {
+      const { expiredAt, zone } = inventory;
+      const key = expiredAt ? moment(expiredAt).format('YYYY-MM-DD') : 'None';
+
+      if (!groupedInventories[key]) {
+        groupedInventories[key] = {};
+      }
+
+      if (!groupedInventories[key][zone.name]) {
+        groupedInventories[key][zone.name] = [];
+      }
+
+      groupedInventories[key][zone.name].push(inventory);
     });
 
-    try {
-      await updateAndAddExportDetails({
-        data: newExportDetails,
-        exportId: id,
-        authToken,
-      }).unwrap();
-      message.success("Export details updated successfully");
-    } catch (error) {
-      message.error("Failed to update export details");
-      console.error("Update and add export details error:", error);
-    }
-
-    setLocalUpdatedQuantities({});
-    setSelectedProducts([]);
-    setIsEditMode(false);
-    setIsProductModalVisible(false);
+    return groupedInventories;
   };
-
-  const calculateCurrentInventory = (item) => {
-    const existingExportDetail = exportProducts.find(
-      (product) =>
-        product.product.id === item.product.id &&
-        product.zone.id === item.zone.id &&
-        new Date(product.expiredAt).getTime() ===
-        new Date(item.expiredAt).getTime()
-    );
-    return (
-      item.quantity + (existingExportDetail ? existingExportDetail.quantity : 0)
-    );
-  };
-
-  const handleSelectAllChange = (e) => {
-    if (e.target.checked) {
-      const newSelectedProducts = filteredData.map((item) => ({
-        id: item.id,
-        quantity: 0,
-      }));
-      setSelectedProducts(newSelectedProducts);
-    } else {
-      setSelectedProducts([]);
-    }
-  };
-
-  const handlePageChange = (page) => setCurrentPage(page);
-
-  const handleProductSelectChange = (e, id) => {
-    if (e.target.checked) {
-      setSelectedProducts([...selectedProducts, { id, quantity: 0 }]);
-    } else {
-      setSelectedProducts(
-        selectedProducts.filter((product) => product.id !== id)
-      );
-    }
-  };
-
-  const handleQuantityChange = (e, id) => {
-    const { value } = e.target;
-    setSelectedProducts((prevSelectedProducts) =>
-      prevSelectedProducts.map((product) =>
-        product.id === id
-          ? {
-            ...product,
-            quantity: Math.min(
-              value,
-              inventories.find((item) => item.id === id).quantity
-            ),
-          }
-          : product
-      )
-    );
-  };
-
-  const handleRemoveProduct = (id) => {
-    setSelectedProducts(
-      selectedProducts.filter((product) => product.id !== id)
-    );
-  };
-
-  const filteredData = inventories.filter((item) => {
-    const now = new Date();
-    const expiredAt = new Date(item.expiredAt);
-    const inFifteenDays = new Date(now);
-    inFifteenDays.setDate(now.getDate() + 15);
-
-    if (filterType === "expired" && expiredAt >= now) return false;
-    if (
-      filterType === "expiring" &&
-      (expiredAt < now || expiredAt > inFifteenDays)
-    )
-      return false;
-    if (filterType === "valid" && expiredAt <= now) return false;
-
-    return (
-      item.product.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.zone.name.toLowerCase().includes(searchText.toLowerCase())
-    );
-  });
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * 10,
-    currentPage * 10
-  );
 
   const columns = [
-    ...(isEditMode ? [{
-      title: 'Select',
-      dataIndex: 'select',
-      key: 'select',
-      render: (_, record) => (
-        <Checkbox
-          checked={selectedProductIds.includes(record.id)}
-          onChange={(e) => {
-            if (e.target.checked) {
-              setSelectedProductIds([...selectedProductIds, record.id]);
-            } else {
-              setSelectedProductIds(selectedProductIds.filter((id) => id !== record.id));
-            }
-          }}
-        />
-      )
-    }] : []),
     {
       title: 'Product Name',
       dataIndex: ['product', 'name'],
       key: 'productName',
+      width: 250,
+      render: (text, record) => (
+        <span>{text}</span>
+      ),
     },
     {
-      title: 'Product Description',
+      title: 'Description',
       dataIndex: ['product', 'description'],
-      key: 'productDescription',
+      key: 'description',
+      width: 250, // Set a fixed width for the column
     },
     {
-      title: 'Product Category',
+      title: 'Category',
       dataIndex: ['product', 'category', 'name'],
-      key: 'productCategory',
+      key: 'category',
+      width: 150, // Set a fixed width for the column
+    },
+    {
+      title: 'Expiration Date',
+      dataIndex: 'expiredAt',
+      key: 'expiredAt',
+      width: 150, // Set a fixed width for the column
+      render: (text, record) => (
+        <span>{text ? moment(text).format('YYYY-MM-DD') : 'None'}</span>
+      )
+    },
+    {
+      title: 'Zone',
+      dataIndex: ['zone', 'name'],
+      key: 'zone',
+      width: 150, // Set a fixed width for the column
+      render: (text, record) => (
+        <span>{text}</span>
+      )
     },
     {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
+      width: 100, // Set a fixed width for the column
       render: (text, record) => (
-        editableRow === record.id ? (
+        isEditing ? (
           <Input
+            className='w-full'
             type="number"
-            value={editableRowData.quantity}
-            onChange={(e) => setEditableRowData({
-              ...editableRowData,
-              quantity: e.target.value
-            })}
+            value={text}
+            onChange={(e) => handleDetailInputChange(e, 'quantity', record.id)}
           />
-        ) : (
-          localUpdatedQuantities[record.id]?.quantity ?? text
-        )
+        ) : text
       ),
     },
-    {
-      title: 'Expired At',
-      dataIndex: 'expiredAt',
-      key: 'expiredAt',
-      render: (text) => new Date(text).toLocaleDateString(),
-    },
-    ...(isEditMode ? [{
-      title: 'Action',
-      key: 'action',
-      render: (_, record) => (
-        editableRow === record.id ? (
-          <span>
-            <a className='no-select' onClick={() => handleSaveRowEdit(record)}>Save</a>
-            <a className='no-select' onClick={() => {
-              setEditableRow(null);
-              setEditableRowData({});
-            }}>Cancel</a>
-          </span>
-        ) : (
-          <a className='no-select' onClick={() => {
-            setEditableRow(record.id);
-            setEditableRowData(record);
-          }}>Change</a>
-        )
-      ),
-    }] : []),
   ];
 
-  if (exportsLoading || isInventoryLoading) return <div>Loading...</div>;
-  if (exportsError) return <div>Error loading export data</div>;
-
-  const modalConfirmTitle = {
-    deleteProduct: 'Do you want to delete the selected products?',
-    approveExport: 'Do you want to approve this export?',
-    cancelEditMode: 'Do you want to cancel editing?',
-    updateExport: 'Do you want to save changes?'
-  }[confirmationAction?.type] || 'Confirm Action';
+  if (isEditing) {
+    columns.push({
+      title: 'Actions',
+      key: 'actions',
+      width: 150, // Set a fixed width for the column
+      render: (text, record) => (
+        <span>
+          {editedDetails.some(detail => detail.id === record.id) ? (
+            <>
+              <a className='text-blue-300 hover:text-blue-600 no-underline bg-transparent cursor-pointer transition duration-300' onClick={() => handleSaveDetail(record)}>Save</a>
+              <a className='text-red-300 hover:text-red-600 no-underline bg-transparent cursor-pointer transition duration-300 ml-2' onClick={() => handleCancelDetail(record.id)}>Cancel</a>
+            </>
+          ) : (
+            <a className='text-red-300 hover:text-red-600 no-underline bg-transparent cursor-pointer transition duration-300' onClick={() => handleDeleteDetail(record.id)} danger>Delete</a>
+          )}
+        </span>
+      )
+    });
+  }
 
   return (
     <div>
-      <div className='container'>
-        <Breadcrumbs />
-        <h1 className="font-bold text-3xl py-4">Export {id}</h1>
-        <table className="table-detail">
-          <tbody>
-            <tr>
-              <td className="export-attribute-title">Description:</td>
-              <td>
-                {isEditMode ? (
-                  <TextArea
-                    rows={4}
-                    style={{ width: '100%' }}
-                    value={editableData.description}
-                    onChange={(e) => handleChange('description', e.target.value)}
-                  />
-                ) : (
-                  <p>{exportData.description}</p>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <td className="export-attribute-title">Status:</td>
-              <td>
-                {isEditMode ? (
-                  <Select
-                    placeholder="Select a status"
-                    defaultValue={exportData.status}
-                    onChange={(value) => handleChange('status', value)}
-                    style={{ width: '100%' }}
-                  >
-                    <Option value="PENDING">PENDING</Option>
-                    <Option value="SHIPPING">SHIPPING</Option>
-                    <Option value="SUCCEED">SUCCEED</Option>
-                    <Option value="CANCEL">CANCEL</Option>
-                  </Select>
-                ) : (
-                  <p><ExportStatus status={exportData.status} /></p>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <td className="export-attribute-title">Export Date:</td>
-              <td>
-                {isEditMode ? (
-                  <Input
-                    type="date"
-                    style={{ width: '100%' }}
-                    value={new Date(editableData.exportDate).toISOString().split('T')[0]}
-                    onChange={(e) => handleChange('exportDate', e.target.value)}
-                  />
-                ) : (
-                  <p>{new Date(exportData.exportDate).toLocaleDateString()}</p>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <td className="export-attribute-title">Export Type:</td>
-              <td><p>{exportData.exportType}</p></td>
-            </tr>
-            {exportData.exportType === 'WAREHOUSE' && <tr>
-              <td className="export-attribute-title">Warehouse: </td>
-              <td><p>{exportData.warehouseTo.name}</p></td>
-            </tr>}
-            <tr>
-              <td className="export-attribute-title">To:</td>
-              <td>
-                {isEditMode ? (
-                  <div>
-                    {exportData.exportType === 'CUSTOMER' ? (
-                      <Input
-                        style={{ width: '100%' }}
-                        value={editableData.customerAddress}
-                        onChange={(e) => handleChange('customerAddress', e.target.value)}
-                      />
-                    ) : (
-                      <Select
-                        style={{ width: '100%' }}
-                        showSearch
-                        placeholder="Select a warehouse"
-                        value={editableData.warehouseIdTo}
-                        onChange={(value) => handleChange('warehouseIdTo', value)}
-                        loading={isWarehouseLoading}
-                      >
-                        {warehousesData.map((warehouse) => (
-                          <Option key={warehouse.id} value={warehouse.id}>
-                            {warehouse.name}
-                          </Option>
-                        ))}
-                      </Select>
-                    )}
-                  </div>
-                ) : (
-                  <p>
-                    {exportData.exportType === 'CUSTOMER' ?
-                      exportData.customer.address :
-                      exportData.warehouseTo.address
-                    }
-                  </p>
-                )}
-              </td>
-            </tr>
-            {exportData.exportType === 'CUSTOMER' && (
-              <>
-                <tr>
-                  <td className="export-attribute-title">Customer:</td>
-                  <td>
-                    {isEditMode ? (
-                      <Input
-                        style={{ width: '100%' }}
-                        value={editableData.customerName}
-                        onChange={(e) => handleChange('customerName', e.target.value)}
-                      />
-                    ) : (
-                      <p>{exportData.customer.name}</p>
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="export-attribute-title">Customer Email:</td>
-                  <td>
-                    {isEditMode ? (
-                      <Input
-                        style={{ width: '100%' }}
-                        value={editableData.customerEmail}
-                        onChange={(e) => handleChange('customerEmail', e.target.value)}
-                      />
-                    ) : (
-                      <p>{exportData.customer.email}</p>
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="export-attribute-title">Customer Phone:</td>
-                  <td>
-                    {isEditMode ? (
-                      <Input
-                        style={{ width: '100%' }}
-                        value={editableData.customerPhone}
-                        onChange={(e) => handleChange('customerPhone', e.target.value)}
-                      />
-                    ) : (
-                      <p>{exportData.customer.phone}</p>
-                    )}
-                  </td>
-                </tr>
-              </>
-            )}
-          </tbody>
-        </table>
-        <div>
-          <Button className='no-select' href='#' onClick={handleOpenProductListPopup}>
-            View Export Details
-          </Button>
-          <div>
-            {isEditMode ? (
-              <div className="action-buttons">
-                <Button
-                  style={{
-                    background: '#ef4444',
-                    color: 'white',
-                  }}
-                  type="default"
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  style={{
-                    background: '#16a34a',
-                    color: 'white',
-                  }}
-                  type="default"
-                  onClick={() =>
-                    handleOpenConfirmationPopup({ type: "updateExport" })
-                  }
-                >
-                  Save
-                </Button>
-              </div>
-            ) : (
-              <div>
-                {exportData.status === "PENDING" && (
-                  <div className="action-buttons">
-                    <Button
-                      style={{
-                        background: '#0284c7',
-                        color: 'white',
-                      }}
-                      type="default"
-                      onClick={handleOpenEditMode}
-                    >
-                      <EditNoteIcon /> Edit
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <Modal
-        transitionName=""
-        title="Export Details"
-        width={800}
-        className="custom-modal"
-        visible={isProductListPopupVisible}
-        onCancel={handleCloseProductListPopup}
-        footer={[
-          <div className='footer-modal-button'>
-            <Button key="close" onClick={handleCloseProductListPopup}>
-              Close
-            </Button>
-            {isEditMode && selectedProductIds.length != 0 ? (
-              <Button
-                style={{
-                  background: '#d32f2f',
-                  color: 'white',
-                }}
-                type="default"
-                onClick={() =>
-                  handleOpenConfirmationPopup({ type: "deleteProduct" })
-                }
-              >
-                <DeleteRoundedIcon /> Delete Selected
+      <Breadcrumbs />
+      <h1 className="font-bold text-3xl p-4">Export {id}</h1>
+      <div className="px-4 overflow-auto">
+        <div className='flex justify-end gap-2'>
+          {!isEditing ? (
+            <>
+              <Button size="large" style={{ backgroundColor: '#ff4d4f', color: '#fff', borderColor: '#ff4d4f' }}>
+                <PictureAsPdfIcon /> Preview
               </Button>
-            ) : null}
-            <Button
-              key="update"
-              style={{
-                background: "#3b82f6",
-                color: "white",
-              }}
-              type="default"
-              onClick={handleUpdate}
-            >
-              Update
-            </Button>
-          </div>
-        ]}
-      >
-        <Table
-          dataSource={exportProducts.filter(product => !temporarilyHiddenProductIds.includes(product.id))}
-          columns={columns}
-          rowKey="id"
-          pagination={false}
-        />
-      </Modal>
-
-      <Modal
-        title="Select Products"
-        visible={isProductModalVisible}
-        onCancel={handleCloseProductModal}
-        footer={[
-          <Button key="close" onClick={handleCloseProductModal}>
-            Close
-          </Button>,
-          <Button key="done" type="primary" onClick={handleDone}>
-            Done
-          </Button>,
-        ]}
-        style={{ top: 20 }}
-        width={1000}
-      >
-        <div style={{ display: "flex", height: "80vh" }}>
-          <div style={{ width: "70%", paddingRight: "10px" }}>
-            <Radio.Group
-              onChange={(e) => setFilterType(e.target.value)}
-              value={filterType}
-              style={{ marginBottom: 16 }}
-            >
-              <Radio value="all">All</Radio>
-              <Radio value="expired">Expired</Radio>
-              <Radio value="expiring">Expiring in 15 days</Radio>
-              <Radio value="valid">Valid</Radio>
-            </Radio.Group>
-            <Input
-              placeholder="Search by product or zone name"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ marginBottom: 16 }}
-            />
-            <Table
-              dataSource={paginatedData}
-              columns={columns}
-              rowKey="id"
-              pagination={false}
-            />
-            <Pagination
-              current={currentPage}
-              pageSize={10}
-              total={filteredData.length}
-              onChange={handlePageChange}
-              style={{ marginTop: "10px", textAlign: "center" }}
-            />
-          </div>
-          <div
-            style={{
-              width: "30%",
-              maxHeight: "100%",
-              overflowY: "auto",
-              padding: "10px",
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-            }}
-          >
-            <h2 className="text-xl font-bold mb-4">Selected Products</h2>
-            {selectedProducts.map((product) => {
-              const item = inventories.find((inv) => inv.id === product.id);
-              const currentInventory = calculateCurrentInventory(item);
-              return (
-                <div
-                  key={product.id}
-                  style={{
-                    marginBottom: "10px",
-                    padding: "10px",
-                    border: "1px solid #ddd",
-                    borderRadius: "5px",
-                  }}
+              {exportData?.id === latestExportData?.id && (
+                <Button
+                  size="large"
+                  type="primary"
+                  className="flex justify-center items-center mr-4"
+                  onClick={() => setIsEditing(true)}
                 >
-                  <h3>{item.product.name}</h3>
-                  <p>Available: {currentInventory}</p>
-                  <Input
-                    type="number"
-                    value={product.quantity}
-                    onChange={(e) => handleQuantityChange(e, product.id)}
-                    min={1}
-                    max={currentInventory}
-                    style={{ marginBottom: "10px" }}
-                  />
-                  <Button
-                    type="link"
-                    danger
-                    onClick={() => handleRemoveProduct(product.id)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </Modal>
+                  <EditTwoTone /> Edit
+                </Button>)}
+            </>
+          ) : (
+            <>
+              <Button
+                size="large"
+                onClick={handleCancelEdit}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="large"
+                type="primary" danger
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </Button>
+              <Button
+                size="large"
+                type='primary'
+                onClick={handleSaveEdit}
+                disabled={JSON.stringify(formData) === JSON.stringify(initialData) && JSON.stringify(detailFormData) === JSON.stringify(initialDetailData)}
+              >
+                Save
+              </Button>
 
-      <Modal
-        transitionName=""
-        title={modalConfirmTitle}
-        width={400}
-        className="custom-modal"
-        visible={isConfirmationPopupVisible}
-        onCancel={handleCloseConfirmationPopup}
-        footer={[
-          <div key="footer">
-            <Button key="close" onClick={handleCloseConfirmationPopup}>
-              Close
-            </Button>
-            <Button
-              style={{
-                background: "#3b82f6",
-                color: "white",
-              }}
-              type="default"
-              onClick={handleConfirmAction}
-            >
-              Confirm
-            </Button>
+            </>
+          )}
+        </div>
+        <div className='grid grid-cols-2 h-full'>
+          <div className='ml-4'>
+            <table>
+              <p className="mt-3 mb-1 font-bold text-xl">Export Invoice:</p>
+              <tr>
+                <td><p className='font-medium'>Description:</p></td>
+                <td className='w-3/4'><TextArea className='mb-2' size='large' autoSize={{ minRows: 3 }} value={formData?.description} disabled={!isEditing} onChange={(e) => handleInputChange(e, 'description')} /></td>
+              </tr>
+              <tr>
+                <td><p className='font-medium'>Export Type:</p></td>
+                <td className='w-3/4'>
+                  <Select className='mb-2 w-full' size='large' value={formData?.exportType} disabled={!isEditing}
+                    onChange={(value) => handleSelectChange(value, 'exportType', 'exportType')}>
+                    <Select.Option value="WAREHOUSE">Warehouse</Select.Option>
+                    <Select.Option value="CUSTOMER">Customer</Select.Option>
+                    <Select.Option value="WASTE">Waste</Select.Option>
+                  </Select>
+                </td>
+              </tr>
+              <tr>
+                <td><p className='font-medium'>Export Date:</p></td>
+                <td className='w-3/4'>
+                  <DatePicker
+                    className='mb-2 w-full'
+                    size='large'
+                    value={formData.exportDate ? moment(formData.exportDate) : null}
+                    onChange={handleDateChange}
+                    disabled={!isEditing}
+                  />
+                </td>
+              </tr>
+              <p className="mt-3 mb-1 font-bold text-xl">Warehouse From:</p>
+              <tr>
+                <td><p className='font-medium'>Warehouse Description:</p></td>
+                <td className='w-3/4'><TextArea className='mb-2' size='large' autoSize={{ minRows: 3 }} value={formData?.warehouseFromDescription} disabled /></td>
+              </tr>
+              <tr>
+                <td><p className='font-medium'>Warehouse Name:</p></td>
+                <td className='w-3/4'><Input className='mb-2' size='large' value={formData?.warehouseFromName} disabled /></td>
+              </tr>
+              <tr>
+                <td><p className='font-medium'>Warehouse Address:</p></td>
+                <td className='w-3/4'><Input className='mb-2' size='large' value={formData?.warehouseFromAddress} disabled /></td>
+              </tr>
+            </table>
           </div>
-        ]}
-      >
-      </Modal>
-    </div>
+          <div className='ml-4'>
+            {formData?.exportType === 'WAREHOUSE' ? (
+              <table>
+                <td><p className="mt-3 font-bold text-xl">Warehouse To:</p></td>
+                <tr>
+                  <td><p className='font-medium'>Name:</p></td>
+                  <td className='w-3/4'>
+                    <Select
+                      className='w-full mb-2'
+                      size='large'
+                      showSearch
+                      value={formData.warehouseToName}
+                      onChange={(value) => handleSelectChange(value, 'warehouse', 'warehouseToName')}
+                      disabled={!isEditing}
+                    >
+                      {warehouseResponse?.data
+                        .filter((warehouse) => warehouse.id !== exportData.warehouseFrom.id)
+                        .map((warehouse) => (
+                          <Select.Option key={warehouse.id} value={warehouse.name}>
+                            {warehouse.name}
+                          </Select.Option>
+                        ))}
+                    </Select>
+                  </td>
+                </tr>
+                <tr>
+                  <td><p className='font-medium'>Description:</p></td>
+                  <td className='w-3/4'><Input className='mb-2' size='large' value={formData?.warehouseToDescription} disabled /></td>
+                </tr>
+                <tr>
+                  <td><p className='font-medium'>Address:</p></td>
+                  <td className='w-3/4'><Input className='mb-2' size='large' value={formData?.warehouseToAddress} disabled /></td>
+                </tr>
+              </table>
+            ) : (
+              <table>
+                <td><p className="mt-3 font-bold text-xl">Customer:</p></td>
+                <tr>
+                  <td><p className='font-medium'>Name:</p></td>
+                  <td className='w-full'>
+                    <Select
+                      className='w-full mb-2'
+                      size='large'
+                      showSearch
+                      value={formData.customerName}
+                      onChange={(value) => handleSelectChange(value, 'customer', 'customerName')}
+                      disabled={!isEditing}
+                    >
+                      {customerResponse?.data.map((customer) => (
+                        <Select.Option key={customer.id} value={customer.name}>
+                          {customer.name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </td>
+                </tr>
+                <tr>
+                  <td><p className='font-medium'>Email:</p></td>
+                  <td className='w-full'><Input className='mb-2' size='large' value={formData?.customerEmail} disabled /></td>
+                </tr>
+                <tr>
+                  <td><p className='font-medium'>Phone:</p></td>
+                  <td className='w-full'><Input className='mb-2' size='large' value={formData?.customerPhone} disabled /></td>
+                </tr>
+                <tr>
+                  <td><p className='font-medium'>Address:</p></td>
+                  <td className='w-full'><Input className='mb-2' size='large' value={formData?.customerAddress} disabled /></td>
+                </tr>
+              </table>
+            )}
+          </div>
+        </div >
+        <div className="mt-4 py-4">
+          <Table
+            columns={columns}
+            dataSource={detailFormData}
+            rowKey="id"
+            loading={exportDetailResponseLoading}
+            pagination={false}
+          />
+        </div>
+      </div >
+    </div >
   );
 }
 

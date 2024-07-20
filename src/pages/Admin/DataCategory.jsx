@@ -14,8 +14,10 @@ import { Button, message, Form } from "antd";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
 import '../../assets/styles/MainDash.css';
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const DataCategory = () => {
+  useDocumentTitle('Categories');
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
   const { data: categories, isLoading, error } = useGetCategoriesQuery(authToken);
@@ -86,6 +88,10 @@ const DataCategory = () => {
   return (
     <div className="">
       <Breadcrumbs />
+      <div
+        className="flex justify-between"
+        style={{ paddingLeft: "3rem", paddingTop: "1rem" }}
+      >
       <h1 class="mb-2 text-2xl font-semibold text-dark">Categories</h1>
         <Button
           type="primary"
@@ -93,7 +99,7 @@ const DataCategory = () => {
           onClick={() => setAddNewVisible(true)}
         >
           Add new category
-        </Button>
+        </Button></div>
       <AddCategoryModal
         addNewVisible={addNewVisible}
         handleOkAdd={handleOkAdd}

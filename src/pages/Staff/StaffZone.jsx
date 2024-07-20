@@ -8,8 +8,10 @@ import { Button, message, Form } from 'antd';
 import { useSelector } from 'react-redux';
 import Loading from '../../utils/Loading';
 import Error500 from '../../utils/Error500';
+import useDocumentTitle from '../../utils/UseDocumentTitle';
 
 const StaffZone = () => {
+  useDocumentTitle('Zone')
   const { id } = useParams();
   const userInfo = useSelector((state) => state.auth);
   let authToken;

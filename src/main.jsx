@@ -80,10 +80,10 @@ const router = createBrowserRouter(
         <Route path="" element={<StaffRoute />}>
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
           <Route path="/staff/orders" element={<StaffOrder />} />
-          <Route path="/staff/data" element={<StaffData />} />
+          <Route path="/staff/data" element={<StaffProduct />} />
           <Route path="/staff/data/zone" element={<StaffZone />} />
           <Route path="/staff/data/zone/:zoneid/inventory" element={<StaffZoneInventory />} />
-          <Route path="/staff/data/products" element={<StaffProduct />} />
+          {/* <Route path="/staff/data/products" element={<StaffProduct />} /> */}
           <Route path="/staff/data/customers" element={<StaffCustomer />} />
           <Route path="/staff/order/export" element={<StaffExpport />} />
           <Route path="/staff/order/import" element={<StaffImport />} />
@@ -91,7 +91,6 @@ const router = createBrowserRouter(
           <Route path="/staff/import/new" element={<StaffAddImport />} />
           <Route path="/staff/import/from-warehouse" element={<StaffAddImportWarehouse />}/>
           <Route path="/staff/export/detail/:id" element={<StaffExportDetail />} />
-          <Route path="/staff/transfer" element={<StaffTransfer />} />
         </Route>
       </Route>
       {/* Route 404 cho tất cả các route khác */}

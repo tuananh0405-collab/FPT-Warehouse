@@ -6,9 +6,11 @@ import StoreIcon from "@mui/icons-material/Store";
 import CategoryIcon from "@mui/icons-material/Category";
 import PeopleIcon from "@mui/icons-material/People";
 import Breadcrumbs from "../../utils/Breadcumbs";
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 const { Meta } = Card;
 
 const DataComponent = () => {
+  useDocumentTitle('Data')
   const cardData = [
     {
       title: "Warehouse",
@@ -16,12 +18,12 @@ const DataComponent = () => {
       icon: <WarehouseIcon style={{ fontSize: 64 }} />,
       link: "/data/warehouse",
     },
-    {
-      title: "Zone",
-      description: "Define zones within warehouses.",
-      icon: <LocationOnIcon style={{ fontSize: 64 }} />,
-      link: "/data/zone",
-    },
+    // {
+    //   title: "Zone",
+    //   description: "Define zones within warehouses.",
+    //   icon: <LocationOnIcon style={{ fontSize: 64 }} />,
+    //   link: "/data/zone",
+    // },
     {
       title: "Product",
       description: "Manage your products.",
@@ -67,7 +69,7 @@ const DataComponent = () => {
     <div>
       <Breadcrumbs/>
       <div style={{ padding: "10px" }}>
-        <Row gutter={[16, 16]} justify="space-around">
+        <Row gutter={[16, 16]} justify="space">
           {cardData.map((card, index) => (
             <Col xs={24} sm={24} md={12} lg={8} xl={8} key={index}>
               <Link to={card.link} style={{ display: "block", height: "100%" }}>

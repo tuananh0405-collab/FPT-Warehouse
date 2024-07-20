@@ -195,10 +195,12 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Pagination from "@mui/material/Pagination";
+import useDocumentTitle from '../../utils/UseDocumentTitle';
 
 const { Option } = Select;
 
 const OrderExport = () => {
+  useDocumentTitle('Export')
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchParams, setSearchParams] = useState({ status: '', sortBy: 'id', direction: 'asc', pageNo: 1 });

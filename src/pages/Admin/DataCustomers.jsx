@@ -13,12 +13,18 @@ import AddCustomerModal from "../../components/Data/Customers/AddCustomerModal";
 import { Button, message, Form } from "antd";
 import Loading from "../../utils/Loading";
 import Error500 from "../../utils/Error500";
-import '../../assets/styles/MainDash.css';
+import "../../assets/styles/MainDash.css";
+import useDocumentTitle from "../../utils/UseDocumentTitle";
 
 const DataCustomers = () => {
+  useDocumentTitle('Customers')
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
-  const { data: customers, isLoading, error } = useGetAllCustomersQuery(authToken);
+  const {
+    data: customers,
+    isLoading,
+    error,
+  } = useGetAllCustomersQuery(authToken);
   const [updateCustomer] = useUpdateCustomerMutation();
   const [deleteCustomer] = useDeleteCustomerByIdMutation();
   const [addCustomer] = useAddCustomerMutation();
@@ -39,7 +45,11 @@ const DataCustomers = () => {
   const handleOk = async () => {
     const values = await form.validateFields();
     const data = { ...values, id: selectedCustomer.id };
-    await updateCustomer({ customerId: selectedCustomer.id, formData: data, authToken });
+    await updateCustomer({
+      customerId: selectedCustomer.id,
+      formData: data,
+      authToken,
+    });
     setIsModalVisible(false);
   };
 
@@ -86,14 +96,19 @@ const DataCustomers = () => {
   return (
     <div className="">
       <Breadcrumbs />
-      <h1 class="mb-2 text-2xl font-semibold text-dark">Customers</h1>
-      <Button
-        type="primary"
-        style={{ background: "#40A578" }}
-        onClick={() => setAddNewVisible(true)}
+      <div
+        className="flex justify-between"
+        style={{ paddingLeft: "3rem", paddingTop: "1rem" }}
       >
-        Add new customer
-      </Button>
+        <h1 class="mb-2 text-2xl font-semibold text-dark">Customers</h1>
+        <Button
+          type="primary"
+          style={{ background: "#40A578" }}
+          onClick={() => setAddNewVisible(true)}
+        >
+          Add new customer
+        </Button>
+      </div>
       <AddCustomerModal
         addNewVisible={addNewVisible}
         handleOkAdd={handleOkAdd}
