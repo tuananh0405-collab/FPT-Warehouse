@@ -6,17 +6,15 @@ import {
 } from "../../redux/api/exportApiSlice";
 import {
   useGetAllExportDetailsByExportIdQuery,
-  useUpdateExportDetailsMutation,
+  useUpdateAndAddExportDetailsMutation,
   useDeleteExportDetailsMutation,
   useCheckQuantityForUpdateMutation,
-  useUpdateAndAddExportDetailsMutation,
 } from "../../redux/api/exportDetailApiSlice";
 import { useGetAllCustomersQuery } from "../../redux/api/customersApiSlice";
 import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
 import { useGetAllProductsQuery } from "../../redux/api/productApiSlice";
 import { useGetAllInventoriesQuery } from "../../redux/api/inventoryApiSlice";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Breadcrumbs from "../../utils/Breadcumbs";
 import {
@@ -31,7 +29,7 @@ import {
 } from "antd";
 import { EditTwoTone } from "@mui/icons-material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import moment from "moment/moment";
+import moment from "moment";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import logo from "../../assets/images/FPT_logo_2010.png";
@@ -41,8 +39,8 @@ const { TextArea } = Input;
 function StaffExportDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const userInfo = useSelector((state) => state.auth);
+
   if (!userInfo) {
     navigate("/", { replace: true });
     return null;
@@ -86,6 +84,12 @@ function StaffExportDetail() {
   const exportData = exportResponse?.data;
   const exportDetailData = exportDetailResponse?.data;
   const latestExportData = latestExportResponse?.data;
+
+  const filteredProducts = productResponse?.data.filter((product) =>
+    inventoryResponse?.data.some(
+      (inv) => inv.product.id === product.id && inv.zone.warehouse.id === wid
+    )
+  );
 
   useEffect(() => {
     if (exportData) {
@@ -219,9 +223,12 @@ function StaffExportDetail() {
         )
       );
     } else if (key === "zone") {
+      const selectedZone = inventoryResponse?.data.find(
+        (zone) => zone.zone.name === value
+      );
       setDetailFormData(
         detailFormData.map((item) =>
-          item.id === recordId ? { ...item, zone: { name: value } } : item
+          item.id === recordId ? { ...item, zone: selectedZone.zone } : item
         )
       );
     } else {
@@ -313,12 +320,12 @@ function StaffExportDetail() {
         setIsEditing(false);
         setInitialData(formData);
 
-        if (editedDetails.length > 0 || newDetails.length > 0) {
+        if (
+          editedDetails.length > 0 ||
+          newDetails.length > 0 ||
+          deletedDetails.length > 0
+        ) {
           await handleUpdateExportDetails();
-        }
-
-        if (deletedDetails.length > 0) {
-          await handleDeleteExportDetails();
         }
       } else {
         throw new Error("Failed to update export");
@@ -331,21 +338,25 @@ function StaffExportDetail() {
 
   const handleUpdateExportDetails = async () => {
     try {
-      const requests = editedDetails.map((detail) => ({
-        exportDetailId: detail.id,
-        quantity: detail.quantity,
-      }));
+      const requests = detailFormData.map((detail) => {
+        let expiredAt = detail.expiredAt;
+        if (expiredAt && !expiredAt.includes("T")) {
+          const [date, time] = expiredAt.split(" ");
+          expiredAt = `${date}T${time.replace(".0", ".000+00:00")}`;
+        }
+        return {
+          productId: detail.product.id,
+          exportId: id,
+          quantity: detail.quantity,
+          expiredAt,
+          zoneId: detail.zone.id,
+        };
+      });
 
-      const newRequests = newDetails.map((detail) => ({
-        productId: detail.product.id,
-        exportId: id,
-        quantity: detail.quantity,
-        expiredAt: detail.expiredAt,
-        zoneId: detail.zone.id,
-      }));
+      console.log(requests);
 
       const result = await updateAndAddExportDetails({
-        data: [...requests, ...newRequests],
+        data: requests,
         exportId: id,
         authToken,
       });
@@ -354,34 +365,13 @@ function StaffExportDetail() {
         message.success("Export details updated successfully!");
         setEditedDetails([]);
         setNewDetails([]);
+        setDeletedDetails([]);
       } else {
         throw new Error("Failed to update export details");
       }
     } catch (error) {
       console.error("Update details error:", error);
       message.error("Failed to update export details: " + error.message);
-    }
-  };
-
-  const handleDeleteExportDetails = async () => {
-    try {
-      const result = await deleteExportDetails({
-        data: deletedDetails,
-        authToken,
-      });
-
-      if (result?.data) {
-        message.success("Export details deleted successfully!");
-        setDeletedDetails([]);
-        setDetailFormData(
-          detailFormData.filter((detail) => !deletedDetails.includes(detail.id))
-        );
-      } else {
-        throw new Error("Failed to delete export details");
-      }
-    } catch (error) {
-      console.error("Delete details error:", error);
-      message.error("Failed to delete export details: " + error.message);
     }
   };
 
@@ -472,7 +462,7 @@ function StaffExportDetail() {
     const newProduct = {
       id: Date.now().toString(),
       product: { name: "", description: "", category: { name: "" } },
-      zone: { name: "" },
+      zone: { id: null, name: "" },
       expiredAt: null,
       quantity: 1,
     };
@@ -481,7 +471,7 @@ function StaffExportDetail() {
   };
 
   const handleProductSelectChange = (value, index) => {
-    const product = productResponse?.data.find((p) => p.id === value);
+    const product = filteredProducts?.find((p) => p.id === value);
     const newDetails = [...detailFormData];
     newDetails[index].product = {
       ...newDetails[index].product,
@@ -495,8 +485,9 @@ function StaffExportDetail() {
   };
 
   const handleZoneChange = (value, index) => {
+    const zone = inventoryResponse?.data.find((z) => z.zone.id === value).zone;
     const newDetails = [...detailFormData];
-    newDetails[index].zone = { name: value };
+    newDetails[index].zone = zone;
     setDetailFormData(newDetails);
   };
 
@@ -520,7 +511,7 @@ function StaffExportDetail() {
             (inv) =>
               inv.product.id === productId && inv.zone.name !== excludedZone
           )
-          .map((inv) => inv.zone.name)
+          .map((inv) => inv.zone)
       ),
     ];
     return filteredZones;
@@ -575,7 +566,7 @@ function StaffExportDetail() {
             onChange={(value) => handleProductSelectChange(value, index)}
             style={{ width: "100%" }}
           >
-            {productResponse?.data.map((p) => (
+            {filteredProducts?.map((p) => (
               <Select.Option key={p.id} value={p.id}>
                 {p.name}
               </Select.Option>
@@ -632,13 +623,13 @@ function StaffExportDetail() {
         isEditing ? (
           <Select
             placeholder="Select zone"
-            value={record.zone.name}
+            value={record.zone.id}
             onChange={(value) => handleZoneChange(value, index)}
             style={{ width: "100%" }}
           >
             {getUniqueZones(record.product.id, record.zone.name).map((zone) => (
-              <Select.Option key={zone} value={zone}>
-                {zone}
+              <Select.Option key={zone.id} value={zone.id}>
+                {zone.name}
               </Select.Option>
             ))}
           </Select>
