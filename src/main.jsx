@@ -49,6 +49,7 @@ import ImportDetails from "./pages/Admin/ImportDetails.jsx";
 import ReportComponent from "./pages/Admin/ReportComponent.jsx";
 import StaffTransfer from "./pages/Staff/StaffTransfer.jsx";
 import StaffAddImportWarehouse from "./pages/Staff/StaffAddImportWarehouse.jsx";
+import StaffImportDetail from "./pages/Staff/StaffImportDetail.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -91,6 +92,7 @@ const router = createBrowserRouter(
           <Route path="/staff/import/new" element={<StaffAddImport />} />
           <Route path="/staff/import/from-warehouse" element={<StaffAddImportWarehouse />}/>
           <Route path="/staff/export/detail/:id" element={<StaffExportDetail />} />
+          <Route path="/staff/import/detail/:id" element={<StaffImportDetail />} />
         </Route>
       </Route>
       {/* Route 404 cho tất cả các route khác */}
