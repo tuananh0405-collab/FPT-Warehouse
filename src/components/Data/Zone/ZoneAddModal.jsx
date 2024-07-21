@@ -18,7 +18,7 @@ const ZoneAddModal = ({ visible, handleOk, handleCancel, form }) => {
       ]}
     >
       <Form form={form} layout="vertical">
-        <Form.Item label="Name" name="name">
+        <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please input the zone name!' }]}>
           <Input placeholder="Name" />
         </Form.Item>
         <Form.Item label="Description" name="description">

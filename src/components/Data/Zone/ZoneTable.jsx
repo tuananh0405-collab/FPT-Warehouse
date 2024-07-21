@@ -107,7 +107,7 @@ const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {zones && (
+            {!zones && (
               <TableRow>
                 <TableCell colSpan={5}>
                   <Stack sx={{ width: "100%" }} spacing={2}>

@@ -22,7 +22,7 @@ const AddCategoryModal = ({
       ]}
     >
       <Form form={formAdd} layout="vertical">
-        <Form.Item label="Name" name="name">
+        <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please input the category name!' }]}>
           <Input placeholder="name" />
         </Form.Item>
         <Form.Item label="Description" name="description">

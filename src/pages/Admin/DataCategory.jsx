@@ -68,10 +68,15 @@ const DataCategory = () => {
   const handleOkAdd = async () => {
     const values = await formAdd.validateFields();
     const data = { ...values };
-    await addCategory({ newCategory: data, authToken });
-    message.success("Category added successfully");
-    setAddNewVisible(false);
-    formAdd.resetFields();
+    try {
+      await addCategory({ newCategory: data, authToken });
+      setAddNewVisible(false);
+      formAdd.resetFields();
+      // message.success("Added category")
+    } catch (error) {
+      console.log(error);
+      message.error(error.message);
+    }
   };
 
   const handleCancelAdd = () => {

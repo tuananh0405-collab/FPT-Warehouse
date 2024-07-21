@@ -23,22 +23,22 @@ const AddStaffModal = ({
       ]}
     >
       <Form form={formAdd} layout="vertical">
-        <Form.Item label="Full Name" name="fullName">
+        <Form.Item label="Full Name" name="fullName" rules={[{ required: true, message: 'Please input the staff name!' }]}>
           <Input placeholder="Full name" />
         </Form.Item>
-        <Form.Item label="User Name" name="username">
+        <Form.Item label="User Name" name="username" rules={[{ required: true, message: 'Please input the user name!' }]}>
           <Input placeholder="User name" />
         </Form.Item>
-        <Form.Item label="Password" name="password">
+        <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please input the password!' }]}>
           <Input placeholder="Password" />
         </Form.Item>
-        <Form.Item label="Email" name="email">
+        <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Please input the email!' }]}>
           <Input placeholder="Email" />
         </Form.Item>
-        <Form.Item label="Phone" name="phone">
+        <Form.Item label="Phone" name="phone" rules={[{ required: true, message: 'Please input the phone number!' }]}>
           <Input placeholder="Phone" />
         </Form.Item>
-        <Form.Item label="Address" name="address">
+        <Form.Item label="Address" name="address" rules={[{ required: true, message: 'Please input the address!' }]}>
           <Input placeholder="Address" />
         </Form.Item>
         <Form.Item label="Role" name="role">
