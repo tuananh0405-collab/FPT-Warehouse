@@ -33,7 +33,7 @@ const { Option } = Select;
 const { Step } = Steps;
 
 export const FormatTime = (time) => {
-  return moment(time).format("YYYY-MM-DD HH:mm:ss"); // Format như ví dụ, bạn có thể thay đổi theo ý muốn
+  return moment(time).format("YYYY-MM-DD HH:mm:ss");
 };
 
 const StaffAddExport = () => {
@@ -129,30 +129,6 @@ const StaffAddExport = () => {
       ...changedValues,
     }));
   };
-
-  // const handleStepChange = async (current) => {
-  //   if (currentStep === 0 && current === 1) {
-  //     try {
-  //       await form.validateFields();
-  //       const currentDate = new Date().toISOString().split("T")[0];
-  //       if (formData.exportDate < currentDate) {
-  //         message.error("Export date must be today or later.");
-  //         return;
-  //       }
-  //       setCurrentStep(current);
-  //     } catch (error) {
-  //       message.error("Please fill out all required fields.");
-  //     }
-  //   } else if (currentStep === 1 && current === 2) {
-  //     if (selectedProducts.length === 0) {
-  //       message.error("Please add at least one product.");
-  //     } else {
-  //       setCurrentStep(current);
-  //     }
-  //   } else {
-  //     setCurrentStep(current);
-  //   }
-  // };
 
   const handleStepChange = async (current) => {
     if (currentStep === 0 && current === 1) {
@@ -279,7 +255,8 @@ const StaffAddExport = () => {
       newSelectedProducts[index].name = product.name;
       newSelectedProducts[index].zoneId = null;
       newSelectedProducts[index].expiredAt = null;
-      newSelectedProducts[index].quantity = 1;
+      newSelectedProducts[index].quantity =
+        newSelectedProducts[index].quantity || 1;
     } else if (type === "zone") {
       newSelectedProducts[index].zoneId = value;
       newSelectedProducts[index].expiredAt = null;
@@ -301,8 +278,13 @@ const StaffAddExport = () => {
     setSelectedProducts(newSelectedProducts);
   };
 
+  const handleQuantityChange = (value, index) => {
+    const newSelectedProducts = [...selectedProducts];
+    newSelectedProducts[index].quantity = value;
+    setSelectedProducts(newSelectedProducts);
+  };
+
   const getUniqueZones = (productId) => {
-    // Lấy tất cả các zone cho productId không kiểm tra đã chọn
     return zonesData.filter((zone) =>
       inventoriesData.some(
         (inv) =>
@@ -317,7 +299,6 @@ const StaffAddExport = () => {
   };
 
   const getUniqueExpiredAt = (productId, zoneId) => {
-    // Chỉ trả về những ngày hết hạn không đã được chọn cho productId và zoneId này
     return inventoriesData
       .filter((inv) => inv.product.id === productId && inv.zone.id === zoneId)
       .map((inv) => inv.expiredAt)
@@ -596,7 +577,7 @@ const StaffAddExport = () => {
                                 }
                                 value={product.quantity}
                                 onChange={(value) =>
-                                  handleDropdownChange(value, index, "quantity")
+                                  handleQuantityChange(value, index)
                                 }
                                 style={{ width: "100%" }}
                                 disabled={
