@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Button, Input, Table, Space, Result } from "antd";
-import { useGetAllImportsByWarehouseIdQuery, useGetTotalImportsByWarehouseIdQuery } from "../../redux/api/importApiSlice";
+import {
+  useGetAllImportsByWarehouseIdQuery,
+  useGetTotalImportsByWarehouseIdQuery,
+} from "../../redux/api/importApiSlice";
 import { FormatTime } from "../../utils/FormatTime";
 import { useNavigate } from "react-router-dom";
 import { SearchOutlined } from "@ant-design/icons";
@@ -15,6 +18,7 @@ function StaffImportTable({ searchValue }) {
   const warehouseId = userInfo?.data?.warehouseId;
 
   const [pageNo, setPageNo] = useState(1);
+  const [pageSize, setPageSize] = useState(10); // Ensure 10 imports per page
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -29,20 +33,22 @@ function StaffImportTable({ searchValue }) {
   } = useGetAllImportsByWarehouseIdQuery({
     warehouseId,
     authToken,
-    pageNo: pageNo,
+    pageNo,
+    pageSize,
     sortBy: sortField,
     direction: sortOrder,
     status: filterStatus,
     search: searchText,
   });
-  const totalImportItemData = useGetTotalImportsByWarehouseIdQuery({
-    warehouseId,
-    authToken,
-    status: filterStatus,
-    search: searchText,
-  });
+  const { data: totalImportItemData = 0 } =
+    useGetTotalImportsByWarehouseIdQuery({
+      warehouseId,
+      authToken,
+      status: filterStatus,
+      search: searchText,
+    });
   const imports = importsData.data || [];
-  const totalImportItem = totalImportItemData.data || 0;
+  const totalImportItem = totalImportItemData;
 
   useEffect(() => {
     setSearchText(searchValue);
@@ -52,6 +58,8 @@ function StaffImportTable({ searchValue }) {
 
   const handleTableChange = (pagination, filters, sorter) => {
     setPageNo(pagination.current);
+    setPageSize(pagination.pageSize); // Update the page size
+
     if (sorter.order === undefined) {
       setSortField("");
       setSortOrder("");
@@ -160,7 +168,10 @@ function StaffImportTable({ searchValue }) {
     ),
     onFilter: (value, record) =>
       record[dataIndex]
-        ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+        ? record[dataIndex]
+            .toString()
+            .toLowerCase()
+            .includes(value.toLowerCase())
         : "",
     onFilterDropdownOpenChange: (visible) => {
       if (visible) {
@@ -208,7 +219,7 @@ function StaffImportTable({ searchValue }) {
       dataIndex: "customerName",
       key: "customerName",
       width: 200,
-      render: (_, record) => record.customer ? record.customer.name : "N/A",
+      render: (_, record) => (record.customer ? record.customer.name : "N/A"),
       ...getColumnSearchProps("customerName"),
     },
     {
@@ -257,21 +268,22 @@ function StaffImportTable({ searchValue }) {
   ];
 
   if (importsLoading) return <div>Loading...</div>;
-  if (importsError) return (
-    <Result
-      status="error"
-      title="There are some problems with your operation."
-      extra={
-        <Button
-          type="primary"
-          key="console"
-          onClick={() => navigate(`/staff/dashboard`)}
-        >
-          Go Dashboard
-        </Button>
-      }
-    />
-  );
+  if (importsError)
+    return (
+      <Result
+        status="error"
+        title="There are some problems with your operation."
+        extra={
+          <Button
+            type="primary"
+            key="console"
+            onClick={() => navigate(`/staff/dashboard`)}
+          >
+            Go Dashboard
+          </Button>
+        }
+      />
+    );
 
   // Transform data to include customerName and fromAddress for search
   const transformedData = imports?.map((item) => ({
@@ -300,7 +312,7 @@ function StaffImportTable({ searchValue }) {
       rowKey="id"
       pagination={{
         current: pageNo,
-        pageSize: 10,
+        pageSize: pageSize, // Ensure 10 imports per page
         total: totalImportItem,
         position: ["bottomCenter"],
       }}

@@ -177,7 +177,7 @@ function StaffImportDetail() {
           </div>
         </div>
         <div className="flex-1 min-w-[300px]">
-          {formData?.importType === "WAREHOUSE" ? (
+          {formData?.importType === "WAREHOUSE" && importData ? (
             <>
               <h2 className="font-bold text-xl mb-2">Warehouse To:</h2>
               <div className="mb-2">
@@ -192,7 +192,7 @@ function StaffImportDetail() {
                   {warehouseResponse?.data
                     .filter(
                       (warehouse) =>
-                        warehouse.id !== importData.warehouseFrom.id
+                        warehouse.id !== importData?.warehouseFrom?.id
                     )
                     .map((warehouse) => (
                       <Select.Option key={warehouse.id} value={warehouse.name}>
