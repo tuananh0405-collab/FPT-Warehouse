@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/features/auth/authSlice";
 import { useGetWarehouseByIdQuery } from "../../redux/api/warehousesApiSlice";
 import useOutsideClick from "../../utils/useOutsideClick";
+import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
 
 const StaffSidebar = () => {
   const [expanded, setExpaned] = useState(true);
@@ -111,7 +112,7 @@ const StaffSidebar = () => {
               <div
                 className={
                   location.pathname.startsWith(item.link) ||
-                  (dropdownOpen && item.subItems)
+                    (dropdownOpen && item.subItems)
                     ? "menuItem active"
                     : "menuItem"
                 }
@@ -124,6 +125,7 @@ const StaffSidebar = () => {
               >
                 <item.icon />
                 <span>{item.heading}</span>
+                {item.subItems && <KeyboardArrowDownOutlinedIcon className={`dropdownIcon ${dropdownOpen ? 'rotate' : ''}`} />}
               </div>
 
               {item.subItems && dropdownOpen && (
