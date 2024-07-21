@@ -24,25 +24,25 @@ const AddStaffModal = ({
     >
       <Form form={formAdd} layout="vertical">
         <Form.Item label="Full Name" name="fullName">
-          <Input placeholder="fullName" />
+          <Input placeholder="Full name" />
         </Form.Item>
         <Form.Item label="User Name" name="username">
-          <Input placeholder="fullName" />
+          <Input placeholder="User name" />
         </Form.Item>
         <Form.Item label="Password" name="password">
-          <Input placeholder="fullName" />
+          <Input placeholder="Password" />
         </Form.Item>
         <Form.Item label="Email" name="email">
-          <Input placeholder="email" />
+          <Input placeholder="Email" />
         </Form.Item>
         <Form.Item label="Phone" name="phone">
-          <Input placeholder="phone" />
+          <Input placeholder="Phone" />
         </Form.Item>
         <Form.Item label="Address" name="address">
-          <Input placeholder="address" />
+          <Input placeholder="Address" />
         </Form.Item>
         <Form.Item label="Role" name="role">
-          <Select placeholder="role">
+          <Select placeholder="Role">
             <Select.Option value="STAFF">STAFF</Select.Option>
             <Select.Option value="ADMIN">ADMIN</Select.Option>
           </Select>

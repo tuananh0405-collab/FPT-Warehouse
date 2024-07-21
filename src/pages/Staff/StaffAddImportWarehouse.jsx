@@ -374,7 +374,7 @@ const StaffAddImportWarehouse = () => {
   return (
     <div>
       <Breadcrumbs />
-      <div className="MainDash relative">
+      <div className=" relative">
         <Row gutter={16}>
           <Col xs={24} lg={16}>
             <h1
@@ -595,6 +595,7 @@ const StaffAddImportWarehouse = () => {
                     textTransform: "uppercase",
                     marginBottom: "10px",
                   }}
+                  className="font-bold"
                 >
                   Review and Confirm
                 </h1>
@@ -677,22 +678,24 @@ const StaffAddImportWarehouse = () => {
             )}
           </Col>
           <Col xs={24} lg={8}>
-            <h2 style={{ textAlign: "center" }}>Available Exports</h2>
+          <div className="container">
+            <h2 style={{ textAlign: "center" }} className="font-bold">Available Exports</h2>
             <List
               itemLayout="horizontal"
               dataSource={filteredExports}
               renderItem={(exportItem) => (
                 <List.Item
+                className=""
                   onClick={() => handleExportSelect(exportItem)}
                   style={{ cursor: "pointer" }}
                 >
-                  <Card>
-                    <h3>{exportItem.description}</h3>
+                  <Card className="w-full shadow-md hover:shadow-lg">
+                    <h3 className="text-xl text-indigo-500">{exportItem.description}</h3>
                     <p>{`From Warehouse: ${exportItem.warehouseFrom.name}`}</p>
                   </Card>
                 </List.Item>
               )}
-            />
+            /></div>
           </Col>
         </Row>
       </div>

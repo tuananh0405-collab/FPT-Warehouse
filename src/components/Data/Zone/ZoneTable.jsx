@@ -24,7 +24,7 @@ const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [searchName, setSearchName] = useState("");
 
-  const rows = zones.map((zone) => createData(zone.id, zone.name, zone.description));
+  const rows = zones?.map((zone) => createData(zone.id, zone.name, zone.description));
 
   const handleSort = (column) => {
     let direction = "asc";
