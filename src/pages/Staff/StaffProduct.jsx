@@ -168,7 +168,7 @@ const StaffProduct = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedInventories.map((inventory) => (
+            {paginatedInventories.map((inventory) => (inventory.quantity>0&&
               <TableRow key={inventory.id}>
                 <TableCell>{inventory.product.name}</TableCell>
                 <TableCell>{inventory.zone.name}</TableCell>
