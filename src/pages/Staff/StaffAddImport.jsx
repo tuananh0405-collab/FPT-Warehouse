@@ -85,7 +85,7 @@ const StaffAddImport = () => {
     transferKey: "",
     warehouseIdFrom: null,
     warehouseIdTo: warehouseId,
-    customerId: null, // Thêm trường customerId vào formData
+    customerId: null,
   });
 
   const handleFormChange = (changedValues) => {
@@ -168,12 +168,16 @@ const StaffAddImport = () => {
     if (currentStep === 0 && current === 1) {
       try {
         await form.validateFields();
-        console.log("Form Data:", formData);
         setCurrentStep(current);
       } catch (error) {
         message.error("Please fill out all required fields.");
       }
-    } else if (currentStep === 1 && (current === 2 || current === 0)) {
+    } else if (currentStep === 1 && current === 2) {
+      if (selectedProducts.length === 0) {
+        message.error("Please add at least one product.");
+        return;
+      }
+
       let isValid = true;
       for (let i = 0; i < selectedProducts.length; i++) {
         const product = selectedProducts[i];
@@ -224,13 +228,8 @@ const StaffAddImport = () => {
         transferKey: formData.transferKey || null,
         warehouseIdFrom: formData.warehouseIdFrom || null,
         warehouseIdTo: formData.warehouseIdTo,
-        customerId: formData.customerId, // Thêm customerId vào dữ liệu import
+        customerId: formData.customerId,
       };
-
-      console.log("Import Data to be sent:", importData);
-      if (!importData.warehouseIdTo) {
-        throw new Error("warehouseIdTo must not be null");
-      }
 
       const response = await addImport({
         data: importData,
@@ -238,17 +237,11 @@ const StaffAddImport = () => {
       }).unwrap();
 
       message.success("Import created successfully!");
-      console.log("Response from create import:", response);
 
       const importId = response.data.id;
       await handleCreateImportDetails(importId);
       navigate("/staff/order/import");
     } catch (error) {
-      console.error("Error creating import:", error);
-
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-      }
       message.error("Failed to create import. Please try again.");
     }
   };
@@ -265,17 +258,14 @@ const StaffAddImport = () => {
         }))
       );
 
-      console.log("Import details to be sent:", importDetails);
       const detailsResponse = await createImportDetails({
         data: importDetails,
         authToken,
       }).unwrap();
-      console.log("Import details created:", detailsResponse);
       message.success("Import details created successfully!");
       setSelectedProducts([]);
       setProductZones({});
     } catch (error) {
-      console.error("Error creating import details:", error);
       message.error("Failed to create import details. Please try again.");
     }
   };
@@ -412,10 +402,19 @@ const StaffAddImport = () => {
                     >
                       <Row gutter={16}>
                         <Col span={12}>
-                          <Form.Item label="Product Name">
+                          <Form.Item
+                            label="Product Name"
+                            name={`productId_${productIndex}`}
+                            rules={[
+                              {
+                                required: true,
+                                message: "Please select a product!",
+                              },
+                            ]}
+                          >
                             <Select
                               placeholder="Select product"
-                              value={product.name}
+                              value={product.productId}
                               onChange={(value) =>
                                 handleProductSelectChange(value, productIndex)
                               }
@@ -430,7 +429,16 @@ const StaffAddImport = () => {
                           </Form.Item>
                         </Col>
                         <Col span={12}>
-                          <Form.Item label="Expired At">
+                          <Form.Item
+                            label="Expired At"
+                            name={`expiredAt_${productIndex}`}
+                            rules={[
+                              {
+                                required: true,
+                                message: "Please select an expiration date!",
+                              },
+                            ]}
+                          >
                             <Input
                               type="date"
                               value={product.expiredAt}
@@ -457,6 +465,13 @@ const StaffAddImport = () => {
                                     label={`Zone`}
                                     labelCol={{ span: 10 }}
                                     wrapperCol={{ span: 14 }}
+                                    name={`zone_${productIndex}_${zoneIndex}`}
+                                    rules={[
+                                      {
+                                        required: true,
+                                        message: "Please select a zone!",
+                                      },
+                                    ]}
                                   >
                                     <Select
                                       placeholder="Select zone"
@@ -484,6 +499,13 @@ const StaffAddImport = () => {
                                     label="Quantity"
                                     labelCol={{ span: 10 }}
                                     wrapperCol={{ span: 14 }}
+                                    name={`quantity_${productIndex}_${zoneIndex}`}
+                                    rules={[
+                                      {
+                                        required: true,
+                                        message: "Please enter a quantity!",
+                                      },
+                                    ]}
                                   >
                                     <InputNumber
                                       min={1}
@@ -633,7 +655,7 @@ const StaffAddImport = () => {
                           quantity: zone.quantity,
                         }))
                     )}
-                    pagination={{ pageSize: 5, position: ["bottomCenter"] }}
+                    pagination={{ pageSize: 10, position: ["bottomCenter"] }}
                   />
                 </div>
                 <div
