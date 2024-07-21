@@ -13,18 +13,22 @@ import IconButton from "@mui/material/IconButton";
 import { Button } from "antd";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import TextField from "@mui/material/TextField";
-import { Stack } from "@mui/material";
+import { Alert, Stack } from "@mui/material";
 
 const createData = (id, name, description) => {
   return { id, name, description };
 };
 
 const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
+  console.log(zones);
+
   const [anchorElName, setAnchorElName] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [searchName, setSearchName] = useState("");
 
-  const rows = zones?.map((zone) => createData(zone.id, zone.name, zone.description));
+  const rows = zones?.map((zone) =>
+    createData(zone.id, zone.name, zone.description)
+  );
 
   const handleSort = (column) => {
     let direction = "asc";
@@ -35,7 +39,7 @@ const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
     setPage(1); // Reset to first page when sorting changes
   };
 
-  const sortedRows = [...rows].sort((a, b) => {
+  const sortedRows = rows ? [...rows].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
       return sortConfig.direction === "asc" ? -1 : 1;
     }
@@ -43,13 +47,13 @@ const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
       return sortConfig.direction === "asc" ? 1 : -1;
     }
     return 0;
-  });
+  }) : null;
 
-  const filteredRows = sortedRows.filter((row) => {
+  const filteredRows = sortedRows?.filter((row) => {
     return row.name.toLowerCase().includes(searchName.toLowerCase());
   });
 
-  const paginatedRows = filteredRows.slice(
+  const paginatedRows = filteredRows?.slice(
     (page - 1) * rowsPerPage,
     (page - 1) * rowsPerPage + rowsPerPage
   );
@@ -73,9 +77,7 @@ const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
           <TableHead>
             <TableRow>
               <TableCell>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  ID
-                </div>
+                <div style={{ display: "flex", alignItems: "center" }}>ID</div>
               </TableCell>
               <TableCell>
                 <div style={{ display: "flex", alignItems: "center" }}>
@@ -105,7 +107,16 @@ const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedRows.map((row) => (
+            {zones && (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <Stack sx={{ width: "100%" }} spacing={2}>
+                    <Alert severity="info">No Data !</Alert>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            )}
+            {paginatedRows?.map((row) => (
               <TableRow
                 key={row.id}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
@@ -127,7 +138,7 @@ const ZoneTable = ({ zones, showModal, page, setPage, rowsPerPage }) => {
       </TableContainer>
       <Stack spacing={2} className="pagination">
         <Pagination
-          count={Math.ceil(filteredRows.length / rowsPerPage)}
+          count={Math.ceil(filteredRows?.length / rowsPerPage ||0)}
           page={page}
           onChange={handleChangePage}
           showFirstButton
