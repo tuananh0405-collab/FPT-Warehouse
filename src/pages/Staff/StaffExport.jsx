@@ -20,7 +20,13 @@ function StaffExportPage() {
         <h1 className="font-bold text-3xl text-center mb-4">Export</h1>
         <div className="flex flex-col sm:flex-row items-center mb-4 justify-between w-full">
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <Button className="w-full sm:w-auto bg-black text-white flex items-center justify-center">
+            <Button
+              style={{
+                backgroundColor: "#2A2A2A",
+                color: "#ffffff",
+              }}
+              size="medium"
+              className="w-full sm:w-auto flex items-center justify-center">
               <Link
                 to="/staff/export/new"
                 className="text-white flex items-center"
@@ -31,6 +37,7 @@ function StaffExportPage() {
             </Button>
           </div>
           <Search
+            size="medium"
             className="w-full sm:w-auto max-w-xs ml-auto"
             placeholder="Search export..."
             onChange={(e) => setSearchValue(e.target.value)}

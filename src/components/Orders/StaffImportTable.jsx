@@ -18,7 +18,7 @@ function StaffImportTable({ searchValue }) {
   const warehouseId = userInfo?.data?.warehouseId;
 
   const [pageNo, setPageNo] = useState(1);
-  const [pageSize, setPageSize] = useState(10); // Ensure 10 imports per page
+  const [pageSize, setPageSize] = useState(10);
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -58,7 +58,7 @@ function StaffImportTable({ searchValue }) {
 
   const handleTableChange = (pagination, filters, sorter) => {
     setPageNo(pagination.current);
-    setPageSize(pagination.pageSize); // Update the page size
+    setPageSize(pagination.pageSize);
 
     if (sorter.order === undefined) {
       setSortField("");
@@ -169,9 +169,9 @@ function StaffImportTable({ searchValue }) {
     onFilter: (value, record) =>
       record[dataIndex]
         ? record[dataIndex]
-            .toString()
-            .toLowerCase()
-            .includes(value.toLowerCase())
+          .toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
         : "",
     onFilterDropdownOpenChange: (visible) => {
       if (visible) {
@@ -215,6 +215,18 @@ function StaffImportTable({ searchValue }) {
       ...getColumnSearchProps("receivedDate"),
     },
     {
+      title: "Type",
+      dataIndex: "importType",
+      key: "importType",
+      filters: [
+        { text: "Customer", value: "CUSTOMER" },
+        { text: "Warehouse", value: "WAREHOUSE" }
+      ],
+      filterMultiple: false,
+      width: 120,
+      onFilter: (value, record) => record.importType === value,
+    },
+    {
       title: "Customer Name",
       dataIndex: "customerName",
       key: "customerName",
@@ -235,20 +247,6 @@ function StaffImportTable({ searchValue }) {
         return record.customer ? record.customer.address : "N/A";
       },
       ...getColumnSearchProps("fromAddress"),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      filters: [
-        { text: "Pending", value: "PENDING" },
-        { text: "Shipping", value: "SHIPPING" },
-        { text: "Succeed", value: "SUCCEED" },
-        { text: "Cancel", value: "CANCEL" },
-      ],
-      filterMultiple: false,
-      width: 120,
-      onFilter: (value, record) => record.status === value,
     },
     {
       title: "Action",

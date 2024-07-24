@@ -34,6 +34,8 @@ import moment from "moment";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import logo from "../../assets/images/FPT_logo_2010.png";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 const { TextArea } = Input;
 
@@ -55,12 +57,14 @@ function StaffExportDetail() {
   const [initialData, setInitialData] = useState({});
   const [detailFormData, setDetailFormData] = useState([]);
   const [initialDetailData, setInitialDetailData] = useState([]);
-  const [selectedProductId, setSelectedProductId] = useState(null);
   const [editedDetails, setEditedDetails] = useState([]);
   const [deletedDetails, setDeletedDetails] = useState([]);
   const [newDetails, setNewDetails] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [pdfData, setPdfData] = useState(null);
+  const [isDetailSaved, setIsDetailSaved] = useState(false);
+  const [isRowAdding, setIsRowAdding] = useState(false);
+  const [filteredInventory, setFilteredInventory] = useState([]);
 
   const { data: exportResponse } = useGetExportByIdQuery({
     exportId: id,
@@ -77,7 +81,6 @@ function StaffExportDetail() {
   const { data: productResponse } = useGetAllProductsQuery(authToken);
   const { data: inventoryResponse } = useGetAllInventoriesQuery(authToken);
 
-
   const [deleteExport, { isLoading: isDeleting }] = useDeleteExportMutation();
   const [updateExport] = useUpdateExportByIdMutation();
   const [checkQuantityForUpdate] = useCheckQuantityForUpdateMutation();
@@ -89,10 +92,17 @@ function StaffExportDetail() {
   const latestExportData = latestExportResponse?.data;
 
   const filteredProducts = productResponse?.data.filter((product) =>
-    inventoryResponse?.data.some(
+    filteredInventory.some(
       (inv) => inv.product.id === product.id && inv.zone.warehouse.id === wid
     )
   );
+
+  useEffect(() => {
+    if (inventoryResponse?.data) {
+      const filteredData = inventoryResponse.data.filter(inv => inv.quantity > 0);
+      setFilteredInventory(filteredData);
+    }
+  }, [inventoryResponse]);
 
   useEffect(() => {
     if (exportData) {
@@ -121,6 +131,8 @@ function StaffExportDetail() {
       const detailsWithKeys = exportDetailData.map((item) => ({
         ...item,
         key: item.id,
+        originalQuantity: item.quantity,
+        isRowEditing: false,
       }));
       setDetailFormData(detailsWithKeys);
       setInitialDetailData(detailsWithKeys);
@@ -172,85 +184,6 @@ function StaffExportDetail() {
     setFormData(update);
   };
 
-  const handleDetailInputChange = (e, key, recordId) => {
-    setDetailFormData(
-      detailFormData.map((item) =>
-        item.id === recordId ? { ...item, [key]: e.target.value } : item
-      )
-    );
-
-    if (key === "quantity") {
-      setEditedDetails((editedDetails) => {
-        const existingIndex = editedDetails.findIndex(
-          (detail) => detail.id === recordId
-        );
-        const updatedDetails = [...editedDetails];
-        if (existingIndex >= 0) {
-          updatedDetails[existingIndex] = {
-            ...updatedDetails[existingIndex],
-            quantity: e.target.value,
-          };
-        } else {
-          updatedDetails.push({ id: recordId, quantity: e.target.value });
-        }
-        return updatedDetails;
-      });
-    }
-  };
-
-  const handleDetailSelectChange = (value, key, recordId) => {
-    if (key === "productName") {
-      const selectedProduct = productResponse?.data.find(
-        (product) => product.name === value
-      );
-      const selectedProductId = selectedProduct?.id;
-
-      setSelectedProductId(selectedProductId);
-
-      setDetailFormData(
-        detailFormData.map((item) =>
-          item.id === recordId
-            ? {
-              ...item,
-              product: {
-                ...item.product,
-                name: value,
-                description: selectedProduct?.description || "",
-                category: {
-                  ...item.product.category,
-                  name: selectedProduct?.category?.name || "",
-                },
-              },
-            }
-            : item
-        )
-      );
-    } else if (key === "zone") {
-      const selectedZone = inventoryResponse?.data.find(
-        (zone) => zone.zone.name === value
-      );
-      setDetailFormData(
-        detailFormData.map((item) =>
-          item.id === recordId ? { ...item, zone: selectedZone.zone } : item
-        )
-      );
-    } else {
-      setDetailFormData(
-        detailFormData.map((item) =>
-          item.id === recordId ? { ...item, [key]: value } : item
-        )
-      );
-    }
-  };
-
-  const handleDetailDateChange = (value, key, recordId) => {
-    setDetailFormData(
-      detailFormData.map((item) =>
-        item.id === recordId ? { ...item, [key]: value } : item
-      )
-    );
-  };
-
   const handleCancelEdit = () => {
     if (
       JSON.stringify(formData) !== JSON.stringify(initialData) ||
@@ -263,9 +196,9 @@ function StaffExportDetail() {
           setIsEditing(false);
           setFormData(initialData);
           setDetailFormData(initialDetailData);
-          setEditedDetails([]); // Reset edited details
-          setDeletedDetails([]); // Reset deleted details
-          setNewDetails([]); // Reset new details
+          setEditedDetails([]);
+          setDeletedDetails([]);
+          setNewDetails([]);
         },
       });
     } else {
@@ -282,6 +215,7 @@ function StaffExportDetail() {
       setDeletedDetails([...deletedDetails, recordId]);
       setDetailFormData(detailFormData.filter((item) => item.id !== recordId));
     }
+    message.success("Saved change");
   };
 
   const handleConfirmDelete = () => {
@@ -412,6 +346,11 @@ function StaffExportDetail() {
   };
 
   const handleSaveEdit = () => {
+    if (hasUnsavedChanges()) {
+      message.warning("Please save or cancel your changes before saving.");
+      return;
+    }
+
     Modal.confirm({
       title: "Confirm Save",
       content: "Are you sure you want to save the changes?",
@@ -421,153 +360,107 @@ function StaffExportDetail() {
     });
   };
 
-  const handleSaveDetail = async (record) => {
-    try {
-      const formattedDate = record.expiredAt
-        ? moment(record.expiredAt).utc().format("YYYY-MM-DDTHH:mm:ss.SSSZ")
-        : null;
-
-      const bodyData = {
-        exportId: record.id,
-        productId: record.product.id,
-        zoneId: record.zone.id,
-        expiredAt: formattedDate,
-        quantity: record.quantity,
-      };
-
-      const result = await checkQuantityForUpdate({
-        authToken,
-        data: bodyData,
-      });
-
-      if (
-        result?.data.status === 200 &&
-        result?.data.message === "Sufficient inventory"
-      ) {
-        message.success(result?.data?.message);
-        setEditedDetails((editedDetails) => {
-          const existingIndex = editedDetails.findIndex(
-            (detail) => detail.id === record.id
-          );
-          const updatedDetails = [...editedDetails];
-          if (existingIndex >= 0) {
-            updatedDetails[existingIndex] = {
-              ...updatedDetails[existingIndex],
-              quantity: record.quantity,
-            };
-          } else {
-            updatedDetails.push({ id: record.id, quantity: record.quantity });
-          }
-          return updatedDetails;
-        });
-        setDetailFormData(
-          detailFormData.map((item) =>
-            item.id === record.id ? { ...item, showSaveCancel: false } : item
-          )
-        );
-      } else if (result?.data?.status !== 200) {
-        throw new Error(result?.data?.message);
-      }
-    } catch (error) {
-      console.error("Check quantity error:", error);
-      message.error("Failed to check quantity " + error.message || error);
-      handleCancelDetail(record.id);
-    }
-  };
-
   const handleCancelDetail = (recordId) => {
-    setDetailFormData(
-      detailFormData.map((item) =>
-        item.id === recordId
-          ? {
-            ...item,
-            quantity: initialDetailData.find(
-              (initialItem) => initialItem.id === recordId
-            ).quantity,
-            showSaveCancel: false,
-          }
-          : item
-      )
-    );
+    if (newDetails.find(detail => detail.id === recordId)) {
+      setDetailFormData(detailFormData.filter(item => item.id !== recordId));
+      setNewDetails(newDetails.filter(detail => detail.id !== recordId));
+      setIsRowAdding(false);
+    } else {
+      setDetailFormData(
+        detailFormData.map((item) =>
+          item.id === recordId
+            ? {
+              ...item,
+              quantity: initialDetailData.find(
+                (initialItem) => initialItem.id === recordId
+              ).quantity,
+              isRowEditing: false,
+            }
+            : item
+        )
+      );
+    }
     setEditedDetails((editedDetails) =>
       editedDetails.filter((detail) => detail.id !== recordId)
     );
+    message.info("Cancel changes");
+  };
+
+  const handleSaveDetail = async (recordId) => {
+    const detail = detailFormData.find((item) => item.id === recordId);
+    const stockQuantity = getStockQuantity(detail.product.id, detail.zone.name, detail.expiredAt);
+    if (detail.quantity > stockQuantity) {
+      message.error("Quantity exceeds available stock.");
+      return;
+    } else {
+      message.success("Saved change");
+    }
+
+    setDetailFormData(
+      detailFormData.map((item) =>
+        item.id === recordId
+          ? { ...item, isRowEditing: false }
+          : item
+      )
+    );
+    setEditedDetails((editedDetails) => {
+      const existingIndex = editedDetails.findIndex((detail) => detail.id === recordId);
+      const updatedDetails = [...editedDetails];
+      if (existingIndex >= 0) {
+        updatedDetails[existingIndex] = {
+          ...updatedDetails[existingIndex],
+          quantity: detail.quantity,
+        };
+      } else {
+        updatedDetails.push({ id: recordId, quantity: detail.quantity });
+      }
+      return updatedDetails;
+    });
+
+    setIsRowAdding(false);
+    setIsDetailSaved(true);
+  };
+
+  const handleQuantityChange = (value, recordId) => {
+    if (value < 1) {
+      message.error("Quantity must be greater than 0.");
+      return;
+    }
+    setDetailFormData(
+      detailFormData.map((item) =>
+        item.id === recordId
+          ? { ...item, quantity: value, isRowEditing: value !== item.originalQuantity }
+          : item
+      )
+    );
+  };
+
+  const hasUnsavedChanges = () => {
+    return detailFormData.some((detail) => detail.isRowEditing);
   };
 
   const handleAddProduct = () => {
+    if (isRowAdding) {
+      message.error("Please complete adding product before adding another.");
+      return;
+    }
+    setIsRowAdding(true);
+
     const newProduct = {
       id: Date.now().toString(),
       product: { name: "", description: "", category: { name: "" } },
       zone: { id: null, name: "" },
       expiredAt: null,
       quantity: 1,
+      isRowEditing: true,
+      isNew: true
     };
     setDetailFormData([...detailFormData, newProduct]);
     setNewDetails([...newDetails, newProduct]);
   };
 
-  const handleProductSelectChange = (value, index) => {
-    const product = filteredProducts?.find((p) => p.id === value);
-    const newDetails = [...detailFormData];
-    newDetails[index].product = {
-      ...newDetails[index].product,
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      category: { name: product.category.name },
-    };
-    setDetailFormData(newDetails);
-    setSelectedProductId(product.id);
-  };
-
-  const handleZoneChange = (value, index) => {
-    const zone = inventoryResponse?.data.find((z) => z.zone.id === value).zone;
-    const newDetails = [...detailFormData];
-    newDetails[index].zone = zone;
-    setDetailFormData(newDetails);
-  };
-
-  const handleExpiredAtChange = (value, index) => {
-    const newDetails = [...detailFormData];
-    newDetails[index].expiredAt = value;
-    setDetailFormData(newDetails);
-  };
-
-  const handleQuantityChange = (value, index) => {
-    const newDetails = [...detailFormData];
-    newDetails[index].quantity = value;
-    setDetailFormData(newDetails);
-  };
-
-  const getUniqueZones = (productId, excludedZone) => {
-    const filteredZones = [
-      ...new Set(
-        inventoryResponse?.data
-          .filter(
-            (inv) =>
-              inv.product.id === productId && inv.zone.name !== excludedZone
-          )
-          .map((inv) => inv.zone)
-      ),
-    ];
-    return filteredZones;
-  };
-
-  const getUniqueExpiredAt = (productId, zoneName) => {
-    const filteredDates = [
-      ...new Set(
-        inventoryResponse?.data
-          .filter(
-            (inv) => inv.product.id === productId && inv.zone.name === zoneName
-          )
-          .map((inv) => inv.expiredAt)
-      ),
-    ];
-    return filteredDates;
-  };
-
   const getStockQuantity = (productId, zoneName, expiredAt) => {
-    const inventoryQuantity = inventoryResponse?.data
+    const inventoryQuantity = filteredInventory
       .filter(
         (inv) =>
           inv.product.id === productId &&
@@ -588,29 +481,150 @@ function StaffExportDetail() {
     return (inventoryQuantity || 0) + (exportDetailQuantity || 0);
   };
 
+  const handleDetailSelectChange = (value, key, recordId) => {
+    if (key === "productName") {
+      const selectedProduct = productResponse?.data.find(
+        (product) => product.name === value
+      );
+      const selectedProductId = selectedProduct?.id;
+
+      setSelectedProductId(selectedProductId);
+
+      setDetailFormData(
+        detailFormData.map((item) =>
+          item.id === recordId
+            ? {
+              ...item,
+              product: {
+                ...item.product,
+                name: value,
+                description: selectedProduct?.description || "",
+                category: {
+                  ...item.product.category,
+                  name: selectedProduct?.category?.name || "",
+                },
+              },
+            }
+            : item
+        )
+      );
+    } else if (key === "zone") {
+      const selectedZone = filteredInventory.find(
+        (zone) => zone.zone.name === value
+      );
+      setDetailFormData(
+        detailFormData.map((item) =>
+          item.id === recordId ? { ...item, zone: selectedZone.zone } : item
+        )
+      );
+    } else {
+      setDetailFormData(
+        detailFormData.map((item) =>
+          item.id === recordId ? { ...item, [key]: value } : item
+        )
+      );
+    }
+  };
+
+  const hasQuantityChanged = (record) => {
+    return record.quantity !== record.originalQuantity;
+  };
+
+  const handleZoneChange = (value, index) => {
+    const zone = filteredInventory.find((z) => z.zone.id === value).zone;
+    const newDetails = [...detailFormData];
+    newDetails[index].zone = zone;
+    newDetails[index].expiredAt = null;
+    setDetailFormData(newDetails);
+  };
+
+  const handleExpiredAtChange = (value, index) => {
+    const newDetails = [...detailFormData];
+    newDetails[index].expiredAt = value;
+    setDetailFormData(newDetails);
+  };
+
+  const getUniqueExpiredAt = (productId, zoneId) => {
+    const filteredDates = [
+      ...new Set(
+        filteredInventory
+          .filter(
+            (inv) => inv.product.id === productId && inv.zone.id === zoneId
+          )
+          .map((inv) => inv.expiredAt)
+      ),
+    ];
+    return filteredDates;
+  };
+
+  const handleProductSelectChange = (value, index) => {
+    const product = filteredProducts?.find((p) => p.id === value);
+    const newDetails = [...detailFormData];
+    newDetails[index].product = {
+      ...newDetails[index].product,
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      category: { name: product.category.name },
+    };
+    newDetails[index].zone = { id: null, name: "" };
+    newDetails[index].expiredAt = null;
+    setDetailFormData(newDetails);
+    setSelectedProductId(product.id);
+  };
+
+  const getUniqueZones = (productId, excludedZone) => {
+    const filteredZones = filteredInventory
+      .filter(
+        (inv) =>
+          inv.product.id === productId && inv.zone.id !== excludedZone
+      )
+      .map((inv) => inv.zone);
+
+    const uniqueZones = Array.from(new Set(filteredZones.map(zone => JSON.stringify(zone))))
+      .map(str => JSON.parse(str));
+
+    return uniqueZones;
+  };
+
+  const isRowValid = (row) => {
+    return row.product.id && row.zone.id && row.expiredAt;
+  };
+
   const columns = [
     {
       title: "Product Name",
       dataIndex: ["product", "name"],
       key: "productName",
       width: 250,
-      render: (text, record, index) =>
-        isEditing ? (
-          <Select
-            placeholder="Select product"
-            value={record.product.id}
-            onChange={(value) => handleProductSelectChange(value, index)}
-            style={{ width: "100%" }}
-          >
-            {filteredProducts?.map((p) => (
-              <Select.Option key={p.id} value={p.id}>
-                {p.name}
-              </Select.Option>
-            ))}
-          </Select>
-        ) : (
-          text
-        ),
+      render: (text, record, index) => {
+        if (record.isRowEditing && record.isNew) {
+          return (
+            <Select
+              showSearch
+              value={record.product.id}
+              onChange={(value) => handleProductSelectChange(value, index)}
+              style={{ width: "100%" }}
+            >
+              {filteredProducts?.map((p) => (
+                <Select.Option key={p.id} value={p.id}>
+                  {p.name}
+                </Select.Option>
+              ))}
+            </Select>
+          );
+        } else {
+          if (record.isNew) {
+            return (
+              <span>
+                {text || ""}<span className="text-red-500">*</span>
+              </span>
+            )
+          } else {
+            return text || "";
+          }
+        }
+      }
     },
     {
       title: "Description",
@@ -625,77 +639,86 @@ function StaffExportDetail() {
       width: 150,
     },
     {
+      title: "Zone",
+      dataIndex: ["zone", "name"],
+      key: "zone",
+      width: 100,
+      render: (text, record, index) => {
+        if (record.isRowEditing && record.isNew) {
+          return (
+            <Select
+              showSearch
+              notFoundContent="No zones found"
+              defaultValue={"Select Zone"}
+              value={record.zone.name}
+              onChange={(value) => handleZoneChange(value, index)}
+              style={{ width: "100%" }}
+              disabled={!record.product.id}
+            >
+              {getUniqueZones(record.product.id, record.zone.id).map((zone) => (
+                <Select.Option key={zone.id} value={zone.id}>
+                  {zone.name}
+                </Select.Option>
+              ))}
+            </Select>
+          );
+        } else {
+          return text || "";
+        }
+      }
+    },
+    {
       title: "Expiration Date",
       dataIndex: "expiredAt",
       key: "expiredAt",
       width: 150,
-      render: (text, record, index) =>
-        isEditing ? (
-          <Select
-            placeholder="Select expired date"
-            value={record.expiredAt}
-            onChange={(value) => handleExpiredAtChange(value, index)}
-            style={{ width: "100%" }}
-            disabled={!record.zone.name}
-          >
-            {getUniqueExpiredAt(record.product.id, record.zone.name).map(
-              (date) => (
+      render: (text, record, index) => {
+        if (record.isRowEditing && record.isNew) {
+          const formattedDate = text ? moment(text).format("YYYY-MM-DD") : null; // Có thể gây ra lỗi
+          return (
+            <Select
+              showSearch
+              value={formattedDate}
+              onChange={(value) => handleExpiredAtChange(value, index)}
+              style={{ width: "100%" }}
+              disabled={!record.zone.id}
+            >
+              {getUniqueExpiredAt(record.product.id, record.zone.id).map((date) => (
                 <Select.Option key={date} value={date}>
-                  {date}
+                  {formattedDate}
                 </Select.Option>
-              )
-            )}
-          </Select>
-        ) : (
-          <span>{text ? moment(text).format("YYYY-MM-DD") : "None"}</span>
-        ),
-    },
-    {
-      title: "Zone",
-      dataIndex: ["zone", "name"],
-      key: "zone",
-      width: 150,
-      render: (text, record, index) =>
-        isEditing ? (
-          <Select
-            placeholder="Select zone"
-            value={record.zone.id}
-            onChange={(value) => handleZoneChange(value, index)}
-            style={{ width: "100%" }}
-          >
-            {getUniqueZones(record.product.id, record.zone.name).map((zone) => (
-              <Select.Option key={zone.id} value={zone.id}>
-                {zone.name}
-              </Select.Option>
-            ))}
-          </Select>
-        ) : (
-          text
-        ),
+              ))}
+            </Select>
+          );
+        } else {
+          return text ? moment(text).format("YYYY-MM-DD") : "None";
+        }
+      }
     },
     {
       title: "Quantity",
       dataIndex: "quantity",
       key: "quantity",
-      width: 100,
-      render: (text, record, index) =>
+      width: 120,
+      render: (text, record) =>
         isEditing ? (
-          <>
-            <InputNumber
+          <span className="flex items-center justify-center gap-1">
+            {!isRowAdding ? (<InputNumber
+              disabled={isRowAdding && !record.isNew}
               min={1}
               value={text}
-              onChange={(value) => handleQuantityChange(value, index)}
+              onChange={(value) => handleQuantityChange(value, record.id)}
               style={{ width: "100%" }}
-            />
-            <div>
-              In stock:{" "}
-              {getStockQuantity(
-                record.product.id,
-                record.zone.name,
-                record.expiredAt
-              )}
-            </div>
-          </>
+            />) : (
+              <InputNumber
+                disabled={!record.expiredAt}
+                min={1}
+                value={text}
+                onChange={(value) => handleQuantityChange(value, record.id)}
+                style={{ width: "100%" }}
+              />
+            )}
+          </span>
         ) : (
           text
         ),
@@ -703,123 +726,86 @@ function StaffExportDetail() {
   ];
 
   if (isEditing) {
-    columns.push({
-      title: "Actions",
-      key: "actions",
-      width: 150,
-      render: (text, record, index) =>
-        isEditing ? (
-          <span>
-            <Button
-              type="link"
-              danger
-              onClick={() => handleDeleteDetail(record.id)}
-            >
-              Delete
-            </Button>
-          </span>
-        ) : null,
-    });
+    columns.push(
+      {
+        title: "Available",
+        key: "Available",
+        width: 40,
+        render: (text, record, index) =>
+          <div>
+            {getStockQuantity(
+              record.product.id,
+              record.zone.name,
+              record.expiredAt
+            )}
+          </div>
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        width: 150,
+        render: (text, record, index) =>
+          record.isRowEditing ? (
+            <div className="flex items-center gap-2 w-full">
+              <a
+                className="text-blue-500 no-underline cursor-pointer transition duration-300"
+                onClick={() => handleSaveDetail(record.id)}
+              >
+                Save
+              </a>
+              <a
+                className="text-red-500 hover:text-red-300 no-underline cursor-pointer transition duration-300"
+                onClick={() => handleCancelDetail(record.id)}
+              >
+                Cancel
+              </a>
+            </div>
+          ) : (
+            <span className="flex items-center gap-2">
+              {hasQuantityChanged(record) && (
+                record.isNew === false ? (<a
+                  className="text-blue-500 hover:text-blue-300 no-underline cursor-pointer transition duration-300"
+                  onClick={() => handleCancelDetail(record.id)}
+                >
+                  Reset
+                </a>) : (
+                  null
+                )
+              )}
+              <a
+                className="text-red-500 hover:text-red-300 no-underline cursor-pointer transition duration-300"
+                onClick={() => handleDeleteDetail(record.id)}
+              >
+                Delete
+              </a>
+            </span>
+          ),
+      });
   }
 
-  const generatePDFData = () => {
-    const doc = new jsPDF();
-
-    // Add company logo
-
-    // Add invoice title and number
-    doc.setFontSize(20);
-    doc.text("EXPORT INVOICE", 105, 30, null, null, "center");
-    doc.setFontSize(10);
-    doc.text(`No. ${formData.id}`, 180, 20);
-
-    // Add date
-    doc.setFontSize(12);
-    doc.text(`Date: ${moment().format("DD MMMM, YYYY")}`, 10, 50);
-
-    // Add billed to and from information
-    doc.setFontSize(10);
-    doc.text("To:", 10, 60);
-    if (formData.exportType === "WAREHOUSE") {
-      doc.text(formData.warehouseToName || "N/A", 10, 65);
-      doc.text(formData.warehouseToAddress || "N/A", 10, 70);
-      doc.text(formData.warehouseToDescription || "N/A", 10, 75);
-    } else if (formData.exportType === "CUSTOMER") {
-      doc.text(formData.customerName || "N/A", 10, 65);
-      doc.text(formData.customerAddress || "N/A", 10, 70);
-      doc.text(formData.customerEmail || "N/A", 10, 75);
-      doc.text(formData.customerPhone || "N/A", 10, 80);
-    }
-
-    doc.text("From:", 105, 60);
-    doc.text(formData.warehouseFromName || "N/A", 105, 65);
-    doc.text(formData.warehouseFromAddress || "N/A", 105, 70);
-    doc.text(formData.warehouseFromDescription || "N/A", 105, 75);
-
-    // Add table
-    doc.autoTable({
-      head: [
-        [
-          "Product Name",
-          "Description",
-          "Category",
-          "Expiration Date",
-          "Zone",
-          "Quantity",
-        ],
-      ],
-      body: detailFormData.map((item) => [
-        item.product.name,
-        item.product.description,
-        item.product.category.name,
-        item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
-        item.zone.name,
-        item.quantity,
-      ]),
-      startY: 90,
-    });
-
-    // Add footer
-    doc.setFontSize(10);
-    doc.text(
-      "Note: Thank you for choosing us!",
-      10,
-      doc.lastAutoTable.finalY + 35
-    );
-
-    setPdfData(doc.output("datauristring"));
-    setIsModalVisible(true);
-  };
-
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.fromDataURL(pdfData);
-    doc.save(`Export_${id}.pdf`);
-    setIsModalVisible(false);
-  };
-
   return (
-    <div>
+    <>
       <Breadcrumbs />
-      {/* <h1 className="font-bold text-3xl p-4">Export {id}</h1> */}
+      <div className="flex justify-center items-center">
+        <h1 className="font-bold text-3xl py-4 mt-2">Export {id}</h1>
+      </div>
       <div className="px-4 overflow-auto">
         <div className="flex justify-end gap-2">
           {!isEditing ? (
             <>
               <Button
-                size="large"
+                size="medium"
                 style={{
                   backgroundColor: "#ff4d4f",
                   color: "#fff",
                   borderColor: "#ff4d4f",
                 }}
-                onClick={generatePDFData}
               >
                 <PictureAsPdfIcon /> Preview
               </Button>
               {exportData?.id === latestExportData?.id && (
                 <Button
-                  size="large"
+                  size="medium"
                   type="primary"
                   className="flex justify-center items-center mr-4"
                   onClick={() => setIsEditing(true)}
@@ -830,11 +816,11 @@ function StaffExportDetail() {
             </>
           ) : (
             <>
-              <Button size="large" onClick={handleCancelEdit}>
+              <Button size="medium" onClick={handleCancelEdit}>
                 Cancel
               </Button>
               <Button
-                size="large"
+                size="medium"
                 type="primary"
                 danger
                 onClick={handleConfirmDelete}
@@ -843,13 +829,12 @@ function StaffExportDetail() {
                 Delete
               </Button>
               <Button
-                size="large"
+                size="medium"
                 type="primary"
                 onClick={handleSaveEdit}
                 disabled={
                   JSON.stringify(formData) === JSON.stringify(initialData) &&
-                  JSON.stringify(detailFormData) ===
-                  JSON.stringify(initialDetailData)
+                  !isDetailSaved
                 }
               >
                 Save
@@ -857,10 +842,12 @@ function StaffExportDetail() {
             </>
           )}
         </div>
-        <div className="grid grid-cols-2 h-full">
+        <div className="grid grid-cols-2 mb-6">
           <div className="ml-4">
             <table>
-              <p className="mt-3 mb-1 font-bold text-xl">Export Invoice:</p>
+              <tr>
+                <td colSpan={2}><p className="mt-3 mb-1 font-bold text-xl">Export Invoice:</p></td>
+              </tr>
               <tr>
                 <td>
                   <p className="font-medium">Description:</p>
@@ -912,7 +899,11 @@ function StaffExportDetail() {
                   />
                 </td>
               </tr>
-              <p className="mt-3 mb-1 font-bold text-xl">Warehouse From:</p>
+              <tr>
+                <td colSpan={2}>
+                  <p className="mt-3 mb-1 font-bold text-xl">Warehouse From:</p>
+                </td>
+              </tr>
               <tr>
                 <td>
                   <p className="font-medium">Warehouse Description:</p>
@@ -958,14 +949,16 @@ function StaffExportDetail() {
           <div className="ml-4">
             {formData?.exportType === "WAREHOUSE" ? (
               <table>
-                <td>
-                  <p className="mt-3 font-bold text-xl">Warehouse To:</p>
-                </td>
+                <tr>
+                  <td colSpan={2}>
+                    <p className="mt-3 font-bold text-xl">Warehouse To:</p>
+                  </td>
+                </tr>
                 <tr>
                   <td>
                     <p className="font-medium">Name:</p>
                   </td>
-                  <td className="w-3/4">
+                  <td className="w-full">
                     <Select
                       className="w-full mb-2"
                       size="large"
@@ -1015,7 +1008,6 @@ function StaffExportDetail() {
                   </td>
                   <td className="w-3/4">
                     <Input
-                      className="mb-2"
                       size="large"
                       value={formData?.warehouseToAddress}
                       disabled
@@ -1024,11 +1016,13 @@ function StaffExportDetail() {
                 </tr>
               </table>
             ) : (
-              isEditing && formData?.exportType === "CUSTOMER" && (
+              formData?.exportType === "CUSTOMER" && (
                 <table>
-                  <td>
-                    <p className="mt-3 font-bold text-xl">Customer:</p>
-                  </td>
+                  <tr>
+                    <td colSpan={2}>
+                      <p className="mt-3 font-bold text-xl">Customer:</p>
+                    </td>
+                  </tr>
                   <tr>
                     <td>
                       <p className="font-medium">Name:</p>
@@ -1096,17 +1090,7 @@ function StaffExportDetail() {
             )}
           </div>
         </div>
-        <div className="mt-4 py-4">
-          {isEditing && (
-            <Button
-              type="primary"
-              onClick={handleAddProduct}
-              block
-              style={{ marginBottom: "20px" }}
-            >
-              Add Product
-            </Button>
-          )}
+        <div>
           <Table
             columns={columns}
             dataSource={detailFormData}
@@ -1114,30 +1098,22 @@ function StaffExportDetail() {
             loading={exportDetailResponseLoading}
             pagination={false}
           />
+          {isEditing && (
+            <div className="w-full flex items-center justify-center mt-2">
+              <Button
+                type="dashed"
+                onClick={handleAddProduct}
+                block
+                style={{ marginBottom: "20px", width: "10%" }}
+                disabled={isRowAdding}
+              >
+                <AddOutlinedIcon /> Product
+              </Button>
+            </div>
+          )}
         </div>
-        <Modal
-          title="PDF Preview"
-          visible={isModalVisible}
-          onCancel={() => setIsModalVisible(false)}
-          footer={[
-            <Button key="cancel" onClick={() => setIsModalVisible(false)}>
-              Cancel
-            </Button>,
-            <Button key="download" type="primary" onClick={() => downloadPDF()}>
-              Download
-            </Button>,
-          ]}
-          width={"80%"}
-        >
-          <iframe
-            src={pdfData}
-            width="100%"
-            height="700px"
-            style={{ border: "none" }}
-          ></iframe>
-        </Modal>
       </div>
-    </div>
+    </>
   );
 }
 

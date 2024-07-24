@@ -456,10 +456,10 @@ const StaffAddExport = () => {
                   marginTop: "20px",
                 }}
               >
-                <div className="flex justify-start gap-1 mt-4">
+                <div className="flex justify-start gap-1 mb-2">
                   <Button
                     type="default"
-                    size="large"
+                    size="middle"
                     style={{
                       backgroundColor: "#2A2A2A",
                       color: "#ffffff",
@@ -469,7 +469,7 @@ const StaffAddExport = () => {
                     <AutorenewOutlinedIcon /> Auto Select
                   </Button>
                   <Button
-                    size="large"
+                    size="middle"
                     type="primary"
                     onClick={handleAddProduct}
                   >
