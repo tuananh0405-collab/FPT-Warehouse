@@ -134,16 +134,16 @@ public class ExportService {
                 export.setExportDate(request.getExportDate());
 
             if (export.getExportType() == ImportExportType.CUSTOMER || export.getExportType() == ImportExportType.WASTE) {
-                if (request.getCustomerId() != null){
+                if (request.getCustomerId() != null) {
                     Customer customer = customerRepository.findById(request.getCustomerId())
                             .orElseThrow(() -> new CustomException(ErrorCode.CUSTOMER_NOT_FOUND));
                     export.setCustomer(customer);
                     export.setWarehouseTo(null);
-                } else{
+                } else {
                     throw new CustomException(ErrorCode.CUSTOMER_NOT_FOUND);
                 }
             } else if (export.getExportType() == ImportExportType.WAREHOUSE) {
-                if (request.getWarehouseIdTo() != null){
+                if (request.getWarehouseIdTo() != null) {
                     Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseIdTo())
                             .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
                     export.setWarehouseTo(warehouseTo);
@@ -180,18 +180,18 @@ public class ExportService {
                 export.setExportType(ImportExportType.valueOf(request.getExportType()));
 
             }
-            if (request.getWarehouseIdTo()!=null) {
+            if (request.getWarehouseIdTo() != null) {
                 Warehouse warehouseTo = warehouseRepository.findById(request.getWarehouseIdTo())
                         .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
 
                 export.setWarehouseTo(warehouseTo);
             }
-if (request.getWarehouseIdFrom()!=null) {
-    Warehouse warehouseFrom = warehouseRepository.findById(request.getWarehouseIdFrom())
-            .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
+            if (request.getWarehouseIdFrom() != null) {
+                Warehouse warehouseFrom = warehouseRepository.findById(request.getWarehouseIdFrom())
+                        .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND));
 
-    export.setWarehouseFrom(warehouseFrom);
-}
+                export.setWarehouseFrom(warehouseFrom);
+            }
 
 
             exportRepository.save(export);
@@ -483,7 +483,7 @@ if (request.getWarehouseIdFrom()!=null) {
         }
     }
 
-    public ResponseObject<?> confirmShippedSuccessfully (Integer exportid) {
+    public ResponseObject<?> confirmShippedSuccessfully(Integer exportid) {
         try {
             Export export = exportRepository.findById(exportid)
                     .orElseThrow(() -> new CustomException(ErrorCode.EXPORT_NOT_FOUND));

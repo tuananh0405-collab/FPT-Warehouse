@@ -78,6 +78,8 @@ public class ExportDetailController {
             @RequestBody List<ExportDetailRequest> requests,
             @RequestParam Integer exportId
     ) {
+        System.out.println("exportId: " + exportId);
+        System.out.println("requests: " + requests);
         return ResponseEntity.ok(exportDetailService.updateAndAddExportDetails(requests, exportId));
     }
 }

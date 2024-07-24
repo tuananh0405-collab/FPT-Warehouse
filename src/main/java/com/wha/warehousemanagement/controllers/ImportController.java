@@ -33,7 +33,7 @@ public class ImportController {
             @RequestParam(value = "status", required = false) Status status,
             @RequestParam(value = "search", required = false) String search
     ) {
-        int limit = 5;
+        int limit = 10;
         pageNo = pageNo - 1;
         search = search.isBlank() ? null : search;
         return ResponseEntity.ok(importService.getAllImports(
