@@ -50,6 +50,7 @@ import ReportComponent from "./pages/Admin/ReportComponent.jsx";
 import StaffTransfer from "./pages/Staff/StaffTransfer.jsx";
 import StaffAddImportWarehouse from "./pages/Staff/StaffAddImportWarehouse.jsx";
 import StaffImportDetail from "./pages/Staff/StaffImportDetail.jsx";
+import { WebSocketProvider } from './components/WebSocket/WebSocketProvider.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -90,7 +91,7 @@ const router = createBrowserRouter(
           <Route path="/staff/order/import" element={<StaffImport />} />
           <Route path="/staff/export/new" element={<StaffNewExport />} />
           <Route path="/staff/import/new" element={<StaffAddImport />} />
-          <Route path="/staff/import/from-warehouse" element={<StaffAddImportWarehouse />}/>
+          <Route path="/staff/import/from-warehouse" element={<StaffAddImportWarehouse />} />
           <Route path="/staff/export/detail/:id" element={<StaffExportDetail />} />
           <Route path="/staff/import/detail/:id" element={<StaffImportDetail />} />
         </Route>
@@ -103,6 +104,9 @@ const router = createBrowserRouter(
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <RouterProvider router={router} />
+    <WebSocketProvider>
+
+      <RouterProvider router={router} />
+    </WebSocketProvider>
   </Provider>
 );

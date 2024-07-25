@@ -19,6 +19,7 @@
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
     "@reduxjs/toolkit": "^2.2.5",
+    "@stomp/stompjs": "^7.0.0",
     "@tanstack/react-table": "^8.19.2",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",
@@ -45,12 +46,15 @@
     "react-router-dom": "^6.23.1",
     "react-table": "^7.8.0",
     "react-to-print": "^2.15.1",
+    "react-toastify": "^10.0.5",
+    "sockjs-client": "^1.6.1",
     "styled-components": "^6.1.11",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.1",

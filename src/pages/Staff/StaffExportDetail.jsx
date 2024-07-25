@@ -99,7 +99,7 @@ function StaffExportDetail() {
 
   useEffect(() => {
     if (inventoryResponse?.data) {
-      const filteredData = inventoryResponse.data.filter(inv => inv.quantity > 0);
+      const filteredData = inventoryResponse?.data.filter(inv => inv.quantity > 0);
       setFilteredInventory(filteredData);
     }
   }, [inventoryResponse]);
@@ -215,6 +215,7 @@ function StaffExportDetail() {
       setDeletedDetails([...deletedDetails, recordId]);
       setDetailFormData(detailFormData.filter((item) => item.id !== recordId));
     }
+    setIsDetailSaved(true);
     message.success("Saved change");
   };
 
@@ -545,16 +546,24 @@ function StaffExportDetail() {
   };
 
   const getUniqueExpiredAt = (productId, zoneId) => {
-    const filteredDates = [
-      ...new Set(
-        filteredInventory
-          .filter(
-            (inv) => inv.product.id === productId && inv.zone.id === zoneId
-          )
-          .map((inv) => inv.expiredAt)
-      ),
-    ];
-    return filteredDates;
+    const existedExpiredAtInDetailData = exportDetailData.filter(
+      (detail) => detail.product.id === productId && detail.zone.id === zoneId
+    ).map((detail) => detail.expiredAt);
+
+    const selectedExpiredAtInNewDetail = newDetails.filter(
+      (detail) => detail.product.id === productId && detail.zone.id === zoneId
+    ).map((detail) => detail.expiredAt);
+
+    const existedExpiredAtInInventory = filteredInventory.filter(
+      (inv) => inv.product.id === productId && inv.zone.id === zoneId
+    ).map((inv) => inv.expiredAt);
+
+    const uniqueExpiredAt = existedExpiredAtInInventory.filter(date =>
+      !selectedExpiredAtInNewDetail.includes(date) &&
+      !existedExpiredAtInDetailData.includes(date)
+    );
+
+    return [...new Set(uniqueExpiredAt)];
   };
 
   const handleProductSelectChange = (value, index) => {
@@ -573,22 +582,36 @@ function StaffExportDetail() {
     setSelectedProductId(product.id);
   };
 
-  const getUniqueZones = (productId, excludedZone) => {
-    const filteredZones = filteredInventory
+  const getUniqueZones = (productId) => {
+    const existedExpiredAtInDetailData = exportDetailData.filter(
+      (detail) => detail.product.id === productId
+    ).map((detail) => detail.expiredAt);
+
+    console.log(existedExpiredAtInDetailData);
+
+    const selectedExpiredAtInNewDetail = newDetails.filter(
+      (detail) => detail.product.id === productId
+    ).map((detail) => detail.expiredAt);
+
+    const existedExpiredAtInInventory = filteredInventory.filter(
+      (inv) => inv.product.id === productId
+    ).map((inv) => inv.expiredAt);
+
+    const uniqueExpiredAtInInventory = existedExpiredAtInInventory.filter(
+      (date) =>
+        !existedExpiredAtInDetailData.includes(date) &&
+        !selectedExpiredAtInNewDetail.includes(date)
+    );
+
+    const uniqueZones = filteredInventory
       .filter(
         (inv) =>
-          inv.product.id === productId && inv.zone.id !== excludedZone
+          inv.product.id === productId &&
+          uniqueExpiredAtInInventory.includes(inv.expiredAt)
       )
       .map((inv) => inv.zone);
 
-    const uniqueZones = Array.from(new Set(filteredZones.map(zone => JSON.stringify(zone))))
-      .map(str => JSON.parse(str));
-
-    return uniqueZones;
-  };
-
-  const isRowValid = (row) => {
-    return row.product.id && row.zone.id && row.expiredAt;
+    return Array.from(new Set(uniqueZones.map((zone) => JSON.stringify(zone)))).map((str) => JSON.parse(str));
   };
 
   const columns = [
@@ -655,7 +678,7 @@ function StaffExportDetail() {
               style={{ width: "100%" }}
               disabled={!record.product.id}
             >
-              {getUniqueZones(record.product.id, record.zone.id).map((zone) => (
+              {getUniqueZones(record.product.id).map((zone) => (
                 <Select.Option key={zone.id} value={zone.id}>
                   {zone.name}
                 </Select.Option>
@@ -685,13 +708,14 @@ function StaffExportDetail() {
             >
               {getUniqueExpiredAt(record.product.id, record.zone.id).map((date) => (
                 <Select.Option key={date} value={date}>
-                  {formattedDate}
+                  {date ? moment(date).format("YYYY-MM-DD") : null}
                 </Select.Option>
               ))}
             </Select>
           );
         } else {
-          return text ? moment(text).format("YYYY-MM-DD") : "None";
+          const formattedDate = text ? moment(text).format("YYYY-MM-DD") : null; // Có thể gây ra lỗi
+          return formattedDate ? moment(formattedDate).format("YYYY-MM-DD") : "None";
         }
       }
     },
