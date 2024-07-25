@@ -10,8 +10,16 @@ import com.wha.warehousemanagement.repositories.InventoryRepository;
 import com.wha.warehousemanagement.repositories.InventorySnapshotRepository;
 import com.wha.warehousemanagement.services.ZoneService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,6 +62,21 @@ public class InventorySnapshotService {
             reportData.add(data);
         }
 
+        return reportData;
+    }
+
+    public List<Map<String, Object>> getAllWarehouse() {
+        List<Map<String, Object>> reportData = new ArrayList<>();
+        List<Inventory> inventories = inventoryRepository.findAll();
+
+        for (Inventory inventory : inventories) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("warehouse", inventory.getZone().getWarehouse().getName());
+            data.put("product", inventory.getProduct().getName());
+            data.put("zone", inventory.getZone().getName());
+            data.put("quantity", inventory.getQuantity());
+            reportData.add(data);
+        }
         return reportData;
     }
 
@@ -152,5 +175,116 @@ public class InventorySnapshotService {
     private String formatDate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         return formatter.format(date);
+    }
+
+    public void generateWarehouseExcelReport(List<Map<String, Object>> snapshots, String outputExcelFile) throws IOException {
+        if (snapshots == null || snapshots.isEmpty()) {
+            throw new IllegalArgumentException("Snapshots list is null or empty");
+        }
+
+        // Sắp xếp snapshots theo tiêu chí mong muốn
+        snapshots.sort(Comparator.comparing((Map<String, Object> m) -> (String) m.get("warehouse"))
+                .thenComparing(m -> (String) m.get("zone"))
+                .thenComparing(m -> (String) m.get("product"))
+                .thenComparing(m -> (String) m.get("snapshotDate")));
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Warehouse Report");
+
+        // Tạo dòng tiêu đề
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Warehouse", "Product Name", "Zone Name"};
+        for (int i = 0; i < 5; i++) {  // Assuming a max of 5 quantities and dates for simplicity
+            headers = Arrays.copyOf(headers, headers.length + 2);
+            headers[headers.length - 2] = "Quantity " + (i + 1);
+            headers[headers.length - 1] = "Snapshot Date " + (i + 1);
+        }
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+        }
+
+        // Điền dữ liệu
+        int rowNum = 1;
+        Map<String, List<Object[]>> data = new LinkedHashMap<>();
+        for (Map<String, Object> snapshot : snapshots) {
+            String key = snapshot.get("warehouse") + "|" + snapshot.get("product") + "|" + snapshot.get("zone");
+            if (!data.containsKey(key)) {
+                data.put(key, new ArrayList<>());
+            }
+            data.get(key).add(new Object[]{
+                    snapshot.get("quantity"), snapshot.get("snapshotDate")
+            });
+        }
+
+        for (Map.Entry<String, List<Object[]>> entry : data.entrySet()) {
+            Row row = sheet.createRow(rowNum++);
+            String[] keys = entry.getKey().split("\\|");
+            row.createCell(0).setCellValue(keys[0]);
+            row.createCell(1).setCellValue(keys[1]);
+            row.createCell(2).setCellValue(keys[2]);
+
+            int cellNum = 3;
+            for (Object[] record : entry.getValue()) {
+                row.createCell(cellNum++).setCellValue((Integer) record[0]);
+                row.createCell(cellNum++).setCellValue((String) record[1]);
+            }
+        }
+
+        // Tự động điều chỉnh kích thước cột
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Ghi vào file
+        try (FileOutputStream fileOut = new FileOutputStream(outputExcelFile)) {
+            workbook.write(fileOut);
+        } finally {
+            workbook.close();
+        }
+    }
+
+    public void generateCurrentWarehouseExcelReport(List<Map<String, Object>> inventories, String outputExcelFile) throws IOException {
+        if (inventories == null || inventories.isEmpty()) {
+            throw new IllegalArgumentException("Inventory list is null or empty");
+        }
+
+        // Sắp xếp inventories theo tiêu chí mong muốn
+        inventories.sort(Comparator.comparing((Map<String, Object> m) -> (String) m.get("warehouse"))
+                .thenComparing(m -> (String) m.get("product"))
+                .thenComparing(m -> (String) m.get("zone")));
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Warehouse Report");
+
+        // Tạo dòng tiêu đề
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Warehouse", "Product Name", "Zone Name", "Quantity"};
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+        }
+
+        // Điền dữ liệu
+        int rowNum = 1;
+        for (Map<String, Object> inventory : inventories) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue((String) inventory.get("warehouse"));
+            row.createCell(1).setCellValue((String) inventory.get("product"));
+            row.createCell(2).setCellValue((String) inventory.get("zone"));
+            row.createCell(3).setCellValue((Integer) inventory.get("quantity"));
+        }
+
+        // Tự động điều chỉnh kích thước cột
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Ghi vào file
+        try (FileOutputStream fileOut = new FileOutputStream(outputExcelFile)) {
+            workbook.write(fileOut);
+        } finally {
+            workbook.close();
+        }
     }
 }

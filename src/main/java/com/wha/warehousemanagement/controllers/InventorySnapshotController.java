@@ -78,36 +78,84 @@ public class InventorySnapshotController {
         return ResponseEntity.ok("Snapshots created successfully for the given period.");
     }
 
+//    @GetMapping("/warehouse-report")
+//    public ResponseEntity<?> getWarehouseReports() throws IOException, InterruptedException {
+//        List<Map<String, Object>> reportData = inventorySnapshotService.getAllWarehouseSnapshots();
+//
+//        if (reportData.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+//        }
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        File tempFile = File.createTempFile("warehouse_inventory_report", ".json");
+//        mapper.writeValue(tempFile, reportData);
+//
+//        String outputExcelFile = tempFile.getAbsolutePath().replace(".json", ".xlsx");
+//        ProcessBuilder processBuilder = new ProcessBuilder("python", "src/main/python-scripts/generate_warehouse_excel_report.py", tempFile.getAbsolutePath(), outputExcelFile);
+//        processBuilder.redirectErrorStream(true);
+//        Process process = processBuilder.start();
+//        int exitCode = process.waitFor();
+//
+//        if (exitCode != 0) {
+//            // Đọc log lỗi từ ProcessBuilder
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+//            StringBuilder errorMsg = new StringBuilder();
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                errorMsg.append(line).append("\n");
+//            }
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Error generating Excel report: " + errorMsg.toString()));
+//        }
+//
+//        File excelFile = new File(outputExcelFile);
+//        InputStreamResource resource = new InputStreamResource(new FileInputStream(excelFile));
+//
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + excelFile.getName())
+//                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+//                .body(resource);
+//    }
+
     @GetMapping("/warehouse-report")
-    public ResponseEntity<?> getWarehouseReports() throws IOException, InterruptedException {
+    public ResponseEntity<?> getWarehouseReports() throws IOException {
         List<Map<String, Object>> reportData = inventorySnapshotService.getAllWarehouseSnapshots();
 
-        if (reportData.isEmpty()) {
+        if (reportData == null || reportData.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        File tempFile = File.createTempFile("warehouse_inventory_report", ".json");
-        mapper.writeValue(tempFile, reportData);
-
-        String outputExcelFile = tempFile.getAbsolutePath().replace(".json", ".xlsx");
-        ProcessBuilder processBuilder = new ProcessBuilder("python", "src/main/python-scripts/generate_warehouse_excel_report.py", tempFile.getAbsolutePath(), outputExcelFile);
-        processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
-        int exitCode = process.waitFor();
-
-        if (exitCode != 0) {
-            // Đọc log lỗi từ ProcessBuilder
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            StringBuilder errorMsg = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                errorMsg.append(line).append("\n");
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Error generating Excel report: " + errorMsg.toString()));
-        }
+        String outputExcelFile = "warehouse_inventory_report.xlsx";
+        inventorySnapshotService.generateWarehouseExcelReport(reportData, outputExcelFile);
 
         File excelFile = new File(outputExcelFile);
+        if (!excelFile.exists()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create Excel file.");
+        }
+
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(excelFile));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + excelFile.getName())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
+    }
+
+    @GetMapping("/current-warehouse-report")
+    public ResponseEntity<?> getCurrentWarehouseReports() throws IOException {
+        List<Map<String, Object>> reportData = inventorySnapshotService.getAllWarehouse();
+
+        if (reportData == null || reportData.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        }
+
+        String outputExcelFile = "current_warehouse_inventory_report.xlsx";
+        inventorySnapshotService.generateCurrentWarehouseExcelReport(reportData, outputExcelFile);
+
+        File excelFile = new File(outputExcelFile);
+        if (!excelFile.exists()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create Excel file.");
+        }
+
         InputStreamResource resource = new InputStreamResource(new FileInputStream(excelFile));
 
         return ResponseEntity.ok()
