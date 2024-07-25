@@ -38,6 +38,7 @@ public class ExportService {
     private final ExportDetailRepository exportDetailRepository;
     private final ImportDetailRepository importDetailRepository;
     private final ProductRepository productRepository;
+    private final WebSocketService webSocketService;
 
     public ResponseObject<?> addExport(ExportRequest request) {
         try {
@@ -70,6 +71,12 @@ public class ExportService {
             }
 
             exportRepository.save(export);
+
+            if (export.getExportType() == ImportExportType.WAREHOUSE) {
+                ExportNotification notification = new ExportNotification(export);
+                webSocketService.sendNotification(notification, export.getWarehouseTo().getId());
+            }
+
             ExportResponse response = exportMapper.toDto(export);
             return new ResponseObject<>(HttpStatus.OK.value(), "Export added successfully", response);
         } catch (CustomException e) {

@@ -1,7 +1,13 @@
 package com.wha.warehousemanagement.models;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class ExportNotification {
 
+    // Getters and setters
     private Integer exportId;
     private String message;
 
@@ -15,22 +21,5 @@ public class ExportNotification {
     public ExportNotification(Export export) {
         this.exportId = export.getId();
         this.message = "New export created with ID: " + export.getId() + " for warehouse: " + export.getWarehouseTo().getName();
-    }
-
-    // Getters and setters
-    public Integer getExportId() {
-        return exportId;
-    }
-
-    public void setExportId(Integer exportId) {
-        this.exportId = exportId;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }
