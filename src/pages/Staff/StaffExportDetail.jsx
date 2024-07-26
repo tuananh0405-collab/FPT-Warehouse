@@ -39,6 +39,10 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 const { TextArea } = Input;
 
+export const FormatTime = (time) => {
+  return moment(time).format("YYYY-MM-DD HH:mm:ss");
+};
+
 function StaffExportDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -65,6 +69,7 @@ function StaffExportDetail() {
   const [isDetailSaved, setIsDetailSaved] = useState(false);
   const [isRowAdding, setIsRowAdding] = useState(false);
   const [filteredInventory, setFilteredInventory] = useState([]);
+  const [inventoryDataForAdding, setInventoryDataForAdding] = useState([]);
 
   const { data: exportResponse } = useGetExportByIdQuery({
     exportId: id,
@@ -90,6 +95,7 @@ function StaffExportDetail() {
   const exportData = exportResponse?.data;
   const exportDetailData = exportDetailResponse?.data;
   const latestExportData = latestExportResponse?.data;
+  const inventoryData = inventoryResponse?.data;
 
   const filteredProducts = productResponse?.data.filter((product) =>
     filteredInventory.some(
@@ -98,11 +104,29 @@ function StaffExportDetail() {
   );
 
   useEffect(() => {
-    if (inventoryResponse?.data) {
-      const filteredData = inventoryResponse?.data.filter(inv => inv.quantity > 0);
+    if (inventoryData) {
+      const filteredData = inventoryData.filter(inv => inv.quantity > 0);
+
+      // lọc ra những lô hàng từ filteredData đã tồn tại trong exportDetailData
+      const filteredInventoryForAdding = filteredData.filter(
+        (inv) =>
+          !exportDetailData.some(
+            (detail) => {
+              const invExpiredAt = inv.expiredAt ? moment(inv.expiredAt).format("YYYY-MM-DD") : null;
+              const detailExpiredAt = detail.expiredAt ? moment(detail.expiredAt).format("YYYY-MM-DD") : null;
+              return (
+                detail.product.id === inv.product.id &&
+                detail.zone.id === inv.zone.id &&
+                detailExpiredAt === invExpiredAt
+              )
+            }
+          )
+      );
+
       setFilteredInventory(filteredData);
+      setInventoryDataForAdding(filteredInventoryForAdding);
     }
-  }, [inventoryResponse]);
+  }, [inventoryResponse, exportDetailResponse]);
 
   useEffect(() => {
     if (exportData) {
@@ -389,7 +413,11 @@ function StaffExportDetail() {
 
   const handleSaveDetail = async (recordId) => {
     const detail = detailFormData.find((item) => item.id === recordId);
-    const stockQuantity = getStockQuantity(detail.product.id, detail.zone.name, detail.expiredAt);
+    const stockQuantity = getStockQuantity(detail.product.id, detail.zone.id, detail.expiredAt);
+
+    console.log("detail", detail);
+    console.log("stockQuantity", stockQuantity);
+
     if (detail.quantity > stockQuantity) {
       message.error("Quantity exceeds available stock.");
       return;
@@ -460,13 +488,16 @@ function StaffExportDetail() {
     setNewDetails([...newDetails, newProduct]);
   };
 
-  const getStockQuantity = (productId, zoneName, expiredAt) => {
-    const inventoryQuantity = filteredInventory
+  const getStockQuantity = (productId, zoneId, expiredAt) => {
+    const inventoryQuantity = inventoryData
       .filter(
-        (inv) =>
-          inv.product.id === productId &&
-          inv.zone.name === zoneName &&
-          inv.expiredAt === expiredAt
+        (inv) => {
+          const invExpiredAt = inv.expiredAt ? moment(inv.expiredAt).format("YYYY-MM-DD") : null;
+          const propsExpiredAt = expiredAt ? moment(expiredAt).format("YYYY-MM-DD") : null;
+          return (inv.product.id === productId &&
+            inv.zone.id === zoneId &&
+            invExpiredAt === propsExpiredAt)
+        }
       )
       .reduce((acc, inv) => acc + inv.quantity, 0);
 
@@ -474,7 +505,7 @@ function StaffExportDetail() {
       .filter(
         (detail) =>
           detail.product.id === productId &&
-          detail.zone.name === zoneName &&
+          detail.zone.id === zoneId &&
           detail.expiredAt === expiredAt
       )
       .reduce((acc, detail) => acc + detail.quantity, 0);
@@ -548,15 +579,15 @@ function StaffExportDetail() {
   const getUniqueExpiredAt = (productId, zoneId) => {
     const existedExpiredAtInDetailData = exportDetailData.filter(
       (detail) => detail.product.id === productId && detail.zone.id === zoneId
-    ).map((detail) => detail.expiredAt);
+    ).map((detail) => moment(detail.expiredAt).format("YYYY-MM-DD"));  // Chuẩn hóa ngày
 
     const selectedExpiredAtInNewDetail = newDetails.filter(
       (detail) => detail.product.id === productId && detail.zone.id === zoneId
-    ).map((detail) => detail.expiredAt);
+    ).map((detail) => moment(detail.expiredAt).format("YYYY-MM-DD"));  // Chuẩn hóa ngày
 
-    const existedExpiredAtInInventory = filteredInventory.filter(
+    const existedExpiredAtInInventory = inventoryDataForAdding.filter(
       (inv) => inv.product.id === productId && inv.zone.id === zoneId
-    ).map((inv) => inv.expiredAt);
+    ).map((inv) => moment(inv.expiredAt).format("YYYY-MM-DD"));  // Chuẩn hóa ngày
 
     const uniqueExpiredAt = existedExpiredAtInInventory.filter(date =>
       !selectedExpiredAtInNewDetail.includes(date) &&
@@ -583,35 +614,126 @@ function StaffExportDetail() {
   };
 
   const getUniqueZones = (productId) => {
-    const existedExpiredAtInDetailData = exportDetailData.filter(
-      (detail) => detail.product.id === productId
-    ).map((detail) => detail.expiredAt);
+    // Lấy ra tất cả expiredAt và zone.id đã tồn tại trong exportDetailData cho sản phẩm này
+    const existedExpiredAtInDetailData = exportDetailData
+      .filter((detail) => detail.product.id === productId)
+      .map((detail) => ({
+        zoneId: detail.zone.id,
+        expiredAt: moment(detail.expiredAt).format("YYYY-MM-DD"),
+      }));
 
-    console.log(existedExpiredAtInDetailData);
+    // Lấy ra tất cả expiredAt và zone.id đã được chọn trong newDetails cho sản phẩm này
+    const selectedExpiredAtInNewDetail = newDetails
+      .filter((detail) => detail.product.id === productId)
+      .map((detail) => ({
+        zoneId: detail.zone.id,
+        expiredAt: moment(detail.expiredAt).format("YYYY-MM-DD"),
+      }));
 
-    const selectedExpiredAtInNewDetail = newDetails.filter(
-      (detail) => detail.product.id === productId
-    ).map((detail) => detail.expiredAt);
+    // Gộp existedExpiredAtInDetailData và selectedExpiredAtInNewDetail thành một mảng duy nhất để kiểm tra
+    const allSelectedExpiredAt = [...existedExpiredAtInDetailData, ...selectedExpiredAtInNewDetail];
 
-    const existedExpiredAtInInventory = filteredInventory.filter(
-      (inv) => inv.product.id === productId
-    ).map((inv) => inv.expiredAt);
-
-    const uniqueExpiredAtInInventory = existedExpiredAtInInventory.filter(
-      (date) =>
-        !existedExpiredAtInDetailData.includes(date) &&
-        !selectedExpiredAtInNewDetail.includes(date)
-    );
-
-    const uniqueZones = filteredInventory
-      .filter(
-        (inv) =>
-          inv.product.id === productId &&
-          uniqueExpiredAtInInventory.includes(inv.expiredAt)
-      )
+    // Lấy ra danh sách tất cả các zone
+    const allZones = inventoryDataForAdding
+      .filter((inv) => inv.product.id === productId)
       .map((inv) => inv.zone);
 
-    return Array.from(new Set(uniqueZones.map((zone) => JSON.stringify(zone)))).map((str) => JSON.parse(str));
+    // Lọc ra các zone mà tất cả expiredAt đã bị chọn
+    const uniqueZones = allZones.filter((zone) => {
+      // Lấy ra tất cả các expiredAt của zone này trong inventoryDataForAdding
+      const expiredAtInInventory = inventoryDataForAdding
+        .filter((inv) => inv.product.id === productId && inv.zone.id === zone.id)
+        .map((inv) => moment(inv.expiredAt).format("YYYY-MM-DD"));
+
+      // Kiểm tra nếu tất cả expiredAt của zone này đã bị chọn
+      const allExpiredAtSelected = expiredAtInInventory.every((expiredAt) =>
+        allSelectedExpiredAt.some(
+          (detail) => detail.zoneId === zone.id && detail.expiredAt === expiredAt
+        )
+      );
+
+      // Chỉ giữ lại các zone mà không phải tất cả expiredAt đã bị chọn
+      return !allExpiredAtSelected;
+    });
+
+    // Sử dụng Set để đảm bảo mỗi zone chỉ xuất hiện một lần
+    return Array.from(new Set(uniqueZones.map(zone => JSON.stringify(zone))))
+      .map(str => JSON.parse(str));
+  };
+
+  const generatePDFData = () => {
+    const doc = new jsPDF();
+
+    // Add company logo
+
+    // Add invoice title and number
+    doc.setFontSize(20);
+    doc.text("EXPORT INVOICE", 105, 30, null, null, "center");
+    doc.setFontSize(10);
+    doc.text(`No. ${formData.id}`, 180, 20);
+
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Date: ${moment().format("DD MMMM, YYYY")}`, 10, 50);
+
+    // Add billed to and from information
+    doc.setFontSize(10);
+    doc.text("To:", 10, 60);
+    if (formData.exportType === "WAREHOUSE") {
+      doc.text(formData.warehouseToName || "N/A", 10, 65);
+      doc.text(formData.warehouseToAddress || "N/A", 10, 70);
+      doc.text(formData.warehouseToDescription || "N/A", 10, 75);
+    } else if (formData.exportType === "CUSTOMER") {
+      doc.text(formData.customerName || "N/A", 10, 65);
+      doc.text(formData.customerAddress || "N/A", 10, 70);
+      doc.text(formData.customerEmail || "N/A", 10, 75);
+      doc.text(formData.customerPhone || "N/A", 10, 80);
+    }
+
+    doc.text("From:", 105, 60);
+    doc.text(formData.warehouseFromName || "N/A", 105, 65);
+    doc.text(formData.warehouseFromAddress || "N/A", 105, 70);
+    doc.text(formData.warehouseFromDescription || "N/A", 105, 75);
+
+    // Add table
+    doc.autoTable({
+      head: [
+        [
+          "Product Name",
+          "Description",
+          "Category",
+          "Expiration Date",
+          "Zone",
+          "Quantity",
+        ],
+      ],
+      body: detailFormData.map((item) => [
+        item.product.name,
+        item.product.description,
+        item.product.category.name,
+        item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
+        item.zone.name,
+        item.quantity,
+      ]),
+      startY: 90,
+    });
+
+    doc.setFontSize(10);
+    doc.text(
+      "Note: Thank you for choosing us!",
+      10,
+      doc.lastAutoTable.finalY + 35
+    );
+
+    setPdfData(doc.output("datauristring"));
+    setIsModalVisible(true);
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.fromDataURL(pdfData);
+    doc.save(`Export_${id}.pdf`);
+    setIsModalVisible(false);
   };
 
   const columns = [
@@ -697,10 +819,10 @@ function StaffExportDetail() {
       width: 150,
       render: (text, record, index) => {
         if (record.isRowEditing && record.isNew) {
-          const formattedDate = text ? moment(text).format("YYYY-MM-DD") : null; // Có thể gây ra lỗi
+          const formattedDate = text ? moment(text).format("YYYY-MM-DD") : null;
           return (
             <Select
-              showSearch
+              notFoundContent="No date found"
               value={formattedDate}
               onChange={(value) => handleExpiredAtChange(value, index)}
               style={{ width: "100%" }}
@@ -708,13 +830,13 @@ function StaffExportDetail() {
             >
               {getUniqueExpiredAt(record.product.id, record.zone.id).map((date) => (
                 <Select.Option key={date} value={date}>
-                  {date ? moment(date).format("YYYY-MM-DD") : null}
+                  {moment(date).format("YYYY-MM-DD")}
                 </Select.Option>
               ))}
             </Select>
           );
         } else {
-          const formattedDate = text ? moment(text).format("YYYY-MM-DD") : null; // Có thể gây ra lỗi
+          const formattedDate = text ? moment(text).format("YYYY-MM-DD") : null;
           return formattedDate ? moment(formattedDate).format("YYYY-MM-DD") : "None";
         }
       }
@@ -759,7 +881,7 @@ function StaffExportDetail() {
           <div>
             {getStockQuantity(
               record.product.id,
-              record.zone.name,
+              record.zone.id,
               record.expiredAt
             )}
           </div>
@@ -807,6 +929,81 @@ function StaffExportDetail() {
       });
   }
 
+  // const generatePDFData = () => {
+  //   const doc = new jsPDF();
+
+  //   // Add company logo
+
+  //   // Add invoice title and number
+  //   doc.setFontSize(20);
+  //   doc.text("EXPORT INVOICE", 105, 30, null, null, "center");
+  //   doc.setFontSize(10);
+  //   doc.text(`No. ${formData.id}`, 180, 20);
+
+  //   // Add date
+  //   doc.setFontSize(12);
+  //   doc.text(`Date: ${moment().format("DD MMMM, YYYY")}`, 10, 50);
+
+  //   // Add billed to and from information
+  //   doc.setFontSize(10);
+  //   doc.text("To:", 10, 60);
+  //   if (formData.exportType === "WAREHOUSE") {
+  //     doc.text(formData.warehouseToName || "N/A", 10, 65);
+  //     doc.text(formData.warehouseToAddress || "N/A", 10, 70);
+  //     doc.text(formData.warehouseToDescription || "N/A", 10, 75);
+  //   } else if (formData.exportType === "CUSTOMER") {
+  //     doc.text(formData.customerName || "N/A", 10, 65);
+  //     doc.text(formData.customerAddress || "N/A", 10, 70);
+  //     doc.text(formData.customerEmail || "N/A", 10, 75);
+  //     doc.text(formData.customerPhone || "N/A", 10, 80);
+  //   }
+
+  //   doc.text("From:", 105, 60);
+  //   doc.text(formData.warehouseFromName || "N/A", 105, 65);
+  //   doc.text(formData.warehouseFromAddress || "N/A", 105, 70);
+  //   doc.text(formData.warehouseFromDescription || "N/A", 105, 75);
+
+  //   // Add table
+  //   doc.autoTable({
+  //     head: [
+  //       [
+  //         "Product Name",
+  //         "Description",
+  //         "Category",
+  //         "Expiration Date",
+  //         "Zone",
+  //         "Quantity",
+  //       ],
+  //     ],
+  //     body: detailFormData.map((item) => [
+  //       item.product.name,
+  //       item.product.description,
+  //       item.product.category.name,
+  //       item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
+  //       item.zone.name,
+  //       item.quantity,
+  //     ]),
+  //     startY: 90,
+  //   });
+
+  //   doc.setFontSize(10);
+  //   doc.text(
+  //     "Note: Thank you for choosing us!",
+  //     10,
+  //     doc.lastAutoTable.finalY + 35
+  //   );
+
+  //   setPdfData(doc.output("datauristring"));
+  //   setIsModalVisible(true);
+  // };
+
+  // const downloadPDF = () => {
+  //   const doc = new jsPDF();
+  //   doc.fromDataURL(pdfData);
+  //   doc.save(`Export_${id}.pdf`);
+  //   setIsModalVisible(false);
+  // };
+
   return (
     <>
       <Breadcrumbs />
@@ -817,16 +1014,17 @@ function StaffExportDetail() {
         <div className="flex justify-end gap-2">
           {!isEditing ? (
             <>
-              <Button
+              {/* <Button
                 size="medium"
                 style={{
                   backgroundColor: "#ff4d4f",
                   color: "#fff",
                   borderColor: "#ff4d4f",
                 }}
+                onClick={generatePDFData}
               >
                 <PictureAsPdfIcon /> Preview
-              </Button>
+              </Button> */}
               {exportData?.id === latestExportData?.id && (
                 <Button
                   size="medium"
@@ -896,7 +1094,7 @@ function StaffExportDetail() {
                     className="mb-2 w-full"
                     size="large"
                     value={formData?.exportType}
-                    disabled={!isEditing}
+                    disabled={true}
                     onChange={(value) =>
                       handleSelectChange(value, "exportType", "exportType")
                     }
