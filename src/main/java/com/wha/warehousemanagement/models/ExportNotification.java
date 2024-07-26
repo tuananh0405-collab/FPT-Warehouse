@@ -3,6 +3,8 @@ package com.wha.warehousemanagement.models;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.text.SimpleDateFormat;
+
 @Getter
 @Setter
 public class ExportNotification {
@@ -19,7 +21,10 @@ public class ExportNotification {
     }
 
     public ExportNotification(Export export) {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        String formattedDate = formatter.format(export.getExportDate());
         this.exportId = export.getId();
-        this.message = "New export created with ID: " + export.getId() + " for warehouse: " + export.getWarehouseTo().getName();
+        this.message = "New export created by " + export.getWarehouseFrom().getName() + " to your warehouse at " + " at " + formattedDate +
+                " description: " + export.getDescription();
     }
 }
