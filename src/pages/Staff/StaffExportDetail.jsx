@@ -108,9 +108,9 @@ function StaffExportDetail() {
       const filteredData = inventoryData.filter(inv => inv.quantity > 0);
 
       // lọc ra những lô hàng từ filteredData đã tồn tại trong exportDetailData
-      const filteredInventoryForAdding = filteredData.filter(
+      const filteredInventoryForAdding = filteredData?.filter(
         (inv) =>
-          !exportDetailData.some(
+          !exportDetailData?.some(
             (detail) => {
               const invExpiredAt = inv.expiredAt ? moment(inv.expiredAt).format("YYYY-MM-DD") : null;
               const detailExpiredAt = detail.expiredAt ? moment(detail.expiredAt).format("YYYY-MM-DD") : null;
@@ -661,81 +661,6 @@ function StaffExportDetail() {
       .map(str => JSON.parse(str));
   };
 
-  const generatePDFData = () => {
-    const doc = new jsPDF();
-
-    // Add company logo
-
-    // Add invoice title and number
-    doc.setFontSize(20);
-    doc.text("EXPORT INVOICE", 105, 30, null, null, "center");
-    doc.setFontSize(10);
-    doc.text(`No. ${formData.id}`, 180, 20);
-
-    // Add date
-    doc.setFontSize(12);
-    doc.text(`Date: ${moment().format("DD MMMM, YYYY")}`, 10, 50);
-
-    // Add billed to and from information
-    doc.setFontSize(10);
-    doc.text("To:", 10, 60);
-    if (formData.exportType === "WAREHOUSE") {
-      doc.text(formData.warehouseToName || "N/A", 10, 65);
-      doc.text(formData.warehouseToAddress || "N/A", 10, 70);
-      doc.text(formData.warehouseToDescription || "N/A", 10, 75);
-    } else if (formData.exportType === "CUSTOMER") {
-      doc.text(formData.customerName || "N/A", 10, 65);
-      doc.text(formData.customerAddress || "N/A", 10, 70);
-      doc.text(formData.customerEmail || "N/A", 10, 75);
-      doc.text(formData.customerPhone || "N/A", 10, 80);
-    }
-
-    doc.text("From:", 105, 60);
-    doc.text(formData.warehouseFromName || "N/A", 105, 65);
-    doc.text(formData.warehouseFromAddress || "N/A", 105, 70);
-    doc.text(formData.warehouseFromDescription || "N/A", 105, 75);
-
-    // Add table
-    doc.autoTable({
-      head: [
-        [
-          "Product Name",
-          "Description",
-          "Category",
-          "Expiration Date",
-          "Zone",
-          "Quantity",
-        ],
-      ],
-      body: detailFormData.map((item) => [
-        item.product.name,
-        item.product.description,
-        item.product.category.name,
-        item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
-        item.zone.name,
-        item.quantity,
-      ]),
-      startY: 90,
-    });
-
-    doc.setFontSize(10);
-    doc.text(
-      "Note: Thank you for choosing us!",
-      10,
-      doc.lastAutoTable.finalY + 35
-    );
-
-    setPdfData(doc.output("datauristring"));
-    setIsModalVisible(true);
-  };
-
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.fromDataURL(pdfData);
-    doc.save(`Export_${id}.pdf`);
-    setIsModalVisible(false);
-  };
-
   const columns = [
     {
       title: "Product Name",
@@ -871,6 +796,80 @@ function StaffExportDetail() {
     },
   ];
 
+  const generatePDFData = () => {
+    const doc = new jsPDF();
+
+    // Add company logo
+
+    // Add invoice title and number
+    doc.setFontSize(20);
+    doc.text("EXPORT INVOICE", 105, 30, null, null, "center");
+    doc.setFontSize(10);
+    doc.text(`No. ${formData.id}`, 180, 20);
+
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Date: ${moment().format("DD MMMM, YYYY")}`, 10, 50);
+
+    // Add billed to and from information
+    doc.setFontSize(10);
+    doc.text("To:", 10, 60);
+    if (formData.exportType === "WAREHOUSE") {
+      doc.text(formData.warehouseToName || "N/A", 10, 65);
+      doc.text(formData.warehouseToAddress || "N/A", 10, 70);
+      doc.text(formData.warehouseToDescription || "N/A", 10, 75);
+    } else if (formData.exportType === "CUSTOMER") {
+      doc.text(formData.customerName || "N/A", 10, 65);
+      doc.text(formData.customerAddress || "N/A", 10, 70);
+      doc.text(formData.customerEmail || "N/A", 10, 75);
+      doc.text(formData.customerPhone || "N/A", 10, 80);
+    }
+
+    doc.text("From:", 105, 60);
+    doc.text(formData.warehouseFromName || "N/A", 105, 65);
+    doc.text(formData.warehouseFromAddress || "N/A", 105, 70);
+    doc.text(formData.warehouseFromDescription || "N/A", 105, 75);
+
+    // Add table
+    doc.autoTable({
+      head: [
+        [
+          "Product Name",
+          "Description",
+          "Category",
+          "Expiration Date",
+          "Zone",
+          "Quantity",
+        ],
+      ],
+      body: detailFormData.map((item) => [
+        item.product.name,
+        item.product.description,
+        item.product.category.name,
+        item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
+        item.zone.name,
+        item.quantity,
+      ]),
+      startY: 90,
+    });
+
+    doc.setFontSize(10);
+    doc.text(
+      "Note: Thank you for choosing us!",
+      10,
+      doc.lastAutoTable.finalY + 35
+    );
+
+     // Create a blob from the PDF and generate a data URI
+  const pdfBlob = doc.output("blob");
+  const pdfData = URL.createObjectURL(pdfBlob);
+
+  setPdfData(pdfData);
+  setIsModalVisible(true);
+    // setPdfData(doc.output("datauristring"));
+    // setIsModalVisible(true);
+  };
+
   if (isEditing) {
     columns.push(
       {
@@ -929,80 +928,6 @@ function StaffExportDetail() {
       });
   }
 
-  // const generatePDFData = () => {
-  //   const doc = new jsPDF();
-
-  //   // Add company logo
-
-  //   // Add invoice title and number
-  //   doc.setFontSize(20);
-  //   doc.text("EXPORT INVOICE", 105, 30, null, null, "center");
-  //   doc.setFontSize(10);
-  //   doc.text(`No. ${formData.id}`, 180, 20);
-
-  //   // Add date
-  //   doc.setFontSize(12);
-  //   doc.text(`Date: ${moment().format("DD MMMM, YYYY")}`, 10, 50);
-
-  //   // Add billed to and from information
-  //   doc.setFontSize(10);
-  //   doc.text("To:", 10, 60);
-  //   if (formData.exportType === "WAREHOUSE") {
-  //     doc.text(formData.warehouseToName || "N/A", 10, 65);
-  //     doc.text(formData.warehouseToAddress || "N/A", 10, 70);
-  //     doc.text(formData.warehouseToDescription || "N/A", 10, 75);
-  //   } else if (formData.exportType === "CUSTOMER") {
-  //     doc.text(formData.customerName || "N/A", 10, 65);
-  //     doc.text(formData.customerAddress || "N/A", 10, 70);
-  //     doc.text(formData.customerEmail || "N/A", 10, 75);
-  //     doc.text(formData.customerPhone || "N/A", 10, 80);
-  //   }
-
-  //   doc.text("From:", 105, 60);
-  //   doc.text(formData.warehouseFromName || "N/A", 105, 65);
-  //   doc.text(formData.warehouseFromAddress || "N/A", 105, 70);
-  //   doc.text(formData.warehouseFromDescription || "N/A", 105, 75);
-
-  //   // Add table
-  //   doc.autoTable({
-  //     head: [
-  //       [
-  //         "Product Name",
-  //         "Description",
-  //         "Category",
-  //         "Expiration Date",
-  //         "Zone",
-  //         "Quantity",
-  //       ],
-  //     ],
-  //     body: detailFormData.map((item) => [
-  //       item.product.name,
-  //       item.product.description,
-  //       item.product.category.name,
-  //       item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
-  //       item.zone.name,
-  //       item.quantity,
-  //     ]),
-  //     startY: 90,
-  //   });
-
-  //   doc.setFontSize(10);
-  //   doc.text(
-  //     "Note: Thank you for choosing us!",
-  //     10,
-  //     doc.lastAutoTable.finalY + 35
-  //   );
-
-  //   setPdfData(doc.output("datauristring"));
-  //   setIsModalVisible(true);
-  // };
-
-  // const downloadPDF = () => {
-  //   const doc = new jsPDF();
-  //   doc.fromDataURL(pdfData);
-  //   doc.save(`Export_${id}.pdf`);
-  //   setIsModalVisible(false);
-  // };
 
   return (
     <>
@@ -1014,7 +939,7 @@ function StaffExportDetail() {
         <div className="flex justify-end gap-2">
           {!isEditing ? (
             <>
-              {/* <Button
+               <Button
                 size="medium"
                 style={{
                   backgroundColor: "#ff4d4f",
@@ -1024,7 +949,7 @@ function StaffExportDetail() {
                 onClick={generatePDFData}
               >
                 <PictureAsPdfIcon /> Preview
-              </Button> */}
+              </Button> 
               {exportData?.id === latestExportData?.id && (
                 <Button
                   size="medium"
@@ -1334,6 +1259,27 @@ function StaffExportDetail() {
             </div>
           )}
         </div>
+        <Modal
+          title="PDF Preview"
+          visible={isModalVisible}
+          onCancel={() => setIsModalVisible(false)}
+          footer={[
+            <Button key="cancel" onClick={() => setIsModalVisible(false)}>
+              Cancel
+            </Button>,
+            // <Button key="download" type="primary" onClick={() => downloadPDF()}>
+            //   Download
+            // </Button>,
+          ]}
+          width={"80%"}
+        >
+          <iframe
+            src={pdfData}
+            width="100%"
+            height="700px"
+            style={{ border: "none" }}
+          ></iframe>
+        </Modal>
       </div>
     </>
   );
