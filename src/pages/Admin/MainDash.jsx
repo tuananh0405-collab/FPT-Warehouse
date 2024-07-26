@@ -8,6 +8,7 @@ import { useGetAllExportDetailsQuery } from "../../redux/api/exportDetailApiSlic
 import LineChart from "../../components/CustomerReview/LineChart";
 import BarChart from "../../components/CustomerReview/BarChart";
 import { useGetAllImports2Query } from "../../redux/api/importApiSlice";
+import { jwtDecode } from "jwt-decode";
 
 const { Panel } = Collapse;
 
@@ -16,6 +17,7 @@ const MainDash = () => {
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
   const warehouseId = userInfo.userInfo.data.warehouseId;
+  const decoded = jwtDecode(userInfo.userInfo.data.token);
 
   const { data: chartExports } = useGetAllExportsQuery(authToken);
   const { data: chartImports } = useGetAllImports2Query({ authToken });
@@ -79,20 +81,11 @@ const MainDash = () => {
       dataIndex: "expiredAt",
       key: "expiredAt",
     },
-    {
-      title: "Action",
-      key: "action",
-      render: (text, record) => (
-        <Button type="link" onClick={() => console.log(record)}>
-          Import
-        </Button>
-      ),
-    },
   ];
 
   return (
     <div>
-      {filteredExports.length > 0 && (
+      {decoded.role === "STAFF" && filteredExports.length > 0 && (
         <div className="flex justify-between items-center mb-4">
           <Badge count={filteredExports.length}>
             <NotificationsIcon onClick={handleIconClick} style={{ fontSize: 30, cursor: "pointer" }} />
@@ -110,7 +103,7 @@ const MainDash = () => {
         </div>
       </div>
       <Modal
-        title="Export Orders"
+        title="Import From Warehouse Orders"
         open={isModalOpen}
         onCancel={handleModalClose}
         footer={null}
