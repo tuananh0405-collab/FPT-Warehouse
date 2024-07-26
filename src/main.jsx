@@ -51,6 +51,7 @@ import StaffTransfer from "./pages/Staff/StaffTransfer.jsx";
 import StaffAddImportWarehouse from "./pages/Staff/StaffAddImportWarehouse.jsx";
 import StaffImportDetail from "./pages/Staff/StaffImportDetail.jsx";
 import { WebSocketProvider } from './components/WebSocket/WebSocketProvider.jsx';
+import ListenerWrapper from "./components/WebSocket/ListenerWrapper.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -105,8 +106,9 @@ const router = createBrowserRouter(
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <WebSocketProvider>
-
-      <RouterProvider router={router} />
+      <ListenerWrapper>
+        <RouterProvider router={router} />
+      </ListenerWrapper>
     </WebSocketProvider>
   </Provider>
 );

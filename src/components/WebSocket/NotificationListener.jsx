@@ -16,7 +16,7 @@ const NotificationListener = () => {
 
         const subscription = subscribeToWarehouse(wid, (message) => {
             const notification = JSON.parse(message.body);
-            toast.success(notification.message);
+            toast.info(notification.message);
         });
 
         return () => {
