@@ -3,7 +3,7 @@ import {
   useGetExportByIdQuery,
   useGetLatestExportQuery,
   useUpdateExportByIdMutation,
-  useDeleteExportMutation
+  useDeleteExportMutation,
 } from "../../redux/api/exportApiSlice";
 import {
   useGetAllExportDetailsByExportIdQuery,
@@ -35,7 +35,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import logo from "../../assets/images/FPT_logo_2010.png";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 const { TextArea } = Input;
 
@@ -106,22 +106,24 @@ function StaffExportDetail() {
 
   useEffect(() => {
     if (inventoryData) {
-      const filteredData = inventoryData.filter(inv => inv.quantity > 0);
+      const filteredData = inventoryData.filter((inv) => inv.quantity > 0);
 
       // lọc ra những lô hàng từ filteredData đã tồn tại trong exportDetailData
       const filteredInventoryForAdding = filteredData?.filter(
         (inv) =>
-          !exportDetailData?.some(
-            (detail) => {
-              const invExpiredAt = inv.expiredAt ? moment(inv.expiredAt).format("YYYY-MM-DD") : null;
-              const detailExpiredAt = detail.expiredAt ? moment(detail.expiredAt).format("YYYY-MM-DD") : null;
-              return (
-                detail.product.id === inv.product.id &&
-                detail.zone.id === inv.zone.id &&
-                detailExpiredAt === invExpiredAt
-              )
-            }
-          )
+          !exportDetailData?.some((detail) => {
+            const invExpiredAt = inv.expiredAt
+              ? moment(inv.expiredAt).format("YYYY-MM-DD")
+              : null;
+            const detailExpiredAt = detail.expiredAt
+              ? moment(detail.expiredAt).format("YYYY-MM-DD")
+              : null;
+            return (
+              detail.product.id === inv.product.id &&
+              detail.zone.id === inv.zone.id &&
+              detailExpiredAt === invExpiredAt
+            );
+          })
       );
 
       setFilteredInventory(filteredData);
@@ -258,7 +260,7 @@ function StaffExportDetail() {
 
   const handleDelete = async () => {
     try {
-      const detailIdsToDelete = exportDetailData.map(detail => detail.id);
+      const detailIdsToDelete = exportDetailData.map((detail) => detail.id);
 
       const deletedDetailsResult = await deleteExportDetails({
         data: detailIdsToDelete,
@@ -266,20 +268,20 @@ function StaffExportDetail() {
       });
 
       if (deletedDetailsResult.error) {
-        throw new Error('Failed to delete export details');
+        throw new Error("Failed to delete export details");
       }
 
       const result = await deleteExport({ exportId: id, authToken });
 
       if (result?.data) {
-        message.success('Export deleted successfully!');
-        navigate('/staff/order/export');
+        message.success("Export deleted successfully!");
+        navigate("/staff/order/export");
       } else {
-        throw new Error('Deletion failed');
+        throw new Error("Deletion failed");
       }
     } catch (error) {
-      console.error('Deletion error:', error);
-      message.error('Failed to delete export: ' + error.message);
+      console.error("Deletion error:", error);
+      message.error("Failed to delete export: " + error.message);
     }
   };
 
@@ -308,10 +310,10 @@ function StaffExportDetail() {
       if (deletedDetails.length > 0) {
         const deletedDetailsResult = await deleteExportDetails({
           data: deletedDetails,
-          authToken
+          authToken,
         });
         if (deletedDetailsResult.error) {
-          throw new Error('Failed to delete export details');
+          throw new Error("Failed to delete export details");
         }
       }
 
@@ -342,7 +344,9 @@ function StaffExportDetail() {
         let expiredAt = detail.expiredAt;
         if (expiredAt && !expiredAt.includes("T")) {
           const [date, time] = expiredAt.split(" ");
-          expiredAt = `${date}T${time ? time.replace(".0", ".000+00:00") : "00:00:00.000+00:00"}`;
+          expiredAt = `${date}T${
+            time ? time.replace(".0", ".000+00:00") : "00:00:00.000+00:00"
+          }`;
         }
         return {
           productId: detail.product.id,
@@ -391,21 +395,21 @@ function StaffExportDetail() {
   };
 
   const handleCancelDetail = (recordId) => {
-    if (newDetails.find(detail => detail.id === recordId)) {
-      setDetailFormData(detailFormData.filter(item => item.id !== recordId));
-      setNewDetails(newDetails.filter(detail => detail.id !== recordId));
+    if (newDetails.find((detail) => detail.id === recordId)) {
+      setDetailFormData(detailFormData.filter((item) => item.id !== recordId));
+      setNewDetails(newDetails.filter((detail) => detail.id !== recordId));
       setIsRowAdding(false);
     } else {
       setDetailFormData(
         detailFormData.map((item) =>
           item.id === recordId
             ? {
-              ...item,
-              quantity: initialDetailData.find(
-                (initialItem) => initialItem.id === recordId
-              ).quantity,
-              isRowEditing: false,
-            }
+                ...item,
+                quantity: initialDetailData.find(
+                  (initialItem) => initialItem.id === recordId
+                ).quantity,
+                isRowEditing: false,
+              }
             : item
         )
       );
@@ -418,7 +422,11 @@ function StaffExportDetail() {
 
   const handleSaveDetail = async (recordId) => {
     const detail = detailFormData.find((item) => item.id === recordId);
-    const stockQuantity = getStockQuantity(detail.product.id, detail.zone.id, detail.expiredAt);
+    const stockQuantity = getStockQuantity(
+      detail.product.id,
+      detail.zone.id,
+      detail.expiredAt
+    );
 
     if (detail.quantity > stockQuantity) {
       message.error("Quantity exceeds available stock.");
@@ -429,13 +437,13 @@ function StaffExportDetail() {
 
     setDetailFormData(
       detailFormData.map((item) =>
-        item.id === recordId
-          ? { ...item, isRowEditing: false }
-          : item
+        item.id === recordId ? { ...item, isRowEditing: false } : item
       )
     );
     setEditedDetails((editedDetails) => {
-      const existingIndex = editedDetails.findIndex((detail) => detail.id === recordId);
+      const existingIndex = editedDetails.findIndex(
+        (detail) => detail.id === recordId
+      );
       const updatedDetails = [...editedDetails];
       if (existingIndex >= 0) {
         updatedDetails[existingIndex] = {
@@ -460,7 +468,11 @@ function StaffExportDetail() {
     setDetailFormData(
       detailFormData.map((item) =>
         item.id === recordId
-          ? { ...item, quantity: value, isRowEditing: value !== item.originalQuantity }
+          ? {
+              ...item,
+              quantity: value,
+              isRowEditing: value !== item.originalQuantity,
+            }
           : item
       )
     );
@@ -484,7 +496,7 @@ function StaffExportDetail() {
       expiredAt: null,
       quantity: 1,
       isRowEditing: true,
-      isNew: true
+      isNew: true,
     };
     setDetailFormData([...detailFormData, newProduct]);
     setNewDetails([...newDetails, newProduct]);
@@ -492,15 +504,19 @@ function StaffExportDetail() {
 
   const getStockQuantity = (productId, zoneId, expiredAt) => {
     const inventoryQuantity = inventoryData
-      .filter(
-        (inv) => {
-          const invExpiredAt = inv.expiredAt ? moment(inv.expiredAt).format("YYYY-MM-DD") : null;
-          const propsExpiredAt = expiredAt ? moment(expiredAt).format("YYYY-MM-DD") : null;
-          return (inv.product.id === productId &&
-            inv.zone.id === zoneId &&
-            invExpiredAt === propsExpiredAt)
-        }
-      )
+      .filter((inv) => {
+        const invExpiredAt = inv.expiredAt
+          ? moment(inv.expiredAt).format("YYYY-MM-DD")
+          : null;
+        const propsExpiredAt = expiredAt
+          ? moment(expiredAt).format("YYYY-MM-DD")
+          : null;
+        return (
+          inv.product.id === productId &&
+          inv.zone.id === zoneId &&
+          invExpiredAt === propsExpiredAt
+        );
+      })
       .reduce((acc, inv) => acc + inv.quantity, 0);
 
     const exportDetailQuantity = exportDetailData
@@ -528,17 +544,17 @@ function StaffExportDetail() {
         detailFormData.map((item) =>
           item.id === recordId
             ? {
-              ...item,
-              product: {
-                ...item.product,
-                name: value,
-                description: selectedProduct?.description || "",
-                category: {
-                  ...item.product.category,
-                  name: selectedProduct?.category?.name || "",
+                ...item,
+                product: {
+                  ...item.product,
+                  name: value,
+                  description: selectedProduct?.description || "",
+                  category: {
+                    ...item.product.category,
+                    name: selectedProduct?.category?.name || "",
+                  },
                 },
-              },
-            }
+              }
             : item
         )
       );
@@ -579,21 +595,26 @@ function StaffExportDetail() {
   };
 
   const getUniqueExpiredAt = (productId, zoneId) => {
-    const existedExpiredAtInDetailData = exportDetailData.filter(
-      (detail) => detail.product.id === productId && detail.zone.id === zoneId
-    ).map((detail) => moment(detail.expiredAt).format("YYYY-MM-DD"));  // Chuẩn hóa ngày
+    const existedExpiredAtInDetailData = exportDetailData
+      .filter(
+        (detail) => detail.product.id === productId && detail.zone.id === zoneId
+      )
+      .map((detail) => moment(detail.expiredAt).format("YYYY-MM-DD")); // Chuẩn hóa ngày
 
-    const selectedExpiredAtInNewDetail = newDetails.filter(
-      (detail) => detail.product.id === productId && detail.zone.id === zoneId
-    ).map((detail) => moment(detail.expiredAt).format("YYYY-MM-DD"));  // Chuẩn hóa ngày
+    const selectedExpiredAtInNewDetail = newDetails
+      .filter(
+        (detail) => detail.product.id === productId && detail.zone.id === zoneId
+      )
+      .map((detail) => moment(detail.expiredAt).format("YYYY-MM-DD")); // Chuẩn hóa ngày
 
-    const existedExpiredAtInInventory = inventoryDataForAdding.filter(
-      (inv) => inv.product.id === productId && inv.zone.id === zoneId
-    ).map((inv) => moment(inv.expiredAt).format("YYYY-MM-DD"));  // Chuẩn hóa ngày
+    const existedExpiredAtInInventory = inventoryDataForAdding
+      .filter((inv) => inv.product.id === productId && inv.zone.id === zoneId)
+      .map((inv) => moment(inv.expiredAt).format("YYYY-MM-DD")); // Chuẩn hóa ngày
 
-    const uniqueExpiredAt = existedExpiredAtInInventory.filter(date =>
-      !selectedExpiredAtInNewDetail.includes(date) &&
-      !existedExpiredAtInDetailData.includes(date)
+    const uniqueExpiredAt = existedExpiredAtInInventory.filter(
+      (date) =>
+        !selectedExpiredAtInNewDetail.includes(date) &&
+        !existedExpiredAtInDetailData.includes(date)
     );
 
     return [...new Set(uniqueExpiredAt)];
@@ -633,7 +654,10 @@ function StaffExportDetail() {
       }));
 
     // Gộp existedExpiredAtInDetailData và selectedExpiredAtInNewDetail thành một mảng duy nhất để kiểm tra
-    const allSelectedExpiredAt = [...existedExpiredAtInDetailData, ...selectedExpiredAtInNewDetail];
+    const allSelectedExpiredAt = [
+      ...existedExpiredAtInDetailData,
+      ...selectedExpiredAtInNewDetail,
+    ];
 
     // Lấy ra danh sách tất cả các zone
     const allZones = inventoryDataForAdding
@@ -644,13 +668,16 @@ function StaffExportDetail() {
     const uniqueZones = allZones.filter((zone) => {
       // Lấy ra tất cả các expiredAt của zone này trong inventoryDataForAdding
       const expiredAtInInventory = inventoryDataForAdding
-        .filter((inv) => inv.product.id === productId && inv.zone.id === zone.id)
+        .filter(
+          (inv) => inv.product.id === productId && inv.zone.id === zone.id
+        )
         .map((inv) => moment(inv.expiredAt).format("YYYY-MM-DD"));
 
       // Kiểm tra nếu tất cả expiredAt của zone này đã bị chọn
       const allExpiredAtSelected = expiredAtInInventory.every((expiredAt) =>
         allSelectedExpiredAt?.some(
-          (detail) => detail.zoneId === zone.id && detail.expiredAt === expiredAt
+          (detail) =>
+            detail.zoneId === zone.id && detail.expiredAt === expiredAt
         )
       );
 
@@ -659,8 +686,9 @@ function StaffExportDetail() {
     });
 
     // Sử dụng Set để đảm bảo mỗi zone chỉ xuất hiện một lần
-    return Array.from(new Set(uniqueZones.map(zone => JSON.stringify(zone))))
-      .map(str => JSON.parse(str));
+    return Array.from(
+      new Set(uniqueZones.map((zone) => JSON.stringify(zone)))
+    ).map((str) => JSON.parse(str));
   };
 
   const columns = [
@@ -689,14 +717,15 @@ function StaffExportDetail() {
           if (record.isNew) {
             return (
               <span>
-                {text || ""}<span className="text-red-500">*</span>
+                {text || ""}
+                <span className="text-red-500">*</span>
               </span>
-            )
+            );
           } else {
             return text || "";
           }
         }
-      }
+      },
     },
     {
       title: "Description",
@@ -737,7 +766,7 @@ function StaffExportDetail() {
         } else {
           return text || "";
         }
-      }
+      },
     },
     {
       title: "Expiration Date",
@@ -755,18 +784,22 @@ function StaffExportDetail() {
               style={{ width: "100%" }}
               disabled={!record.zone.id}
             >
-              {getUniqueExpiredAt(record.product.id, record.zone.id).map((date) => (
-                <Select.Option key={date} value={date}>
-                  {moment(date).format("YYYY-MM-DD")}
-                </Select.Option>
-              ))}
+              {getUniqueExpiredAt(record.product.id, record.zone.id).map(
+                (date) => (
+                  <Select.Option key={date} value={date}>
+                    {moment(date).format("YYYY-MM-DD")}
+                  </Select.Option>
+                )
+              )}
             </Select>
           );
         } else {
           const formattedDate = text ? moment(text).format("YYYY-MM-DD") : null;
-          return formattedDate ? moment(formattedDate).format("YYYY-MM-DD") : "None";
+          return formattedDate
+            ? moment(formattedDate).format("YYYY-MM-DD")
+            : "None";
         }
-      }
+      },
     },
     {
       title: "Quantity",
@@ -776,13 +809,15 @@ function StaffExportDetail() {
       render: (text, record) =>
         isEditing ? (
           <span className="flex items-center justify-center gap-1">
-            {!isRowAdding ? (<InputNumber
-              disabled={isRowAdding && !record.isNew}
-              min={1}
-              value={text}
-              onChange={(value) => handleQuantityChange(value, record.id)}
-              style={{ width: "100%" }}
-            />) : (
+            {!isRowAdding ? (
+              <InputNumber
+                disabled={isRowAdding && !record.isNew}
+                min={1}
+                value={text}
+                onChange={(value) => handleQuantityChange(value, record.id)}
+                style={{ width: "100%" }}
+              />
+            ) : (
               <InputNumber
                 disabled={!record.expiredAt}
                 min={1}
@@ -802,6 +837,7 @@ function StaffExportDetail() {
     const doc = new jsPDF();
 
     // Add company logo
+    doc.addImage(logo, "PNG", 10, 10, 20, 0, undefined, false);
 
     // Add invoice title and number
     doc.setFontSize(20);
@@ -832,6 +868,8 @@ function StaffExportDetail() {
     doc.text(formData.warehouseFromAddress || "N/A", 105, 70);
     doc.text(formData.warehouseFromDescription || "N/A", 105, 75);
 
+    const groupedData = groupProducts(detailFormData);
+
     // Add table
     doc.autoTable({
       head: [
@@ -840,37 +878,40 @@ function StaffExportDetail() {
           "Description",
           "Category",
           "Expiration Date",
-          "Zone",
           "Quantity",
         ],
       ],
-      body: detailFormData.map((item) => [
+      body: groupedData.map((item) => [
         item.product.name,
         item.product.description,
         item.product.category.name,
         item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
-        item.zone.name,
         item.quantity,
       ]),
       startY: 90,
     });
 
-    doc.setFontSize(10);
-    doc.text(
-      "Note: Thank you for choosing us!",
-      10,
-      doc.lastAutoTable.finalY + 35
-    );
+    // Create a blob from the PDF and generate a data URI
+    const pdfBlob = doc.output("blob");
+    const pdfData = URL.createObjectURL(pdfBlob);
 
-     // Create a blob from the PDF and generate a data URI
-  const pdfBlob = doc.output("blob");
-  const pdfData = URL.createObjectURL(pdfBlob);
-
-  setPdfData(pdfData);
-  setIsModalVisible(true);
-    // setPdfData(doc.output("datauristring"));
-    // setIsModalVisible(true);
+    setPdfData(pdfData);
+    setIsModalVisible(true);
   };
+
+  const groupProducts = (products) => {
+    const grouped = products.reduce((acc, product) => {
+      const key = `${product.product.name}_${product.expiredAt}`;
+      if (!acc[key]) {
+        acc[key] = { ...product, quantity: 0 };
+      }
+      acc[key].quantity += product.quantity;
+      return acc;
+    }, {});
+  
+    return Object.values(grouped);
+  };
+  
 
   if (isEditing) {
     columns.push(
@@ -878,7 +919,7 @@ function StaffExportDetail() {
         title: "Available",
         key: "Available",
         width: 40,
-        render: (text, record, index) =>
+        render: (text, record, index) => (
           <div>
             {getStockQuantity(
               record.product.id,
@@ -886,6 +927,7 @@ function StaffExportDetail() {
               record.expiredAt
             )}
           </div>
+        ),
       },
       {
         title: "Actions",
@@ -909,28 +951,28 @@ function StaffExportDetail() {
             </div>
           ) : (
             <span className="flex items-center gap-2">
-              {hasQuantityChanged(record) && (
-                record.isNew === false ? (<a
-                  className="text-blue-500 hover:text-blue-300 no-underline cursor-pointer transition duration-300"
-                  onClick={() => handleCancelDetail(record.id)}
-                >
-                  Reset
-                </a>) : (
-                  null
-                )
-              )}
-              {canDeleteDetail &&
+              {hasQuantityChanged(record) &&
+                (record.isNew === false ? (
+                  <a
+                    className="text-blue-500 hover:text-blue-300 no-underline cursor-pointer transition duration-300"
+                    onClick={() => handleCancelDetail(record.id)}
+                  >
+                    Reset
+                  </a>
+                ) : null)}
+              {canDeleteDetail && (
                 <a
                   className="text-red-500 hover:text-red-300 no-underline cursor-pointer transition duration-300"
                   onClick={() => handleDeleteDetail(record.id)}
                 >
                   Delete
-                </a>}
+                </a>
+              )}
             </span>
           ),
-      });
+      }
+    );
   }
-
 
   const handleCanDeleteDetail = () => {
     // check nếu trong table có dòng nào đang edit thì không cho xóa
@@ -946,7 +988,7 @@ function StaffExportDetail() {
       return false;
     }
     return true;
-  }
+  };
 
   return (
     <>
@@ -958,7 +1000,7 @@ function StaffExportDetail() {
         <div className="flex justify-end gap-2">
           {!isEditing ? (
             <>
-               <Button
+              <Button
                 size="medium"
                 style={{
                   backgroundColor: "#ff4d4f",
@@ -968,7 +1010,7 @@ function StaffExportDetail() {
                 onClick={generatePDFData}
               >
                 <PictureAsPdfIcon /> Preview
-              </Button> 
+              </Button>
               {exportData?.id === latestExportData?.id && (
                 <Button
                   size="medium"
@@ -1012,7 +1054,9 @@ function StaffExportDetail() {
           <div className="ml-4">
             <table>
               <tr>
-                <td colSpan={2}><p className="mt-3 mb-1 font-bold text-xl">Export Invoice:</p></td>
+                <td colSpan={2}>
+                  <p className="mt-3 mb-1 font-bold text-xl">Export Invoice:</p>
+                </td>
               </tr>
               <tr>
                 <td>
@@ -1205,7 +1249,10 @@ function StaffExportDetail() {
                         disabled={!isEditing}
                       >
                         {customerResponse?.data.map((customer) => (
-                          <Select.Option key={customer.id} value={customer.name}>
+                          <Select.Option
+                            key={customer.id}
+                            value={customer.name}
+                          >
                             {customer.name}
                           </Select.Option>
                         ))}
