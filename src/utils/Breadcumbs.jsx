@@ -6,9 +6,14 @@ const breadcrumbNameMap = {
   "/data": "Data",
   "/data/warehouse": "Warehouse",
   "/data/zone": "Zone",
+  "/data/zone/warehouseId": "Zones",
   "/products": "Products",
   "/data/category": "Category",
-  "/staffs": "Staffs",
+  "/staff": "Staff",
+  "/staff/order": "Order",
+  "/staff/order/import": "Import",
+  "/staff/order/export": "Export",
+  "/data/customer": "Customer",
 };
 
 const Breadcrumbs = () => {
@@ -20,12 +25,12 @@ const Breadcrumbs = () => {
 
     // Check if the current path segment is "warehouseId"
     if (url.includes("/data/zone/warehouseId")) {
-      const warehouseId = pathSnippets[index];
-      return (
-        <Breadcrumb.Item key={url}>
-          {warehouseId}
-        </Breadcrumb.Item>
-      );
+      let warehouseId = pathSnippets[index];
+      if (warehouseId === "warehouseId") {
+        warehouseId = "Zones";
+      }
+      // console.log(warehouseId);
+      return <Breadcrumb.Item key={url}>{warehouseId}</Breadcrumb.Item>;
     }
 
     return (
