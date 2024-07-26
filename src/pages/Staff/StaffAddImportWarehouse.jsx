@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Form,
   Input,
@@ -51,6 +51,7 @@ const generateRandomString = (length = 8) => {
 
 const StaffAddImportWarehouse = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form] = Form.useForm();
   const userInfo = useSelector((state) => state.auth);
   const authToken = userInfo.userInfo.data.token;
@@ -349,6 +350,13 @@ const StaffAddImportWarehouse = () => {
   };
 
   const screens = useBreakpoint();
+
+  useEffect(() => {
+    if (location.state) {
+      const { exportItem, exportDetails } = location.state;
+      handleExportSelect(exportItem, exportDetails);
+    }
+  }, [location.state]);
 
   if (
     isWarehouseLoading ||
@@ -678,24 +686,29 @@ const StaffAddImportWarehouse = () => {
             )}
           </Col>
           <Col xs={24} lg={8}>
-          <div className="container">
-            <h2 style={{ textAlign: "center" }} className="font-bold">Available Exports</h2>
-            <List
-              itemLayout="horizontal"
-              dataSource={filteredExports}
-              renderItem={(exportItem) => (
-                <List.Item
-                className=""
-                  onClick={() => handleExportSelect(exportItem)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <Card className="w-full shadow-md hover:shadow-lg">
-                    <h3 className="text-xl text-indigo-500">{exportItem.description}</h3>
-                    <p>{`From Warehouse: ${exportItem.warehouseFrom.name}`}</p>
-                  </Card>
-                </List.Item>
-              )}
-            /></div>
+            <div className="container">
+              <h2 style={{ textAlign: "center" }} className="font-bold">
+                Available Exports
+              </h2>
+              <List
+                itemLayout="horizontal"
+                dataSource={filteredExports}
+                renderItem={(exportItem) => (
+                  <List.Item
+                    className=""
+                    onClick={() => handleExportSelect(exportItem)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <Card className="w-full shadow-md hover:shadow-lg">
+                      <h3 className="text-xl text-indigo-500">
+                        {exportItem.description}
+                      </h3>
+                      <p>{`From Warehouse: ${exportItem.warehouseFrom.name}`}</p>
+                    </Card>
+                  </List.Item>
+                )}
+              />
+            </div>
           </Col>
         </Row>
       </div>
