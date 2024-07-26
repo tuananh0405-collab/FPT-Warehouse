@@ -36,6 +36,7 @@ import "jspdf-autotable";
 import logo from "../../assets/images/FPT_logo_2010.png";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 
@@ -344,9 +345,8 @@ function StaffExportDetail() {
         let expiredAt = detail.expiredAt;
         if (expiredAt && !expiredAt.includes("T")) {
           const [date, time] = expiredAt.split(" ");
-          expiredAt = `${date}T${
-            time ? time.replace(".0", ".000+00:00") : "00:00:00.000+00:00"
-          }`;
+          expiredAt = `${date}T${time ? time.replace(".0", ".000+00:00") : "00:00:00.000+00:00"
+            }`;
         }
         return {
           productId: detail.product.id,
@@ -404,12 +404,12 @@ function StaffExportDetail() {
         detailFormData.map((item) =>
           item.id === recordId
             ? {
-                ...item,
-                quantity: initialDetailData.find(
-                  (initialItem) => initialItem.id === recordId
-                ).quantity,
-                isRowEditing: false,
-              }
+              ...item,
+              quantity: initialDetailData.find(
+                (initialItem) => initialItem.id === recordId
+              ).quantity,
+              isRowEditing: false,
+            }
             : item
         )
       );
@@ -461,18 +461,14 @@ function StaffExportDetail() {
   };
 
   const handleQuantityChange = (value, recordId) => {
-    if (value < 1) {
-      message.error("Quantity must be greater than 0.");
-      return;
-    }
     setDetailFormData(
       detailFormData.map((item) =>
         item.id === recordId
           ? {
-              ...item,
-              quantity: value,
-              isRowEditing: value !== item.originalQuantity,
-            }
+            ...item,
+            quantity: value,
+            isRowEditing: value !== item.originalQuantity,
+          }
           : item
       )
     );
@@ -544,17 +540,17 @@ function StaffExportDetail() {
         detailFormData.map((item) =>
           item.id === recordId
             ? {
-                ...item,
-                product: {
-                  ...item.product,
-                  name: value,
-                  description: selectedProduct?.description || "",
-                  category: {
-                    ...item.product.category,
-                    name: selectedProduct?.category?.name || "",
-                  },
+              ...item,
+              product: {
+                ...item.product,
+                name: value,
+                description: selectedProduct?.description || "",
+                category: {
+                  ...item.product.category,
+                  name: selectedProduct?.category?.name || "",
                 },
-              }
+              },
+            }
             : item
         )
       );
@@ -908,10 +904,10 @@ function StaffExportDetail() {
       acc[key].quantity += product.quantity;
       return acc;
     }, {});
-  
+
     return Object.values(grouped);
   };
-  
+
 
   if (isEditing) {
     columns.push(
@@ -960,10 +956,19 @@ function StaffExportDetail() {
                     Reset
                   </a>
                 ) : null)}
-              {canDeleteDetail && (
+              {canDeleteDetail ? (
                 <a
                   className="text-red-500 hover:text-red-300 no-underline cursor-pointer transition duration-300"
                   onClick={() => handleDeleteDetail(record.id)}
+                >
+                  Delete
+                </a>
+              ) : (
+                <a
+                  className="text-red-500 hover:text-red-300 no-underline cursor-pointer transition duration-300"
+                  onClick={() => {
+                    message.warning("Export must be at least 1 products");
+                  }}
                 >
                   Delete
                 </a>
@@ -1101,9 +1106,7 @@ function StaffExportDetail() {
                   <DatePicker
                     className="mb-2 w-full"
                     size="large"
-                    value={
-                      formData.exportDate ? moment(formData.exportDate) : null
-                    }
+                    value={formData?.exportDate ? dayjs(formData?.exportDate, "YYYY-MM-DD") : null}
                     onChange={handleDateChange}
                     disabled={!isEditing}
                   />
@@ -1327,7 +1330,8 @@ function StaffExportDetail() {
         </div>
         <Modal
           title="PDF Preview"
-          visible={isModalVisible}
+          open={isModalVisible}
+          transitionName=""
           onCancel={() => setIsModalVisible(false)}
           footer={[
             <Button key="cancel" onClick={() => setIsModalVisible(false)}>

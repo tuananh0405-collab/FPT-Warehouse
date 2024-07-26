@@ -17,12 +17,12 @@ export const importApiSlice = apiSlice.injectEndpoints({
       keepUnusedDataFor: 5,
     }),
     getAllImports2: builder.query({
-      query: ({ authToken}) => ({
+      query: ({ authToken }) => ({
         url: `${IMPORT_URL}/import`,
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
-        
+
       }),
       providesTags: ["Import"],
       keepUnusedDataFor: 5,
@@ -84,6 +84,25 @@ export const importApiSlice = apiSlice.injectEndpoints({
         },
       }),
     }),
+    getLatestImport: builder.query({
+      query: ({ authToken, warehouseId }) => ({
+        url: `${IMPORT_URL}/by-warehouse/get-latest/${warehouseId}`,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }),
+      providesTags: ["Import"],
+      keepUnusedDataFor: 5,
+    }),
+    updateImport: builder.mutation({
+      query: ({ id, data, authToken }) => ({
+        url: `${IMPORT_URL}/${id}`,
+        headers: { Authorization: `Bearer ${authToken}` },
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Import"],
+    }),
   }),
 });
 
@@ -94,4 +113,6 @@ export const {
   useAddImportMutation,
   useGetAllImportsByWarehouseIdQuery,
   useGetTotalImportsByWarehouseIdQuery,
+  useGetLatestImportQuery,
+  useUpdateImportMutation,
 } = importApiSlice;

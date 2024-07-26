@@ -186,7 +186,7 @@ function StaffExportTable({ searchValue }) {
       onFilter: (value, record) => record.exportType === value,
     },
     {
-      title: "Customer Name",
+      title: "To",
       dataIndex: "customerName",
       key: "customerName",
       width: 200,
@@ -199,7 +199,7 @@ function StaffExportTable({ searchValue }) {
       },
     },
     {
-      title: "To",
+      title: "Address",
       dataIndex: "toAddress",
       key: "toAddress",
       ellipsis: true,

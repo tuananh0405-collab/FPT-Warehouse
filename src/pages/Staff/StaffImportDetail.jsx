@@ -3,22 +3,46 @@ import { useGetImportByIdQuery } from "../../redux/api/importApiSlice";
 import { useGetImportDetailsByImportIdQuery } from "../../redux/api/importDetailApiSlice";
 import { useGetAllCustomersQuery } from "../../redux/api/customersApiSlice";
 import { useGetAllWarehousesQuery } from "../../redux/api/warehousesApiSlice";
+import { useUpdateImportMutation } from "../../redux/api/importApiSlice";
+import { useGetLatestImportQuery } from "../../redux/api/importApiSlice";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Breadcrumbs from "../../utils/Breadcumbs";
-import { Table, Input, Select, DatePicker } from "antd";
 import moment from "moment/moment";
+import {
+  Table,
+  Input,
+  Button,
+  Modal,
+  Select,
+  message,
+  DatePicker,
+} from "antd";
+import { Description, EditTwoTone } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 
 function StaffImportDetail() {
   const { id } = useParams();
 
+  const navigate = useNavigate();
   const userInfo = useSelector((state) => state.auth);
+
+  if (!userInfo) {
+    navigate("/", { replace: true });
+    return null;
+  }
+
   const authToken = userInfo?.userInfo?.data?.token;
+  const wid = userInfo?.userInfo?.data?.warehouseId;
 
   const [formData, setFormData] = useState({});
+  const [initialFormData, setInitialFormData] = useState({});
   const [detailFormData, setDetailFormData] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const { data: importResponse } = useGetImportByIdQuery({
     importId: id,
@@ -28,6 +52,12 @@ function StaffImportDetail() {
     useGetImportDetailsByImportIdQuery({ authToken, importId: id });
   const { data: customerResponse } = useGetAllCustomersQuery(authToken);
   const { data: warehouseResponse } = useGetAllWarehousesQuery(authToken);
+  const { data: latestImportResponse } = useGetLatestImportQuery({
+    authToken,
+    warehouseId: wid,
+  });
+
+  const [updateImport] = useUpdateImportMutation();
 
   const importData = importResponse?.data;
   const importDetailData = importDetailResponse?.data;
@@ -50,6 +80,7 @@ function StaffImportDetail() {
         warehouseIdTo: importData.warehouseTo?.id,
       };
       setFormData(flattenedData);
+      setInitialFormData(flattenedData);
     }
   }, [importData]);
 
@@ -63,6 +94,40 @@ function StaffImportDetail() {
     }
   }, [importDetailData]);
 
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const isFormChanged = () => {
+    return JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  };
+
+  const handleSave = async () => {
+    try {
+      const bodyRequest = {
+        description: formData?.description,
+        customerId: formData?.customerId,
+        receivedDate: formData?.receivedDate,
+      }
+      console.log(bodyRequest);
+      await updateImport({ id: id, data: bodyRequest, authToken }).unwrap();
+      message.success("Import updated successfully!");
+      setIsEditing(false);
+      setIsModalVisible(false);
+    } catch (error) {
+      message.error("Failed to update import!");
+    }
+  };
+
+  const handleDateChange = (date, dateString) => {
+    setFormData({
+      ...formData,
+      receivedDate: dateString,
+    });
+  };
   const columns = [
     {
       title: "Product Name",
@@ -89,12 +154,6 @@ function StaffImportDetail() {
       ),
     },
     {
-      title: "Zone",
-      dataIndex: ["zone", "name"],
-      key: "zone",
-      render: (text) => <span>{text}</span>,
-    },
-    {
       title: "Quantity",
       dataIndex: "quantity",
       key: "quantity",
@@ -102,11 +161,47 @@ function StaffImportDetail() {
     },
   ];
 
+  const handleCancel = () => {
+    setFormData(initialFormData); // Reset form data to the initial data
+    setIsEditing(false); // Close editing mode
+  };
+
   return (
     <div className="p-4">
       <Breadcrumbs />
-      <h1 className="text-3xl font-bold mb-4"></h1>
-      <br></br>
+      <div className="flex justify-center items-center">
+        <h1 className="font-bold text-3xl py-4 mt-2">Import {id}</h1>
+      </div>
+      <div className="flex justify-end gap-2">
+        {!isEditing ? (
+          <>
+            {latestImportResponse?.data?.id === importData?.id && (
+              <Button
+                size="medium"
+                type="primary"
+                className="flex justify-center items-center mr-4"
+                onClick={() => setIsEditing(true)}
+              >
+                <EditTwoTone /> Edit
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <Button size="medium" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button
+              size="medium"
+              type="primary"
+              disabled={!isFormChanged()}
+              onClick={() => setIsModalVisible(true)}
+            >
+              Save
+            </Button>
+          </>
+        )}
+      </div>
       <div className="flex flex-wrap gap-4">
         <div className="flex-1 min-w-[300px]">
           <h2 className="font-bold text-xl mb-2">Import Invoice:</h2>
@@ -116,7 +211,8 @@ function StaffImportDetail() {
               size="large"
               autoSize={{ minRows: 3 }}
               value={formData?.description}
-              disabled
+              disabled={!isEditing}
+              onChange={(e) => handleInputChange("description", e.target.value)}
               className="h-[80%]"
             />
           </div>
@@ -137,21 +233,17 @@ function StaffImportDetail() {
             <label className="block font-medium">Import Date:</label>
             <DatePicker
               size="large"
-              value={
-                formData.importDate
-                  ? moment(formData.importDate, "YYYY-MM-DD")
-                  : null
-              }
-              disabled
+              value={formData?.receivedDate ? dayjs(formData.receivedDate, "YYYY-MM-DD") : null}
+              disabled={!isEditing}
+              onChange={handleDateChange}
               className="w-full h-[80%]"
             />
           </div>
-          <h2 className="font-bold text-xl mb-2">Warehouse From:</h2>
+          <h2 className="font-bold text-xl mb-2">From Warehouse:</h2>
           <div className="mb-2">
             <label className="block font-medium">Warehouse Description:</label>
-            <TextArea
+            <Input
               size="large"
-              autoSize={{ minRows: 3 }}
               value={formData?.warehouseFromDescription}
               disabled
               className="h-[80%]"
@@ -179,7 +271,7 @@ function StaffImportDetail() {
         <div className="flex-1 min-w-[300px]">
           {formData?.importType === "WAREHOUSE" && importData ? (
             <>
-              <h2 className="font-bold text-xl mb-2">Warehouse To:</h2>
+              <h2 className="font-bold text-xl mb-2">To Warehouse:</h2>
               <div className="mb-2">
                 <label className="block font-medium">Name:</label>
                 <Select
@@ -222,18 +314,21 @@ function StaffImportDetail() {
             </>
           ) : (
             <>
-              <h2 className="font-bold text-xl mb-2">Customer:</h2>
+              <h2 className="font-bold text-xl mb-2">From Customer:</h2>
               <div className="mb-2">
                 <label className="block font-medium">Name:</label>
                 <Select
                   size="large"
                   showSearch
                   value={formData.customerName}
-                  disabled
+                  disabled={!isEditing}
+                  onChange={(value) =>
+                    handleInputChange("customerId", value)
+                  }
                   className="w-full h-[80%]"
                 >
                   {customerResponse?.data.map((customer) => (
-                    <Select.Option key={customer.id} value={customer.name}>
+                    <Select.Option key={customer.id} value={customer.id}>
                       {customer.name}
                     </Select.Option>
                   ))}
@@ -279,6 +374,14 @@ function StaffImportDetail() {
           pagination={false}
         />
       </div>
+      <Modal
+        title="Confirm Update"
+        visible={isModalVisible}
+        onOk={handleSave}
+        onCancel={() => setIsModalVisible(false)}
+      >
+        <p>Are you sure you want to update this import?</p>
+      </Modal>
     </div>
   );
 }

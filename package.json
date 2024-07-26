@@ -26,6 +26,7 @@
     "@testing-library/user-event": "^14.5.2",
     "antd": "^5.18.1",
     "apexcharts": "^3.49.1",
+    "dayjs": "^1.11.12",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.2.10",

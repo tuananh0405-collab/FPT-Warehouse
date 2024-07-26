@@ -227,15 +227,20 @@ function StaffImportTable({ searchValue }) {
       onFilter: (value, record) => record.importType === value,
     },
     {
-      title: "Customer Name",
+      title: "From",
       dataIndex: "customerName",
       key: "customerName",
       width: 200,
-      render: (_, record) => (record.customer ? record.customer.name : "N/A"),
+      render: (_, record) => {
+        if (record?.importType === "WAREHOUSE") {
+          return record?.warehouseFrom ? record?.warehouseFrom?.name : "N/A";
+        }
+        return record?.customer ? record?.customer?.name : "N/A";
+      },
       ...getColumnSearchProps("customerName"),
     },
     {
-      title: "From",
+      title: "Address",
       dataIndex: "fromAddress",
       key: "fromAddress",
       ellipsis: true,
@@ -286,7 +291,7 @@ function StaffImportTable({ searchValue }) {
   // Transform data to include customerName and fromAddress for search
   const transformedData = imports?.map((item) => ({
     ...item,
-    customerName: item.customer ? item.customer.name : "N/A",
+    customerName: item.importType === "WAREHOUSE" ? item.warehouseFrom?.name : item.customer?.name,
     fromAddress:
       item.importType === "WAREHOUSE"
         ? item.warehouseFrom?.address
