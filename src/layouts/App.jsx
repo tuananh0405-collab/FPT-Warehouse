@@ -9,7 +9,6 @@ const App = () => {
       <div className="AppGlass">
         <Sidebar />
         <div className="MainDash">
-
         <Outlet />
         </div>
       </div>

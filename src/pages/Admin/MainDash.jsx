@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Card, Collapse, Badge, Button, Modal, Pagination, Table } from "antd";
+import { BellOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useGetAllExportsQuery } from "../../redux/api/exportApiSlice";
@@ -29,15 +30,17 @@ const MainDash = () => {
   const [activeKey, setActiveKey] = useState(null);
   const pageSize = 3;
 
-  const filteredExports = allExports?.data.filter(
-    (exp) =>
-      exp.exportType === "WAREHOUSE" &&
-      exp.warehouseTo.id === warehouseId &&
-      exp.warehouseFrom.id !== warehouseId &&
-      !exp.transferKey
-  ) || [];
 
-  const paginatedExports = filteredExports.slice(
+  const filteredExports =
+    allExports?.data.filter(
+      (exp) =>
+        exp.exportType === "WAREHOUSE" &&
+        exp.warehouseTo.id === warehouseId &&
+        exp.warehouseFrom.id !== warehouseId &&
+        !exp.transferKey
+    ) || [];
+
+  const paginatedExports = filteredExports?.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -61,7 +64,7 @@ const MainDash = () => {
 
   const handleImportClick = (exportItem, exportDetails) => {
     navigate("/staff/import/from-warehouse", {
-      state: { exportItem, exportDetails }
+      state: { exportItem, exportDetails },
     });
   };
 
@@ -85,17 +88,25 @@ const MainDash = () => {
 
   return (
     <div>
-      {decoded.role === "STAFF" && filteredExports.length > 0 && (
-        <div className="flex justify-between items-center mb-4">
+      {decoded.role === "STAFF" && filteredExports?.length > 0 && (
+        <div className="flex justify-end items-center mb-4">
           <Badge count={filteredExports.length}>
-            <NotificationsIcon onClick={handleIconClick} style={{ fontSize: 30, cursor: "pointer" }} />
+            <BellOutlined onClick={handleIconClick}
+              style={{ fontSize: 30, cursor: "pointer" }}/>
+            {/* <NotificationsIcon
+              onClick={handleIconClick}
+              style={{ fontSize: 30, cursor: "pointer" }}
+            /> */}
           </Badge>
         </div>
       )}
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 ">
           <div className="flex text-6xl rounded-xl">
-            <LineChart importData={chartImports?.data} exportData={chartExports?.data} />
+            <LineChart
+              importData={chartImports?.data}
+              exportData={chartExports?.data}
+            />
           </div>
           <div className="flex justify-center text-6xl rounded-xl">
             <BarChart />
@@ -111,14 +122,21 @@ const MainDash = () => {
       >
         <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
           <Collapse activeKey={activeKey} onChange={handlePanelChange}>
-            {paginatedExports.map((exportItem) => {
-              const exportDetails = allExportDetails?.data.filter((detail) => detail.export.id === exportItem.id) || [];
+            {paginatedExports?.map((exportItem) => {
+              const exportDetails =
+                allExportDetails?.data.filter(
+                  (detail) => detail.export.id === exportItem.id
+                ) || [];
               return (
                 <Panel
                   header={
                     <div>
-                      <h3 className="text-xl text-indigo-500">{exportItem.description}</h3>
-                      <p>{`Export Date: ${new Date(exportItem.exportDate).toLocaleDateString()}`}</p>
+                      <h3 className="text-xl text-indigo-500">
+                        {exportItem.description}
+                      </h3>
+                      <p>{`Export Date: ${new Date(
+                        exportItem.exportDate
+                      ).toLocaleDateString()}`}</p>
                       <p>{`From Warehouse: ${exportItem.warehouseFrom.name}`}</p>
                     </div>
                   }
@@ -142,7 +160,7 @@ const MainDash = () => {
             })}
           </Collapse>
         </div>
-        {filteredExports.length > pageSize && (
+        {filteredExports?.length > pageSize && (
           <Pagination
             current={currentPage}
             pageSize={pageSize}
