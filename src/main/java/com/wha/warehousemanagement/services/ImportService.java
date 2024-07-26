@@ -63,6 +63,12 @@ public class ImportService {
                         .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND)));
             }
 
+            // Handle warehouseTo
+            if (request.getCustomerId() != null) {
+                anImport.setCustomer(customerRepository.findById(request.getCustomerId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.CUSTOMER_NOT_FOUND)));
+            }
+
             importRepository.save(anImport);
             ImportResponse response = importMapper.toDto(anImport);
             return new ResponseObject<>(HttpStatus.OK.value(), "Import added successfully", response);

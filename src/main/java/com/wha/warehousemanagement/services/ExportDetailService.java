@@ -21,7 +21,10 @@ import java.sql.Date;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -263,7 +266,6 @@ public class ExportDetailService {
                 inventoryMap.put(request.getProductId(), inventories);
             });
 
-
             // Kết quả gợi ý sẽ được lưu vào danh sách suggestedDetails
             List<SuggestedExportProductsResponse> suggestedDetails = new ArrayList<>();
 
@@ -291,26 +293,20 @@ public class ExportDetailService {
 
                 // Yêu cầu số lượng cần xuất
                 int quantityToExport = request.getQuantity();
+                List<Inventory> tempInventories = new ArrayList<>(inventories);
 
-                // Sắp xếp inventory theo expiredAt tăng dần và quanity giảm dần nếu expiredAt bằng nhau
-                // Nếu số lượng hàng của inventory bằng với yêu cầu, ưu tiên inventory đó trước
-                int finalQuantityToExport = quantityToExport;
-                inventories.sort((i1, i2) -> {
-                    int dateComparison = i1.getExpiredAt().compareTo(i2.getExpiredAt());
-                    if (dateComparison != 0) {
-                        return dateComparison;
+                // Sắp xếp inventory theo quantity giảm dần và expiredAt tăng dần
+                tempInventories.sort((i1, i2) -> {
+                    // Nếu quantity khác nhau thì sắp xếp theo quantity giảm dần
+                    if (!i2.getQuantity().equals(i1.getQuantity())) {
+                        return i2.getQuantity() - i1.getQuantity();
                     } else {
-                        if (i1.getQuantity() >= finalQuantityToExport && i2.getQuantity() < finalQuantityToExport) {
-                            return -1;
-                        } else if (i1.getQuantity() < finalQuantityToExport && i2.getQuantity() >= finalQuantityToExport) {
-                            return 1;
-                        } else {
-                            return i2.getQuantity() - i1.getQuantity();
-                        }
+                        // Nếu quantity bằng nhau thì sắp xếp theo expiredAt tăng dần
+                        return i1.getExpiredAt().compareTo(i2.getExpiredAt());
                     }
                 });
 
-                for (Inventory inventory : inventories) {
+                for (Inventory inventory : tempInventories) {
                     ProductResponse product = productMapper.toDto(productRepository.findById(request.getProductId())
                             .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
 
@@ -324,7 +320,8 @@ public class ExportDetailService {
                                 inventory.getExpiredAt(),
                                 inventory.getZone().getId()
                         ));
-                        quantityToExport = 0;
+                        // Giảm số lượng inventory cần xuất
+                        //inventory.setQuantity(inventory.getQuantity() - quantityToExport);
                         break;
                     } else {
                         // Nếu số lượng inventory không đủ để xuất thì lấy hết số lượng inventory đó -> giảm số lượng cần xuất -> lấy inventory tiếp theo
@@ -512,8 +509,6 @@ public class ExportDetailService {
                                         existingDetail.getProduct().getId(), existingDetail.getZone().getId(), existingDetail.getExpiredAt())
                                 .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
 
-                        System.out.println("Inventory for Update: " + inventory);
-
                         int oldQuantity = existingDetail.getQuantity();
                         int newQuantity = newRequest.getQuantity();
                         inventory.setQuantity(inventory.getQuantity() + oldQuantity - newQuantity);
@@ -533,8 +528,6 @@ public class ExportDetailService {
                                     existingDetail.getProduct().getId(), existingDetail.getZone().getId(), existingDetail.getExpiredAt())
                             .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
 
-                    System.out.println("Inventory for Delete: " + inventory);
-
                     inventory.setQuantity(inventory.getQuantity() + existingDetail.getQuantity());
                     inventoryRepository.save(inventory);
                     detailsToDelete.add(existingDetail);
@@ -544,24 +537,34 @@ public class ExportDetailService {
             // Identify additions
             for (ExportDetailRequest newRequest : newRequestsMap.values()) {
                 Inventory inventory = inventoryRepository.findByProductIdAndZoneIdAndExpiredAt(
-                                newRequest.getProductId(), newRequest.getZoneId(), newRequest.getExpiredAt())
-                        .orElseThrow(() -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND));
+                        newRequest.getProductId(), newRequest.getZoneId(), newRequest.getExpiredAt()).orElse(null);
 
-                System.out.println("Inventory for Adding: " + inventory);
-
-                if (inventory.getQuantity() < newRequest.getQuantity()) {
-                    throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY);
+                if (inventory == null) {
+                    // Create new inventory if not found
+                    Inventory newInventory = new Inventory();
+                    newInventory.setProduct(productRepository.findById(newRequest.getProductId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND)));
+                    newInventory.setZone(zoneRepository.findById(newRequest.getZoneId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.ZONE_NOT_FOUND)));
+                    newInventory.setExpiredAt(newRequest.getExpiredAt());
+                    newInventory.setQuantity(newRequest.getQuantity());
+                    inventoryRepository.save(newInventory);
+                    inventory = newInventory; // Assign the newly created inventory to the inventory variable
+                } else {
+                    inventory.setQuantity(inventory.getQuantity() + newRequest.getQuantity());
+                    inventoryRepository.save(inventory);
                 }
-
-                inventory.setQuantity(inventory.getQuantity() - newRequest.getQuantity());
-                inventoryRepository.save(inventory);
 
                 ExportDetail newDetail = new ExportDetail();
                 newDetail = update(newDetail, newRequest);
                 detailsToAdd.add(newDetail);
             }
 
+
             // Perform updates, additions, and deletions
+            System.out.println(detailsToUpdate);
+            System.out.println(detailsToAdd);
+            System.out.println(detailsToDelete);
             exportDetailRepository.saveAll(detailsToUpdate);
             exportDetailRepository.saveAll(detailsToAdd);
             exportDetailRepository.deleteAll(detailsToDelete);
@@ -578,6 +581,7 @@ public class ExportDetailService {
         } catch (CustomException e) {
             return new ResponseObject<>(e.getErrorCode().getCode(), e.getMessage(), null);
         } catch (Exception e) {
+            e.printStackTrace(); // Log exception details
             return new ResponseObject<>(HttpStatus.BAD_REQUEST.value(), "Failed to update export details, add new ones, and adjust inventory", null);
         }
     }
