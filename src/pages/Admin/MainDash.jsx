@@ -79,15 +79,6 @@ const MainDash = () => {
       dataIndex: "expiredAt",
       key: "expiredAt",
     },
-    {
-      title: "Action",
-      key: "action",
-      render: (text, record) => (
-        <Button type="link" onClick={() => console.log(record)}>
-          Import
-        </Button>
-      ),
-    },
   ];
 
   return (
@@ -110,7 +101,7 @@ const MainDash = () => {
         </div>
       </div>
       <Modal
-        title="Export Orders"
+        title="Import From Warehouse Orders"
         open={isModalOpen}
         onCancel={handleModalClose}
         footer={null}
