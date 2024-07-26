@@ -70,6 +70,7 @@ function StaffExportDetail() {
   const [isRowAdding, setIsRowAdding] = useState(false);
   const [filteredInventory, setFilteredInventory] = useState([]);
   const [inventoryDataForAdding, setInventoryDataForAdding] = useState([]);
+  const [canDeleteDetail, setCanDeleteDetail] = useState(false);
 
   const { data: exportResponse } = useGetExportByIdQuery({
     exportId: id,
@@ -98,7 +99,7 @@ function StaffExportDetail() {
   const inventoryData = inventoryResponse?.data;
 
   const filteredProducts = productResponse?.data.filter((product) =>
-    filteredInventory.some(
+    filteredInventory?.some(
       (inv) => inv.product.id === product.id && inv.zone.warehouse.id === wid
     )
   );
@@ -162,6 +163,10 @@ function StaffExportDetail() {
       setInitialDetailData(detailsWithKeys);
     }
   }, [exportDetailData]);
+
+  useEffect(() => {
+    setCanDeleteDetail(handleCanDeleteDetail());
+  }, [detailFormData, isRowAdding]);
 
   const handleInputChange = (e, key) => {
     setFormData({
@@ -231,7 +236,7 @@ function StaffExportDetail() {
   };
 
   const handleDeleteDetail = (recordId) => {
-    const isNewDetail = newDetails.some((detail) => detail.id === recordId);
+    const isNewDetail = newDetails?.some((detail) => detail.id === recordId);
     if (isNewDetail) {
       setNewDetails(newDetails.filter((detail) => detail.id !== recordId));
       setDetailFormData(detailFormData.filter((item) => item.id !== recordId));
@@ -337,7 +342,7 @@ function StaffExportDetail() {
         let expiredAt = detail.expiredAt;
         if (expiredAt && !expiredAt.includes("T")) {
           const [date, time] = expiredAt.split(" ");
-          expiredAt = `${date}T${time.replace(".0", ".000+00:00")}`;
+          expiredAt = `${date}T${time ? time.replace(".0", ".000+00:00") : "00:00:00.000+00:00"}`;
         }
         return {
           productId: detail.product.id,
@@ -415,9 +420,6 @@ function StaffExportDetail() {
     const detail = detailFormData.find((item) => item.id === recordId);
     const stockQuantity = getStockQuantity(detail.product.id, detail.zone.id, detail.expiredAt);
 
-    console.log("detail", detail);
-    console.log("stockQuantity", stockQuantity);
-
     if (detail.quantity > stockQuantity) {
       message.error("Quantity exceeds available stock.");
       return;
@@ -465,7 +467,7 @@ function StaffExportDetail() {
   };
 
   const hasUnsavedChanges = () => {
-    return detailFormData.some((detail) => detail.isRowEditing);
+    return detailFormData?.some((detail) => detail.isRowEditing);
   };
 
   const handleAddProduct = () => {
@@ -647,7 +649,7 @@ function StaffExportDetail() {
 
       // Kiểm tra nếu tất cả expiredAt của zone này đã bị chọn
       const allExpiredAtSelected = expiredAtInInventory.every((expiredAt) =>
-        allSelectedExpiredAt.some(
+        allSelectedExpiredAt?.some(
           (detail) => detail.zoneId === zone.id && detail.expiredAt === expiredAt
         )
       );
@@ -917,17 +919,34 @@ function StaffExportDetail() {
                   null
                 )
               )}
-              <a
-                className="text-red-500 hover:text-red-300 no-underline cursor-pointer transition duration-300"
-                onClick={() => handleDeleteDetail(record.id)}
-              >
-                Delete
-              </a>
+              {canDeleteDetail &&
+                <a
+                  className="text-red-500 hover:text-red-300 no-underline cursor-pointer transition duration-300"
+                  onClick={() => handleDeleteDetail(record.id)}
+                >
+                  Delete
+                </a>}
             </span>
           ),
       });
   }
 
+
+  const handleCanDeleteDetail = () => {
+    // check nếu trong table có dòng nào đang edit thì không cho xóa
+    if (detailFormData.some((detail) => detail.isRowEditing)) {
+      return false;
+    }
+    // check nếu table đang thêm mới dòng thì không cho xóa
+    if (isRowAdding) {
+      return false;
+    }
+    //check table phải có ít nhất 1 dòng, nếu còn 1 dong thì không cho xóa
+    if (detailFormData.length === 1) {
+      return false;
+    }
+    return true;
+  }
 
   return (
     <>
