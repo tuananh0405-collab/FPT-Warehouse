@@ -134,11 +134,6 @@ const StaffAddExport = () => {
     if (currentStep === 0 && current === 1) {
       try {
         await form.validateFields();
-        const currentDate = new Date().toISOString().split("T")[0];
-        if (formData.exportDate < currentDate) {
-          message.error("Export date must be today or later.");
-          return;
-        }
         setCurrentStep(current);
       } catch (error) {
         message.error("Please fill out all required fields.");
@@ -269,13 +264,14 @@ const StaffAddExport = () => {
 
   const handleProductSelectChange = (autoSelectedProducts) => {
     const newSelectedProducts = autoSelectedProducts.map((product) => ({
-      ...selectedProducts,
       id: product.product.id,
       name: product.product.name,
-      zoneId: product.zoneId,
+      zoneId: product.zone.id,
+      zoneName: product.zone.name,
       expiredAt: product.expiredAt,
       quantity: product.quantity,
     }));
+    console.log("newSelectedProducts", newSelectedProducts);
     setSelectedProducts(newSelectedProducts);
   };
 

@@ -33,6 +33,8 @@ function AutoSelectModal({ isModalOpen, setIsModalOpen, onProductSelect }) {
 
     const productListsForAutoSelectData = productListsForAutoSelectResponse?.data || [];
 
+    console.log("productListsForAutoSelectData", productListsForAutoSelectData);
+
     const handleAddProduct = () => {
         setSelectedProducts([...selectedProducts, { id: null, name: "", quantity: 1, availableQuantity: 0 }]);
     };
@@ -93,6 +95,11 @@ function AutoSelectModal({ isModalOpen, setIsModalOpen, onProductSelect }) {
         }
     };
 
+    const getFilteredProductLists = () => {
+        const selectedProductIds = selectedProducts.map((product) => product.id);
+        return productListsForAutoSelectData.filter((product) => !selectedProductIds.includes(product.id));
+    };
+
     return (
         <Modal
             title="Choose Products"
@@ -123,7 +130,7 @@ function AutoSelectModal({ isModalOpen, setIsModalOpen, onProductSelect }) {
                             showSearch
                             size="large"
                             placeholder="Select a product"
-                            value={product.id}
+                            value={product.name}
                             onChange={(value) => handleProductChange(value, index)}
                             style={{ width: "60%" }}
                             filterOption={(input, option) =>
@@ -131,7 +138,7 @@ function AutoSelectModal({ isModalOpen, setIsModalOpen, onProductSelect }) {
                             }
                             optionFilterProp="children"
                         >
-                            {productListsForAutoSelectData.map((product) => (
+                            {getFilteredProductLists().map((product) => (
                                 <Select.Option key={product.id} value={product.id}>
                                     {product.name}
                                 </Select.Option>
