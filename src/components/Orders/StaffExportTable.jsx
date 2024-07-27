@@ -169,7 +169,7 @@ function StaffExportTable({ searchValue }) {
       sorter: (a, b) => new Date(a.exportDate) - new Date(b.exportDate),
       ellipsis: true,
       width: 150,
-      render: (text) => FormatTime(text),
+      render: (text) => new Date(text).toLocaleDateString(),
       ...getColumnSearchProps("exportDate"),
     },
     {

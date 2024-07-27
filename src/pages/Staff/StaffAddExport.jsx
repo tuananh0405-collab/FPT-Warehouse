@@ -269,6 +269,7 @@ const StaffAddExport = () => {
 
   const handleProductSelectChange = (autoSelectedProducts) => {
     const newSelectedProducts = autoSelectedProducts.map((product) => ({
+      ...selectedProducts,
       id: product.product.id,
       name: product.product.name,
       zoneId: product.zoneId,

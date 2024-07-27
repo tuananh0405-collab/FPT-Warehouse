@@ -1104,11 +1104,11 @@ function StaffExportDetail() {
                 </td>
                 <td className="w-3/4">
                   <DatePicker
+                    disabled={true}
                     className="mb-2 w-full"
                     size="large"
                     value={formData?.exportDate ? dayjs(formData?.exportDate, "YYYY-MM-DD") : null}
                     onChange={handleDateChange}
-                    disabled={!isEditing}
                   />
                 </td>
               </tr>

@@ -50,8 +50,12 @@ function AutoSelectModal({ isModalOpen, setIsModalOpen, onProductSelect }) {
     };
 
     const handleQuantityChange = (value, index) => {
-        value = Math.max(value, 1); // Ensure the quantity is at least 1
-        value = Math.min(value, selectedProducts[index].availableQuantity); // Ensure it does not exceed available quantity
+        if (value > selectedProducts[index].availableQuantity) {
+            message.warning("Please input in the range of available quantity")
+            return
+        }
+
+        value = Math.min(value, selectedProducts[index].availableQuantity);
 
         const newSelectedProducts = [...selectedProducts];
         newSelectedProducts[index].quantity = value;
@@ -79,8 +83,9 @@ function AutoSelectModal({ isModalOpen, setIsModalOpen, onProductSelect }) {
 
             if (response && response.data) {
                 onProductSelect(response.data);
-                setSelectedProducts([]); // Reset the selected products after successful fetch
+                setSelectedProducts([]);
                 setIsModalOpen(false);
+                message.success("Auto select success")
             }
         } catch (error) {
             console.error("Failed to fetch product:", error);
@@ -138,8 +143,6 @@ function AutoSelectModal({ isModalOpen, setIsModalOpen, onProductSelect }) {
                             size="large"
                             placeholder="Quantity"
                             value={product.quantity}
-                            min={1}
-                            max={product.availableQuantity}
                             onChange={(e) => handleQuantityChange(Number(e.target.value), index)}
                             style={{ width: "20%" }}
                         />

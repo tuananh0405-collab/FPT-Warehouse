@@ -90,9 +90,9 @@ const StaffProduct = () => {
     setOpen(false);
   };
 
-  if (inventoriesLoading || zonesLoading) return <Loading/>;
-  if (inventoriesError) return <Error500/>;
-  if (zonesError) return <Error500/>;
+  if (inventoriesLoading || zonesLoading) return <Loading />;
+  if (inventoriesError) return <Error500 />;
+  if (zonesError) return <Error500 />;
 
   const filteredInventories = inventories.filter((inventory) => {
     return (
@@ -168,7 +168,7 @@ const StaffProduct = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedInventories.map((inventory) => (inventory.quantity>0&&
+            {paginatedInventories.map((inventory) => (inventory.quantity > 0 &&
               <TableRow key={inventory.id}>
                 <TableCell>{inventory.product.name}</TableCell>
                 <TableCell>{inventory.zone.name}</TableCell>
