@@ -18,9 +18,12 @@ import {
   message,
   DatePicker,
 } from "antd";
-import { Description, EditTwoTone } from "@mui/icons-material";
+import { Description, EditTwoTone, PictureAsPdf } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import dayjs from 'dayjs';
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import logo from "../../assets/images/FPT_logo_2010.png";
 
 const { TextArea } = Input;
 
@@ -43,6 +46,8 @@ function StaffImportDetail() {
   const [detailFormData, setDetailFormData] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [pdfData, setPdfData] = useState(null);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
 
   const { data: importResponse } = useGetImportByIdQuery({
     importId: id,
@@ -111,7 +116,7 @@ function StaffImportDetail() {
         description: formData?.description,
         customerId: formData?.customerId,
         receivedDate: formData?.receivedDate,
-      }
+      };
       console.log(bodyRequest);
       await updateImport({ id: id, data: bodyRequest, authToken }).unwrap();
       message.success("Import updated successfully!");
@@ -128,6 +133,12 @@ function StaffImportDetail() {
       receivedDate: dateString,
     });
   };
+
+  const handleCancel = () => {
+    setFormData(initialFormData); // Reset form data to the initial data
+    setIsEditing(false); // Close editing mode
+  };
+
   const columns = [
     {
       title: "Product Name",
@@ -161,9 +172,63 @@ function StaffImportDetail() {
     },
   ];
 
-  const handleCancel = () => {
-    setFormData(initialFormData); // Reset form data to the initial data
-    setIsEditing(false); // Close editing mode
+  const generatePDFData = () => {
+    const doc = new jsPDF();
+
+    // Add company logo
+    doc.addImage(logo, "PNG", 10, 10, 20, 0, undefined, false);
+
+    // Add invoice title and number
+    doc.setFontSize(20);
+    doc.text("IMPORT INVOICE", 105, 30, null, null, "center");
+    doc.setFontSize(10);
+    doc.text(`No. ${formData.id}`, 180, 20);
+
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Date: ${moment().format("DD MMMM, YYYY")}`, 10, 50);
+
+    // Add billed to and from information
+    doc.setFontSize(10);
+    doc.text("From:", 10, 60);
+    if (formData.importType === "WAREHOUSE") {
+      doc.text(formData.warehouseFromName || "N/A", 10, 65);
+      doc.text(formData.warehouseFromAddress || "N/A", 10, 70);
+      doc.text(formData.warehouseFromDescription || "N/A", 10, 75);
+    } else if (formData.importType === "CUSTOMER") {
+      doc.text(formData.customerName || "N/A", 10, 65);
+      doc.text(formData.customerAddress || "N/A", 10, 70);
+      doc.text(formData.customerEmail || "N/A", 10, 75);
+      doc.text(formData.customerPhone || "N/A", 10, 80);
+    }
+
+    doc.text("To:", 105, 60);
+    doc.text(formData.warehouseToName || "N/A", 105, 65);
+    doc.text(formData.warehouseToAddress || "N/A", 105, 70);
+    doc.text(formData.warehouseToDescription || "N/A", 105, 75);
+
+    // Add table
+    const tableColumn = ["Product Name", "Description", "Category", "Expiration Date", "Quantity"];
+    const tableRows = [];
+
+    detailFormData.forEach((item) => {
+      const itemData = [
+        item.product.name,
+        item.product.description,
+        item.product.category.name,
+        item.expiredAt ? moment(item.expiredAt).format("YYYY-MM-DD") : "None",
+        item.quantity,
+      ];
+      tableRows.push(itemData);
+    });
+
+    doc.autoTable(tableColumn, tableRows, { startY: 90 });
+
+    // Create a blob from the PDF and generate a data URI
+    const pdfBlob = doc.output("blob");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    setPdfData(pdfUrl);
+    setIsPreviewVisible(true);
   };
 
   return (
@@ -175,6 +240,17 @@ function StaffImportDetail() {
       <div className="flex justify-end gap-2">
         {!isEditing ? (
           <>
+            <Button
+              size="medium"
+              style={{
+                backgroundColor: "#ff4d4f",
+                color: "#fff",
+                borderColor: "#ff4d4f",
+              }}
+              onClick={generatePDFData}
+            >
+              <PictureAsPdf /> Preview
+            </Button>
             {latestImportResponse?.data?.id === importData?.id && (
               <Button
                 size="medium"
@@ -380,6 +456,27 @@ function StaffImportDetail() {
         onCancel={() => setIsModalVisible(false)}
       >
         <p>Are you sure you want to update this import?</p>
+      </Modal>
+      <Modal
+        title="PDF Preview"
+        visible={isPreviewVisible}
+        onCancel={() => setIsPreviewVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsPreviewVisible(false)}>
+            Cancel
+          </Button>,
+          <Button key="download" type="primary" onClick={() => setIsPreviewVisible(false)}>
+            Download
+          </Button>,
+        ]}
+        width={"80%"}
+      >
+        <iframe
+          src={pdfData}
+          width="100%"
+          height="700px"
+          style={{ border: "none" }}
+        ></iframe>
       </Modal>
     </div>
   );
