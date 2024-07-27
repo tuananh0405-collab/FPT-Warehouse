@@ -234,9 +234,8 @@ function StaffImportDetail() {
             <DatePicker
               size="large"
               value={formData?.receivedDate ? dayjs(formData.receivedDate, "YYYY-MM-DD") : null}
-              disabled={!isEditing}
-              onChange={handleDateChange}
               className="w-full h-[80%]"
+              disabled={true}
             />
           </div>
           <h2 className="font-bold text-xl mb-2">From Warehouse:</h2>

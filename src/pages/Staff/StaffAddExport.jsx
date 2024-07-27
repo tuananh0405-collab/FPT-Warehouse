@@ -311,6 +311,12 @@ const StaffAddExport = () => {
       );
   };
 
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const currentDate = `${year}-${month}-${day}`;
+
   if (
     isWarehouseLoading ||
     isZoneLoading ||
@@ -361,7 +367,7 @@ const StaffAddExport = () => {
               <Form
                 form={form}
                 layout="vertical"
-                initialValues={formData}
+                initialValues={{ formData, exportDate: currentDate }}
                 onValuesChange={handleFormChange}
               >
                 <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
@@ -441,7 +447,7 @@ const StaffAddExport = () => {
                     { required: true, message: "Please select export date!" },
                   ]}
                 >
-                  <Input type="date" />
+                  <Input disabled={true} type="date" />
                 </Form.Item>
                 <Button type="primary" onClick={handleNext} block>
                   Next
