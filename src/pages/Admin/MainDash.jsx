@@ -30,7 +30,6 @@ const MainDash = () => {
   const [activeKey, setActiveKey] = useState(null);
   const pageSize = 3;
 
-
   const filteredExports =
     allExports?.data.filter(
       (exp) =>
@@ -83,6 +82,7 @@ const MainDash = () => {
       title: "Expired At",
       dataIndex: "expiredAt",
       key: "expiredAt",
+      render: (date) => new Date(date).toLocaleDateString("en-US"),
     },
   ];
 
@@ -91,8 +91,10 @@ const MainDash = () => {
       {decoded.role === "STAFF" && filteredExports?.length > 0 && (
         <div className="flex justify-end items-center mb-4">
           <Badge count={filteredExports.length}>
-            <BellOutlined onClick={handleIconClick}
-              style={{ fontSize: 30, cursor: "pointer" }}/>
+            <BellOutlined
+              onClick={handleIconClick}
+              style={{ fontSize: 30, cursor: "pointer" }}
+            />
             {/* <NotificationsIcon
               onClick={handleIconClick}
               style={{ fontSize: 30, cursor: "pointer" }}
@@ -136,7 +138,7 @@ const MainDash = () => {
                       </h3>
                       <p>{`Export Date: ${new Date(
                         exportItem.exportDate
-                      ).toLocaleDateString()}`}</p>
+                      ).toLocaleDateString("en-US")}`}</p>
                       <p>{`From Warehouse: ${exportItem.warehouseFrom.name}`}</p>
                     </div>
                   }

@@ -302,7 +302,6 @@ const OrderExport = () => {
               <TableCell>Order ID</TableCell>
               <TableCell align="left">Warehouse Name</TableCell>
               <TableCell align="left">Description</TableCell>
-              <TableCell align="left">Status</TableCell>
               <TableCell align="left">Type</TableCell>
               <TableCell align="left">Actions</TableCell>
             </TableRow>
@@ -322,12 +321,7 @@ const OrderExport = () => {
                   </TableCell>
                   <TableCell align="left">{row.warehouseFrom.name}</TableCell>
                   <TableCell align="left">{row.description}</TableCell>
-                  <TableCell align="left">
-                    <span style={{ color: row.status === 'PENDING' ? 'orange' : row.status === 'SHIPPING' ? 'blue' : row.status === 'SUCCEED' ? 'green' : 'red' }}>
-                      {row.status}
-                    </span>
-                  </TableCell>
-                  <TableCell align="left">{row.warehouseTo ? 'Inside' : 'Outside'}</TableCell>
+                  <TableCell align="left">{row.exportType}</TableCell>
                   <TableCell align="left" className="Details">
                     <Link to={`/order/export/${row.id}`}>
                       <Button type="primary" style={{ backgroundColor: "#1976d2", color: "#fff" }}>
