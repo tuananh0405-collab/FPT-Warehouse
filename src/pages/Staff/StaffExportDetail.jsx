@@ -107,7 +107,7 @@ function StaffExportDetail() {
 
   useEffect(() => {
     if (inventoryData) {
-      const filteredData = inventoryData.filter((inv) => inv.quantity > 0);
+      const filteredData = inventoryData.filter((inv) => inv.quantity > 0  && inv.zone.warehouse.id === wid);
 
       // lọc ra những lô hàng từ filteredData đã tồn tại trong exportDetailData
       const filteredInventoryForAdding = filteredData?.filter(
@@ -345,8 +345,9 @@ function StaffExportDetail() {
         let expiredAt = detail.expiredAt;
         if (expiredAt && !expiredAt.includes("T")) {
           const [date, time] = expiredAt.split(" ");
-          expiredAt = `${date}T${time ? time.replace(".0", ".000+00:00") : "00:00:00.000+00:00"
-            }`;
+          expiredAt = `${date}T${
+            time ? time.replace(".0", ".000+00:00") : "00:00:00.000+00:00"
+          }`;
         }
         return {
           productId: detail.product.id,
@@ -404,12 +405,12 @@ function StaffExportDetail() {
         detailFormData.map((item) =>
           item.id === recordId
             ? {
-              ...item,
-              quantity: initialDetailData.find(
-                (initialItem) => initialItem.id === recordId
-              ).quantity,
-              isRowEditing: false,
-            }
+                ...item,
+                quantity: initialDetailData.find(
+                  (initialItem) => initialItem.id === recordId
+                ).quantity,
+                isRowEditing: false,
+              }
             : item
         )
       );
@@ -465,10 +466,10 @@ function StaffExportDetail() {
       detailFormData.map((item) =>
         item.id === recordId
           ? {
-            ...item,
-            quantity: value,
-            isRowEditing: value !== item.originalQuantity,
-          }
+              ...item,
+              quantity: value,
+              isRowEditing: value !== item.originalQuantity,
+            }
           : item
       )
     );
@@ -540,17 +541,17 @@ function StaffExportDetail() {
         detailFormData.map((item) =>
           item.id === recordId
             ? {
-              ...item,
-              product: {
-                ...item.product,
-                name: value,
-                description: selectedProduct?.description || "",
-                category: {
-                  ...item.product.category,
-                  name: selectedProduct?.category?.name || "",
+                ...item,
+                product: {
+                  ...item.product,
+                  name: value,
+                  description: selectedProduct?.description || "",
+                  category: {
+                    ...item.product.category,
+                    name: selectedProduct?.category?.name || "",
+                  },
                 },
-              },
-            }
+              }
             : item
         )
       );
@@ -635,7 +636,10 @@ function StaffExportDetail() {
   const getUniqueZones = (productId) => {
     // Lấy ra tất cả expiredAt và zone.id đã tồn tại trong exportDetailData cho sản phẩm này
     const existedExpiredAtInDetailData = exportDetailData
-      .filter((detail) => detail.product.id === productId)
+      .filter(
+        (detail) =>
+          detail.product.id === productId
+      )
       .map((detail) => ({
         zoneId: detail.zone.id,
         expiredAt: moment(detail.expiredAt).format("YYYY-MM-DD"),
@@ -643,7 +647,10 @@ function StaffExportDetail() {
 
     // Lấy ra tất cả expiredAt và zone.id đã được chọn trong newDetails cho sản phẩm này
     const selectedExpiredAtInNewDetail = newDetails
-      .filter((detail) => detail.product.id === productId)
+      .filter(
+        (detail) =>
+          detail.product.id === productId
+      )
       .map((detail) => ({
         zoneId: detail.zone.id,
         expiredAt: moment(detail.expiredAt).format("YYYY-MM-DD"),
@@ -908,7 +915,6 @@ function StaffExportDetail() {
     return Object.values(grouped);
   };
 
-
   if (isEditing) {
     columns.push(
       {
@@ -1107,7 +1113,11 @@ function StaffExportDetail() {
                     disabled={true}
                     className="mb-2 w-full"
                     size="large"
-                    value={formData?.exportDate ? dayjs(formData?.exportDate, "YYYY-MM-DD") : null}
+                    value={
+                      formData?.exportDate
+                        ? dayjs(formData?.exportDate, "YYYY-MM-DD")
+                        : null
+                    }
                     onChange={handleDateChange}
                   />
                 </td>
